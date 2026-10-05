@@ -257,7 +257,6 @@
     return (
       '<section class="block" id="next" data-nav="Keep going">' +
       '<div class="sec-head"><span class="sec-num">Next</span><h2>Keep going</h2></div>' +
-      '<p class="lede">Paste one of these into your coding agent.</p>' +
       '<div class="next-list">' + next.map(function (n, i) {
         return '<div class="next-item"><div><b>' + rich(n.title) + "</b><code>" + esc(n.prompt) + '</code></div><button type="button" class="btn" data-copy-next="' + i + '">Copy prompt</button></div>';
       }).join("") + "</div></section>"
@@ -272,7 +271,6 @@
     return (
       '<section class="block" id="watch" data-nav="Watch">' +
       '<div class="sec-head"><span class="sec-num">Annex</span><h2>Prefer watching?</h2></div>' +
-      '<p class="lede">Each video opens at the exact moment that explains the idea.</p>' +
       '<ol class="videos">' + videos.map(function (v) {
         var safe = /^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(v.url) ? v.url : "#";
         return (
@@ -301,7 +299,7 @@
       '<article class="share-card ' + cls + '">' +
       '<header class="sc-head"><span class="sc-logo">' + logo + '</span><span class="sc-title"><b>' + name + "</b><span>" + sub + "</span></span>" +
       '<span class="count" id="' + id + '-count"></span></header>' +
-      '<div class="sc-post"><div class="sc-author"><span class="sc-avatar" aria-hidden="true">You</span><span><b>You</b><span>Now · your post</span></span></div>' +
+      '<div class="sc-post"><div class="sc-author"><span class="sc-avatar" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="12.5" r="5.5"/><path d="M5.5 28.5c1.6-5.6 5.6-8.5 10.5-8.5s8.9 2.9 10.5 8.5"/></svg></span><span><b>You</b><span>Now · your post</span></span></div>' +
       '<textarea id="' + id + '" aria-label="' + name + ' post" spellcheck="true">' + esc(withRepoLink(text)) + "</textarea></div>" +
       '<div class="btn-row"><a class="btn sc-go" id="' + id + '-open" target="_blank" rel="noopener">' + logo + open + '</a><button type="button" class="btn" data-copy="' + id + '">Copy text</button></div>' +
       "</article>"
@@ -314,7 +312,6 @@
     return (
       '<section class="block" id="share" data-nav="Share">' +
       '<div class="sec-head"><span class="sec-num">Share</span><h2>Tell people what you learned</h2></div>' +
-      '<p class="muted">Two ready-made posts. Edit them as you like, then post or copy.</p>' +
       '<div class="share-grid">' +
       (s.linkedin ? shareCard("share-li", "li", LOGO_LI, "LinkedIn", "Post to your network", s.linkedin, "Post on LinkedIn") : "") +
       (s.x ? shareCard("share-x", "x", LOGO_X, "X", "Post to your followers", s.x, "Post on X") : "") +
