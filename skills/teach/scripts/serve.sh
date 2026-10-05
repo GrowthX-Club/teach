@@ -1,7 +1,9 @@
 #!/bin/sh
-# Serves a built lesson on http://localhost for an in-app browser that cannot
-# open local files (the Claude desktop app). Stops by itself after an hour.
-# Uses node, then python3, then nc (lesson page only). Prints the URL.
+# Serves lessons on http://localhost and prints the lesson's URL.
+# With node: the teach lesson server (lessons, library and the in-lesson chat),
+# reused if one is already running for this teach folder, and stopping by
+# itself after 12 hours without use. Without node: python3, then nc (lesson
+# page only, no chat), stopping after 12 hours.
 # Usage: sh serve.sh <lesson-dir>
 
 set -eu
@@ -15,7 +17,8 @@ teach_home=${TEACH_HOME:-"$HOME/growthx-teach"}
 teach_home=$(CDPATH= cd -- "$teach_home" && pwd)
 lesson_dir=$(CDPATH= cd -- "$1" && pwd)
 lesson_name=$(basename "$lesson_dir")
-lifetime=3600
+lifetime=43200
+skill_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 
 [ -f "$lesson_dir/index.html" ] || { echo "No index.html in $lesson_dir. Build it first." >&2; exit 1; }
 
@@ -31,32 +34,31 @@ has_python() {
   python3 -c 'import sys; sys.exit(sys.version_info < (3, 7))' 2>/dev/null
 }
 
+path="/lessons/$lesson_name/index.html"
+
+# Reuse a teach lesson server that already serves this teach folder.
+if command -v node >/dev/null 2>&1; then
+  for p in 8731 8732 8733 8734 8735 8736 8737 8738 8739 8740; do
+    info=$(curl -s -m 1 "http://localhost:$p/api/health" 2>/dev/null || true)
+    case "$info" in
+      *'"teach":true'*)
+        if printf '%s' "$info" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.exit(JSON.parse(s).home===process.argv[1]?0:1))' "$teach_home"; then
+          echo "http://localhost:$p$path"
+          exit 0
+        fi ;;
+    esac
+  done
+fi
+
 port=""
 for p in 8731 8732 8733 8734 8735 8736 8737 8738 8739 8740; do
   if ! up "$p"; then port=$p; break; fi
 done
 [ -n "$port" ] || { echo "No free port between 8731 and 8740." >&2; exit 1; }
 
-path="/lessons/$lesson_name/index.html"
 
 if command -v node >/dev/null 2>&1; then
-  nohup node -e '
-    const http = require("http"), fs = require("fs"), path = require("path");
-    const root = process.argv[1], port = Number(process.argv[2]), life = Number(process.argv[3]);
-    const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css", ".json": "application/json", ".png": "image/png" };
-    http.createServer((req, res) => {
-      let p = decodeURIComponent(req.url.split("?")[0]);
-      if (p.endsWith("/")) p += "index.html";
-      const file = path.join(root, path.normalize(p));
-      if (!file.startsWith(root + path.sep)) { res.writeHead(403); return res.end(); }
-      fs.readFile(file, (err, data) => {
-        if (err) { res.writeHead(404); return res.end("Not found"); }
-        res.writeHead(200, { "Content-Type": types[path.extname(file)] || "application/octet-stream" });
-        res.end(data);
-      });
-    }).listen(port, "127.0.0.1");
-    setTimeout(() => process.exit(0), life * 1000);
-  ' "$teach_home" "$port" "$lifetime" >/dev/null 2>&1 &
+  nohup node "$skill_dir/scripts/lesson-server.mjs" --port "$port" --home "$teach_home" >/dev/null 2>&1 &
 elif has_python; then
   nohup sh -c 'python3 -m http.server "$1" --bind 127.0.0.1 --directory "$2" & pid=$!; sleep "$3"; kill "$pid"' \
     _ "$port" "$teach_home" "$lifetime" >/dev/null 2>&1 &

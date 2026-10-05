@@ -84,8 +84,11 @@ node <skill>/scripts/validate.mjs --final <lesson-dir>/lesson.json <lesson-dir>/
 
 Then build:
 
-- **Terminal (Claude Code CLI, Codex CLI)**: `sh <skill>/scripts/build.sh --open <lesson-dir>`. This opens the lesson in the user's browser.
-- **Desktop app with a built-in browser tool** (for example the Claude desktop app's browser pane): `sh <skill>/scripts/build.sh <lesson-dir>`, then `sh <skill>/scripts/serve.sh <lesson-dir>`, and open the URL it prints in the built-in browser with its open-a-URL or preview tool (in the Claude desktop app, the preview tool that takes a `url`; a plain "navigate" can be refused for a new local address). Do not also open the real browser. If `serve.sh` fails, run `build.sh --open` instead.
+Run `sh <skill>/scripts/build.sh <lesson-dir>`, then `sh <skill>/scripts/serve.sh <lesson-dir>`. With Node.js this starts (or reuses) the teach lesson server, which also powers the **lesson tutor**: a chat button on the page that answers questions about the lesson using Claude Code on this computer. It prints the lesson's `http://localhost…` URL.
+
+- **Desktop app with a built-in browser tool** (for example the Claude desktop app's browser pane): open that URL in the built-in browser with its open-a-URL or preview tool (in the Claude desktop app, the preview tool that takes a `url`; a plain "navigate" can be refused for a new local address). Do not also open the real browser.
+- **Terminal (Claude Code CLI, Codex CLI)**: open that URL in the user's browser (`open` on macOS, `xdg-open` on Linux, `start` on Windows).
+- If `serve.sh` fails, run `sh <skill>/scripts/build.sh --open <lesson-dir>` instead: the lesson opens as a file, and its tutor copies questions for this chat rather than answering in the page.
 
 `build.sh` prints `LESSON_URL`, `LIBRARY_URL` and `OPENED=yes|no`.
 
@@ -97,11 +100,14 @@ This step is required, also in background mode, where it arrives as its own mess
 >
 > [See all your lessons](<LIBRARY_URL>)
 
-- `<URL>` is the localhost URL in the desktop app, otherwise `LESSON_URL`.
+- `<URL>` is the localhost URL from `serve.sh`, or `LESSON_URL` when it fell back to a file.
+- Add one line: "Questions? Use the chat button at the bottom right of the lesson, or select any text and tap Ask about this."
 - If the lesson did not open by itself (`OPENED=no` in a terminal), add: "If the link doesn't open, copy this into your browser's address bar:" followed by `LESSON_URL` in a code block.
 - Then one short line: "Want it simpler, deeper, more about the business, or more technical? Just say so."
 
 ## Follow-ups
+
+- **"open my lesson"**, **"the link doesn't work"**, or any request to reopen a lesson: run `sh <skill>/scripts/serve.sh <lesson-dir>` (it restarts the lesson server if it stopped; it stops by itself after 12 hours unused) and open the URL it prints the same way as in step 5.
 
 - **A pasted lesson question** (it starts with "Question about my GrowthX teach lesson", quotes a passage and asks something): answer it right here in the chat, in plain words at the learner's depth, starting from an analogy or everyday example, in at most about 150 words. Refer to the quoted passage, don't repeat the whole lesson, and don't rebuild anything. End with one line offering to go deeper.
 

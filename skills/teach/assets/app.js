@@ -654,18 +654,20 @@
     var open = document.querySelector('.coach[data-hint="' + name + '"]');
     if (open) open.remove();
   }
-  function showCoach(name, html, anchor) {
+  function showCoach(name, html, anchor, opts) {
+    opts = opts || {};
     if (hintSeen(name) || document.querySelector(".coach")) return false;
     var c = document.createElement("div");
-    c.className = "coach";
+    c.className = "coach" + (opts.big ? " big" : "");
     c.setAttribute("role", "status");
     c.setAttribute("data-hint", name);
-    c.innerHTML = "<div>" + html + '</div><button type="button">Got it</button>';
-    c.querySelector("button").addEventListener("click", function () { seenHint(name); maybeAskHint(); });
+    c.innerHTML = (opts.demo ? '<div class="coach-demo" aria-hidden="true"><span class="cd-line"><span class="cd-sel">select any text</span> in the lesson</span><span class="cd-pill">Ask about this</span></div>' : "") +
+      "<div>" + html + '</div><button type="button">Got it</button>';
+    c.querySelector("button").addEventListener("click", function () { seenHint(name); setTimeout(maybeAskHint, 400); });
     document.body.appendChild(c);
     function place() {
       if (!c.isConnected) return;
-      if (!anchor) { c.classList.add("corner"); c.style.right = "16px"; c.style.bottom = "16px"; return; }
+      if (opts.corner) { c.classList.add("corner"); c.style.right = "20px"; c.style.bottom = "92px"; return; }
       var r = anchor.getBoundingClientRect(), w = c.offsetWidth, h = c.offsetHeight;
       var left = Math.min(Math.max(12, r.left + r.width / 2 - 24), innerWidth - w - 12);
       var below = r.bottom + h + 14 < innerHeight;
@@ -681,7 +683,7 @@
     return true;
   }
 
-  // Hint 1: the highlighted words. Shown when the first one scrolls into view.
+  // Hint 1: the highlighted words, when the first one scrolls into view.
   var firstTerm = document.querySelector(".content .term");
   if (firstTerm && !hintSeen("terms") && "IntersectionObserver" in window) {
     var termWatch = new IntersectionObserver(function (items) {
@@ -692,25 +694,255 @@
     }, { threshold: 1, rootMargin: "0px 0px -30% 0px" });
     termWatch.observe(firstTerm);
   }
-  // Hint 2: select-to-ask. Shown once the reader is into the first concept and the first hint is done.
+  // Hint 2: the tutor, once the reader is into the first concept and hint 1 is done.
   function maybeAskHint() {
     if (hintSeen("ask") || (firstTerm && !hintSeen("terms"))) return;
     var firstConcept = document.querySelector("section.block[id^='c-']");
     if (firstConcept && firstConcept.getBoundingClientRect().top < innerHeight * 0.5) {
-      showCoach("ask", "Stuck on something? <b>Select any text</b> in the lesson to ask a question about it.", null);
+      if (showCoach("ask", "<b>Stuck on something?</b> Select any text and tap <b>Ask about this</b>, or open the tutor below. You get a plain-words answer right here.", null, { corner: true, big: true, demo: true })) {
+        fab.classList.add("pulse");
+      }
     }
   }
   addEventListener("scroll", maybeAskHint, { passive: true });
 
-  // ---------- select text, ask a question ----------
-  // The page can't talk to the chat, so the question is copied with the lesson
-  // and the exact passage, ready to paste into the chat where teach answers it.
-  var askBtn = document.createElement("button");
-  askBtn.type = "button";
-  askBtn.className = "ask-btn";
-  askBtn.textContent = "Ask about this";
-  askBtn.hidden = true;
-  document.body.appendChild(askBtn);
+  // ---------- lesson tutor (chat) ----------
+  // With the teach lesson server (http://localhost) questions are answered right
+  // here by Claude Code on this computer. Opened as a plain file, the same panel
+  // copies the question so it can be pasted into the Claude chat instead.
+  var lessonDir = (location.pathname.match(/\/lessons\/([a-z0-9-]+)\//) || [])[1] || "";
+  var chatLive = false;
+  var thread = [];
+  var pendingQuote = null;
+  var waiting = false;
+  var localKey = storeKey + ":questions";
+
+  var fab = document.createElement("button");
+  fab.type = "button";
+  fab.className = "tutor-fab";
+  fab.setAttribute("aria-label", "Ask the lesson tutor");
+  fab.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.2 3.4c-.5.4-1.3 0-1.3-.6V16A2.5 2.5 0 0 1 4 13.5z" fill="currentColor"/><circle cx="8.5" cy="9.5" r="1.2" fill="var(--brand)"/><circle cx="12" cy="9.5" r="1.2" fill="var(--brand)"/><circle cx="15.5" cy="9.5" r="1.2" fill="var(--brand)"/></svg><span class="tutor-dot" hidden></span>';
+  document.body.appendChild(fab);
+
+  var panel = document.createElement("section");
+  panel.className = "tutor";
+  panel.hidden = true;
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-label", "Lesson tutor");
+  panel.innerHTML =
+    '<header class="tutor-head"><div class="tutor-avatar" aria-hidden="true">t</div>' +
+    '<div class="tutor-title"><b>Lesson tutor</b><span id="tutor-status">Answers in plain words</span></div>' +
+    '<button type="button" class="tutor-x" aria-label="Close">×</button></header>' +
+    '<div class="tutor-body" id="tutor-body" aria-live="polite"></div>' +
+    '<div class="tutor-quote" hidden><span class="tq-label">Asking about</span><q></q><button type="button" aria-label="Remove passage">×</button></div>' +
+    '<form class="tutor-form"><label class="sr-only" for="tutor-input">Your question</label>' +
+    '<textarea id="tutor-input" rows="1" placeholder="Ask anything about this lesson…"></textarea>' +
+    '<button type="submit" class="tutor-send" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l15-7-5 16-2.5-6.5z" fill="currentColor"/></svg></button></form>' +
+    '<p class="tutor-foot" id="tutor-foot"></p>';
+  document.body.appendChild(panel);
+  var body = panel.querySelector("#tutor-body");
+  var input = panel.querySelector("#tutor-input");
+  var quoteBox = panel.querySelector(".tutor-quote");
+
+  function md(s) {
+    var blocks = String(s || "").trim().split(/\n{2,}/);
+    var bullet = /^\s*([-*•]|\d+\.)\s+/;
+    return blocks.map(function (b) {
+      // Group consecutive bullet lines into a list and other lines into a paragraph.
+      var out = "", para = [], items = [];
+      function flush() {
+        if (para.length) out += "<p>" + rich(para.join(" ")) + "</p>";
+        if (items.length) out += "<ul>" + items.map(function (l) { return "<li>" + rich(l) + "</li>"; }).join("") + "</ul>";
+        para = []; items = [];
+      }
+      b.split("\n").forEach(function (l) {
+        if (bullet.test(l)) { if (para.length) flush(); items.push(l.replace(bullet, "")); }
+        else { if (items.length) flush(); para.push(l); }
+      });
+      flush();
+      return out;
+    }).join("");
+  }
+  function scrollBottom() { body.scrollTop = body.scrollHeight; }
+  function renderEmpty() {
+    if (thread.length) return;
+    body.innerHTML =
+      '<div class="tutor-hello"><p><b>Hi!</b> Ask me anything about this lesson and I\'ll explain it in plain words.</p>' +
+      '<p class="tutor-tip">Tip: select any text in the lesson and tap <b>Ask about this</b>.</p>' +
+      '<div class="tutor-chips">' + ["Explain the main idea more simply", "Give me another real-life example", "How does this connect to my work?"].map(function (t) {
+        return '<button type="button" class="tutor-chip">' + esc(t) + "</button>";
+      }).join("") + "</div></div>";
+    body.querySelectorAll(".tutor-chip").forEach(function (b) { b.addEventListener("click", function () { send(b.textContent); }); });
+  }
+  function addTurn(q, answerHtml, opts) {
+    opts = opts || {};
+    var hello = body.querySelector(".tutor-hello");
+    if (hello) hello.remove();
+    var wrap = document.createElement("div");
+    wrap.className = "tutor-turn";
+    if (q.id) wrap.setAttribute("data-q", q.id);
+    wrap.innerHTML =
+      (q.quote ? '<div class="tutor-cite"><q>' + esc(q.quote.length > 180 ? q.quote.slice(0, 180) + "…" : q.quote) + "</q>" +
+        (q.sectionId ? '<a href="#' + esc(q.sectionId) + '" class="tutor-jump">Show in lesson</a>' : "") + "</div>" : "") +
+      '<div class="bubble me">' + esc(q.question) + "</div>" +
+      '<div class="bubble bot">' + (answerHtml || '<span class="typing"><i></i><i></i><i></i></span>') + "</div>";
+    body.appendChild(wrap);
+    var jump = wrap.querySelector(".tutor-jump");
+    if (jump) jump.addEventListener("click", function (e) {
+      e.preventDefault();
+      var m = document.querySelector('mark.asked[data-q="' + q.id + '"]') || document.getElementById(q.sectionId);
+      if (m) { m.scrollIntoView({ block: "center" }); if (m.classList) { m.classList.add("flash"); setTimeout(function () { m.classList.remove("flash"); }, 1600); } }
+      if (innerWidth < 640) closePanel();
+    });
+    if (!opts.quiet) scrollBottom();
+    return wrap;
+  }
+  function openPanel() {
+    panel.hidden = false;
+    fab.classList.add("open");
+    fab.classList.remove("pulse");
+    fab.querySelector(".tutor-dot").hidden = true;
+    seenHint("ask");
+    renderEmpty();
+    setTimeout(function () { input.focus(); scrollBottom(); }, 30);
+  }
+  function closePanel() { panel.hidden = true; fab.classList.remove("open"); }
+  fab.addEventListener("click", function () { panel.hidden ? openPanel() : closePanel(); });
+  panel.querySelector(".tutor-x").addEventListener("click", closePanel);
+  panel.addEventListener("keydown", function (e) { if (e.key === "Escape") closePanel(); });
+
+  function setQuote(p) {
+    pendingQuote = p;
+    quoteBox.hidden = !p;
+    if (p) quoteBox.querySelector("q").textContent = p.text.length > 160 ? p.text.slice(0, 160) + "…" : p.text;
+  }
+  quoteBox.querySelector("button").addEventListener("click", function () { setQuote(null); });
+
+  function api(method, url, data) {
+    return fetch(url, { method: method, headers: { "Content-Type": "application/json", "X-Teach": "1" }, body: data ? JSON.stringify(data) : undefined })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "Something went wrong."); return j; }); });
+  }
+  function saveLocal() { try { localStorage.setItem(localKey, JSON.stringify(thread)); } catch (e) {} }
+
+  function send(text) {
+    var question = String(text || "").trim();
+    if (!question || waiting) return;
+    var p = pendingQuote;
+    var q = { question: question, quote: p ? p.text : "", section: p ? p.section : "", sectionId: p ? p.sectionId : "" };
+    input.value = "";
+    autosize();
+    setQuote(null);
+    if (!chatLive) {
+      var prompt = 'Question about my GrowthX teach lesson "' + plain(meta.title || "") + '"' + (q.section ? " (section: " + q.section + ")" : "") + "\n\n" +
+        (q.quote ? "About this part:\n> " + q.quote + "\n\n" : "") + "My question: " + question;
+      q.id = "l" + Date.now().toString(36);
+      thread.push(q);
+      saveLocal();
+      if (p) markPassage(p, q.id);
+      addTurn(q, "<p>I can't answer inside the page when it's opened as a file. Your question is copied: paste it into your Claude chat and teach will explain it there.</p>");
+      copy(prompt, null);
+      return;
+    }
+    waiting = true;
+    var turn = addTurn(q, null);
+    var history = thread.slice(-3).reduce(function (h, t) { return h.concat([{ role: "user", text: t.question }, { role: "assistant", text: t.answer || "" }]); }, []);
+    api("POST", "/api/ask", { lesson: lessonDir, question: question, quote: q.quote, section: q.section, sectionId: q.sectionId, history: history })
+      .then(function (entry) {
+        thread.push(entry);
+        turn.setAttribute("data-q", entry.id);
+        turn.querySelector(".bubble.bot").innerHTML = md(entry.answer);
+        if (p) markPassage(p, entry.id);
+        if (panel.hidden) fab.querySelector(".tutor-dot").hidden = false;
+      })
+      .catch(function (err) { turn.querySelector(".bubble.bot").innerHTML = '<p class="tutor-err">' + esc(err.message) + "</p>"; })
+      .then(function () { waiting = false; scrollBottom(); });
+  }
+  function autosize() { input.style.height = "auto"; input.style.height = Math.min(140, input.scrollHeight) + "px"; }
+  input.addEventListener("input", autosize);
+  input.addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input.value); } });
+  panel.querySelector(".tutor-form").addEventListener("submit", function (e) { e.preventDefault(); send(input.value); });
+
+  // ---------- asked passages stay marked ----------
+  function textNodesIn(root) {
+    var out = [], w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) { return n.parentElement && n.parentElement.closest("figure, button, .term-tip, script, style") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT; }
+    });
+    while (w.nextNode()) out.push(w.currentNode);
+    return out;
+  }
+  // Find the quote inside its section (whitespace-insensitive) and wrap each piece in <mark>.
+  function markText(section, quote, id) {
+    if (!section || !quote || document.querySelector('mark.asked[data-q="' + id + '"]')) return;
+    var nodes = textNodesIn(section), flat = "", map = [];
+    nodes.forEach(function (n, ni) {
+      for (var i = 0; i < n.nodeValue.length; i++) {
+        var ch = n.nodeValue[i];
+        if (/\s/.test(ch)) { if (flat.slice(-1) === " ") continue; ch = " "; }
+        flat += ch;
+        map.push([ni, i]);
+      }
+    });
+    var target = quote.replace(/…$/, "").replace(/\s+/g, " ").trim();
+    var at = flat.indexOf(target);
+    if (at < 0) return;
+    var end = at + target.length - 1, pieces = {};
+    for (var k = at; k <= end; k++) {
+      var m = map[k];
+      pieces[m[0]] = pieces[m[0]] || [m[1], m[1]];
+      pieces[m[0]][1] = m[1];
+    }
+    Object.keys(pieces).sort(function (a, b) { return b - a; }).forEach(function (ni) {
+      var n = nodes[ni], r = pieces[ni];
+      var mid = n.splitText(r[0]);
+      mid.splitText(r[1] - r[0] + 1);
+      var mark = document.createElement("mark");
+      mark.className = "asked";
+      mark.setAttribute("data-q", id);
+      mark.title = "You asked about this. Click to see the answer.";
+      mid.parentNode.replaceChild(mark, mid);
+      mark.appendChild(mid);
+      mark.addEventListener("click", function () { openThreadAt(id); });
+    });
+  }
+  function markPassage(p, id) {
+    window.getSelection && window.getSelection().removeAllRanges();
+    markText(document.getElementById(p.sectionId) || document.querySelector(".content"), p.text, id);
+  }
+  function openThreadAt(id) {
+    openPanel();
+    var t = body.querySelector('.tutor-turn[data-q="' + id + '"]');
+    if (t) { t.scrollIntoView({ block: "start" }); t.classList.add("flash"); setTimeout(function () { t.classList.remove("flash"); }, 1600); }
+  }
+  function restore(list) {
+    thread = list || [];
+    body.innerHTML = "";
+    thread.forEach(function (q) {
+      addTurn(q, q.answer ? md(q.answer) : "<p>Copied to paste into your Claude chat.</p>", { quiet: true });
+      if (q.quote) markText(document.getElementById(q.sectionId) || document.querySelector(".content"), q.quote, q.id);
+    });
+    renderEmpty();
+  }
+
+  // Server or file? Load saved questions either way.
+  var foot = panel.querySelector("#tutor-foot");
+  if (/^https?:$/.test(location.protocol) && lessonDir) {
+    fetch("/api/health").then(function (r) { return r.json(); }).then(function (h) {
+      chatLive = !!(h && h.teach && h.chat);
+      foot.textContent = chatLive ? "Answered by Claude on your computer, using this lesson." : "The tutor needs Claude Code installed. Questions are copied for your Claude chat instead.";
+      return chatLive ? api("GET", "/api/questions?lesson=" + encodeURIComponent(lessonDir)).then(function (r) { restore(r.questions); }) : restore(loadLocal());
+    }).catch(function () { foot.textContent = "Questions are copied for your Claude chat."; restore(loadLocal()); });
+  } else {
+    foot.textContent = "Opened as a file: questions are copied for your Claude chat.";
+    restore(loadLocal());
+  }
+  function loadLocal() { try { return JSON.parse(localStorage.getItem(localKey) || "[]"); } catch (e) { return []; } }
+
+  // ---------- select text → ask ----------
+  var pop = document.createElement("div");
+  pop.className = "ask-pop";
+  pop.hidden = true;
+  pop.innerHTML = '<button type="button" data-act="ask"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.2 3.4c-.5.4-1.3 0-1.3-.6V16A2.5 2.5 0 0 1 4 13.5z" fill="currentColor"/></svg>Ask about this</button><button type="button" data-act="simple">Explain simply</button>';
+  document.body.appendChild(pop);
   var picked = null;
   function selectionInLesson() {
     var sel = window.getSelection && window.getSelection();
@@ -719,65 +951,42 @@
     if (text.length < 3) return null;
     var node = sel.getRangeAt(0).commonAncestorContainer;
     var el = node.nodeType === 1 ? node : node.parentElement;
-    if (!el || !el.closest(".content") || el.closest("textarea, input, button, .ask-panel, .options")) return null;
+    if (!el || !el.closest(".content") || el.closest("textarea, input, button, .options, figure, .tutor")) return null;
     var section = el.closest("[data-nav]");
-    return { text: text.length > 600 ? text.slice(0, 600) + "…" : text, section: section ? section.getAttribute("data-nav") : "", rect: sel.getRangeAt(0).getBoundingClientRect() };
+    return {
+      text: text.length > 600 ? text.slice(0, 600) + "…" : text,
+      section: section ? section.getAttribute("data-nav") : "",
+      sectionId: section ? section.id : "",
+      rect: sel.getRangeAt(0).getBoundingClientRect()
+    };
   }
-  function updateAskButton() {
+  function updatePop() {
     picked = selectionInLesson();
-    if (!picked) { askBtn.hidden = true; return; }
-    askBtn.hidden = false;
-    var left = Math.min(Math.max(8, picked.rect.left + picked.rect.width / 2 - askBtn.offsetWidth / 2), innerWidth - askBtn.offsetWidth - 8);
-    var top = picked.rect.top - askBtn.offsetHeight - 10;
-    if (top < 60) top = picked.rect.bottom + 10;
-    askBtn.style.left = left + scrollX + "px";
-    askBtn.style.top = top + scrollY + "px";
+    if (!picked) { pop.hidden = true; return; }
+    pop.hidden = false;
+    var w = pop.offsetWidth, h = pop.offsetHeight;
+    var left = Math.min(Math.max(8, picked.rect.left + picked.rect.width / 2 - w / 2), innerWidth - w - 8);
+    var top = picked.rect.top - h - 12;
+    pop.classList.toggle("below", top < 64);
+    if (top < 64) top = picked.rect.bottom + 12;
+    pop.style.left = left + scrollX + "px";
+    pop.style.top = top + scrollY + "px";
   }
-  document.addEventListener("mouseup", function () { setTimeout(updateAskButton, 0); });
-  document.addEventListener("keyup", function (e) { if (e.shiftKey) updateAskButton(); });
-  document.addEventListener("selectionchange", function () {
-    clearTimeout(updateAskButton.t);
-    updateAskButton.t = setTimeout(updateAskButton, 400);
-  });
-  askBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
-  askBtn.addEventListener("click", function () {
-    if (!picked) return;
+  document.addEventListener("mouseup", function () { setTimeout(updatePop, 0); });
+  document.addEventListener("keyup", function (e) { if (e.shiftKey) updatePop(); });
+  document.addEventListener("selectionchange", function () { clearTimeout(updatePop.t); updatePop.t = setTimeout(updatePop, 350); });
+  pop.addEventListener("mousedown", function (e) { e.preventDefault(); });
+  pop.addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b || !picked) return;
+    var p = picked;
+    pop.hidden = true;
     seenHint("ask");
-    openAsk(picked);
-    askBtn.hidden = true;
+    openPanel();
+    setQuote(p);
+    if (b.getAttribute("data-act") === "simple") send("Can you explain this part more simply?");
+    else input.focus();
   });
-  function openAsk(p) {
-    var old = document.querySelector(".ask-panel");
-    if (old) old.remove();
-    var panel = document.createElement("div");
-    panel.className = "ask-panel";
-    panel.setAttribute("role", "dialog");
-    panel.setAttribute("aria-label", "Ask about this part");
-    panel.innerHTML =
-      '<span class="eyebrow">Ask about this</span><blockquote></blockquote>' +
-      '<label class="sr-only" for="ask-q">Your question</label>' +
-      '<textarea id="ask-q" placeholder="What would you like explained? e.g. Why does the second copy get skipped?"></textarea>' +
-      '<p class="ask-help">Your question is copied with this passage. Paste it into your Claude chat and teach will explain it.</p>' +
-      '<div class="btn-row"><button type="button" class="btn" data-act="cancel">Cancel</button><button type="button" class="btn primary" data-act="copy">Copy question</button></div>';
-    panel.querySelector("blockquote").textContent = p.text;
-    document.body.appendChild(panel);
-    var box = panel.querySelector("textarea");
-    box.focus();
-    function close() { panel.remove(); }
-    panel.querySelector('[data-act="cancel"]').addEventListener("click", close);
-    panel.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
-    panel.querySelector('[data-act="copy"]').addEventListener("click", function () {
-      var q = box.value.trim() || "Can you explain this part more simply?";
-      var prompt =
-        'Question about my GrowthX teach lesson "' + plain(meta.title || "") + '"' +
-        (p.section ? " (section: " + p.section + ")" : "") + "\n\n" +
-        "About this part:\n> " + p.text + "\n\nMy question: " + q;
-      var done = function () { toast("Copied. Paste it into your Claude chat."); close(); };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(prompt).then(done, function () { box.value = prompt; box.select(); toast("Selected. Press Cmd+C or Ctrl+C, then paste it into your chat."); });
-      } else { box.value = prompt; box.select(); toast("Selected. Press Cmd+C or Ctrl+C, then paste it into your chat."); }
-    });
-  }
 
   // ---------- reading progress ----------
   var bar = document.getElementById("progress");

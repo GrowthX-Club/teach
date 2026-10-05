@@ -96,7 +96,7 @@ Needs Node.js and the Claude Code command line (`claude`), logged in; it uses yo
 - A sidebar with every section, ticking them off as you read
 - Light and dark themes (the focus you pick shapes the writing)
 - An optional "Did you know?" side note per concept, only when there's a genuinely interesting fact
-- Select any text to ask a question about it: the question is copied with the passage, ready to paste into your chat, where teach answers it
+- A **lesson tutor**: a chat button at the bottom right answers questions about the lesson in plain words, right in the page. Select any text and tap **Ask about this** (or **Explain simply**); passages you ask about stay highlighted, and clicking one shows its answer. It runs on your computer through Claude Code; opened as a plain file, it copies the question for your Claude chat instead
 - A 3-question multiple-choice quiz with an explanation for every option
 - "Prefer watching?": up to 4 YouTube videos that open at the exact moment that explains a concept, found and checked by a separate agent (left out when nothing reliable turns up)
 - Follow-up prompts to keep learning
