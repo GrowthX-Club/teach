@@ -1,12 +1,18 @@
 #!/bin/sh
 # Builds one self-contained lesson page and refreshes the lesson library.
-# Usage: sh build.sh <lesson-dir>
+# Usage: sh build.sh [--open] <lesson-dir>
+#   --open  also open the lesson in the default browser (for terminal users)
 # Needs only POSIX sh, sed and awk.
 
 set -eu
 
+open_after=false
+if [ "${1:-}" = "--open" ]; then
+  open_after=true
+  shift
+fi
 if [ "$#" -ne 1 ]; then
-  echo "Usage: sh build.sh <lesson-dir>" >&2
+  echo "Usage: sh build.sh [--open] <lesson-dir>" >&2
   exit 2
 fi
 
@@ -54,7 +60,7 @@ sep=$(printf '\034')
 sed 's/</\\u003c/g' "$lesson_json" > "$tmp/lesson.safe.json"
 
 inline "$assets/lesson.html" "$tmp/index.html" \
-  "/*@@THEME@@*/${sep}$theme${sep}/*@@LESSON@@*/${sep}$tmp/lesson.safe.json${sep}/*@@APP@@*/${sep}$assets/app.js"
+  "/*@@THEME@@*/${sep}$theme${sep}/*@@BASE@@*/${sep}$assets/base.css${sep}/*@@LESSON@@*/${sep}$tmp/lesson.safe.json${sep}/*@@APP@@*/${sep}$assets/app.js"
 mv "$tmp/index.html" "$lesson_dir/index.html"
 
 # Library entry for this lesson. One file per lesson, so one broken lesson cannot break the library.
@@ -76,8 +82,25 @@ for entry in "$teach_home"/lessons/*/library-entry.js; do
   printf '<script src="lessons/%s/library-entry.js"></script>\n' "$name" >> "$tmp/entries.html"
 done
 inline "$assets/library.html" "$tmp/library.html" \
-  "/*@@THEME@@*/${sep}$theme${sep}<!--@@ENTRIES@@-->${sep}$tmp/entries.html"
+  "/*@@THEME@@*/${sep}$theme${sep}/*@@BASE@@*/${sep}$assets/base.css${sep}<!--@@ENTRIES@@-->${sep}$tmp/entries.html"
 mv "$tmp/library.html" "$teach_home/index.html"
 
-echo "Built lesson: $lesson_dir/index.html"
-echo "Library: $teach_home/index.html"
+# file:// URLs with spaces and other unsafe characters escaped.
+file_url() {
+  printf 'file://%s' "$1" | sed -e 's/%/%25/g' -e 's/ /%20/g' -e 's/#/%23/g' -e 's/?/%3F/g'
+}
+lesson_url=$(file_url "$lesson_dir/index.html")
+library_url=$(file_url "$teach_home/index.html")
+
+opened=no
+if [ "$open_after" = true ]; then
+  if command -v open >/dev/null 2>&1 && open "$lesson_dir/index.html" >/dev/null 2>&1; then opened=yes
+  elif command -v xdg-open >/dev/null 2>&1 && xdg-open "$lesson_dir/index.html" >/dev/null 2>&1; then opened=yes
+  elif command -v cmd.exe >/dev/null 2>&1 && cmd.exe /c start "" "$lesson_dir/index.html" >/dev/null 2>&1; then opened=yes
+  fi
+fi
+
+echo "LESSON_FILE=$lesson_dir/index.html"
+echo "LESSON_URL=$lesson_url"
+echo "LIBRARY_URL=$library_url"
+echo "OPENED=$opened"

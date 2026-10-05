@@ -1,89 +1,78 @@
 # lesson.json
 
-The designer writes one UTF-8 JSON object. Text fields are plain text; the page renders only `**bold**` and `` `code` `` inside them.
+The designer writes one UTF-8 JSON object. Text fields are plain text; the page renders only `**bold**` and `` `code` `` inside them. See `examples/sample.lesson.json` for a complete lesson.
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "meta": {
-    "slug": "retries-and-idempotency",
-    "title": "Why safe retries need idempotency",
-    "subject": "Retrying webhook deliveries",
+    "slug": "safe-retries",
+    "title": "Why safe retries need **idempotency**",
+    "subject": "Making payment webhooks safe to retry",
     "domain": "backend",
     "one_liner": "Retrying is easy. Retrying without doing things twice is the real trick.",
-    "minutes": 6,
+    "minutes": 5,
     "created": "2026-10-05",
-    "level": { "depth": 2, "lens": "balanced" }
+    "level": { "depth": 2, "lens": "product" }
   },
-  "goal": "By the end you can explain why a retry can charge a customer twice, and the two patterns that stop it.",
-  "hook": "Your webhook failed, so the sender tried again. Now the customer has two receipts. What went wrong?",
+  "goal": "By the end you can explain why trying again can charge a customer twice, and the two ideas that stop it.",
+  "hook": "Apps resend messages all the time when the internet hiccups. So why don't you get charged twice every time?",
   "concepts": [
     {
       "id": "idempotency",
       "name": "Idempotency",
       "tagline": "Doing it twice has the same effect as doing it once.",
-      "explain": "An action is idempotent when repeating it changes nothing after the first time...",
-      "product": "Customers never see duplicate charges, emails, or orders, even when networks fail.",
-      "tech": "Store a unique key per request and check it inside the same transaction as the write.",
+      "explain": "An action is **idempotent** when repeating it changes nothing after the first time...",
+      "product": "Customers never see double charges or duplicate emails, even when the network misbehaves.",
+      "tech": "Store a record keyed by the request ID and check it before acting.",
       "examples": [
-        { "kind": "everyday", "title": "The lift button", "text": "Pressing it five times calls one lift." },
-        { "kind": "industry", "title": "Payment APIs", "text": "Payment providers accept an idempotency key so a retried charge is not run twice." },
-        { "kind": "your-work", "title": "Your payment webhook", "text": "Your handler now skips events it has already stored.", "evidence_ids": ["e1"] }
+        { "kind": "everyday", "title": "The lift button", "text": "Pressing it five times still calls one lift." },
+        { "kind": "industry", "title": "Payment APIs", "text": "Major payment APIs accept an idempotency key, so a retried charge never runs twice." }
       ],
       "visual": {
-        "type": "flow",
-        "title": "One request, safely retried",
-        "steps": [
-          { "label": "Request arrives", "detail": "Carries a unique key" },
-          { "label": "Key checked", "detail": "Seen before? Return the saved result" },
-          { "label": "Work done once", "detail": "Result saved with the key" }
-        ]
+        "type": "compare",
+        "title": "Same repeat, two outcomes",
+        "left": { "title": "Without it", "points": ["Message arrives twice", "Customer charged twice"] },
+        "right": { "title": "With it", "points": ["Message arrives twice", "Repeat recognised and skipped"] }
       },
-      "code": { "language": "ts", "caption": "The check, simplified", "text": "if (await seen(key)) return saved(key);" },
-      "pitfall": "Checking the key and doing the work in two separate steps still lets two retries slip through together."
+      "code": { "language": "ts", "caption": "The idea, simplified", "text": "if (await alreadyHandled(event.id)) return ok();" },
+      "in_your_work": { "text": "Your payment handler now remembers every payment notice and ignores repeats.", "evidence_ids": ["e2"] },
+      "pitfall": "Making a new ID for each retry, so nobody can recognise the repeat."
     }
   ],
-  "connect": {
-    "title": "How the ideas fit together",
-    "text": "Retries make delivery reliable; idempotency makes retries safe.",
-    "steps": [
-      { "label": "Failure", "detail": "The network drops a response", "concept_id": "retries" },
-      { "label": "Retry", "detail": "The sender tries again", "concept_id": "retries" },
-      { "label": "Dedupe", "detail": "The key stops double work", "concept_id": "idempotency" }
-    ]
-  },
   "quiz": [
     {
-      "question": "A retried request reaches your server twice at the same moment. What prevents a double charge?",
+      "question": "Which of these actions is idempotent?",
       "concept_id": "idempotency",
       "options": [
-        { "text": "A longer timeout", "correct": false, "why": "Timeouts change when retries happen, not whether work repeats." },
-        { "text": "Checking the key and writing in one transaction", "correct": true, "why": "Both requests can't pass the check at once." },
-        { "text": "Logging every request", "correct": false, "why": "Logs record the duplicate; they don't stop it." }
+        { "text": "Add one item to the cart", "correct": false, "why": "Doing it twice leaves two items." },
+        { "text": "Set the user's plan to Pro", "correct": true, "why": "After the first time, repeating it changes nothing." },
+        { "text": "Send a welcome email", "correct": false, "why": "Twice means two emails." }
       ]
     }
   ],
   "next": [
-    { "title": "Exactly-once delivery", "prompt": "teach me why exactly-once delivery is so hard" }
+    { "title": "Why \"exactly once\" is so hard", "prompt": "teach me why exactly-once delivery is so hard" }
   ],
   "share": {
-    "linkedin": "Learned today why retries can double-charge customers...",
-    "x": "Retries make systems reliable. Idempotency makes retries safe."
+    "linkedin": "Learned today why apps can charge you twice…\n\nBuilt using GrowthX teach",
+    "x": "Retries make apps reliable. Idempotency makes retries safe."
   }
 }
 ```
 
 ## Rules (checked by `validate.mjs`)
 
-- `meta.slug`: lowercase words joined by hyphens. `meta.minutes`: 3–12. `meta.level.depth`: 1–4. `meta.level.lens`: `product`, `balanced` or `tech`.
-- `goal`, `hook`, every concept's `name`, `tagline`, `explain`, `product` and `tech` are non-empty.
-- 2–4 `concepts`, unique `id`s (lowercase, hyphens).
-- 2–3 `examples` per concept. `kind` is `everyday`, `industry` or `your-work`. At most one `your-work` per concept and at least one other kind.
-- `your-work` examples need `evidence_ids`. When a concept map is passed to the validator, they must exist there.
-- `visual` is optional: `{ "type": "flow", "title", "steps": 3–5 × { label, detail } }` or `{ "type": "compare", "title", "left": { "title", "points": [] }, "right": { "title", "points": [] } }`.
-- `code` is optional and hidden in the product lens. Keep it under 15 lines.
-- `connect` is optional; when present it has 3–5 `steps`, each `concept_id` refers to a concept.
-- 3–5 `quiz` questions. Each has 3–4 options, exactly one `correct: true`, and a `why` on every option. Each `concept_id` refers to a concept.
+- `meta.slug`: lowercase words joined by hyphens. `meta.minutes`: 2–8. `meta.level.depth`: 1–4. `meta.level.lens`: `product`, `balanced` or `tech`.
+- `goal`, `hook`, and every concept's `name`, `tagline`, `explain`, `product` and `tech` are required.
+- **2–3 concepts**, unique `id`s (lowercase, hyphens).
+- **Each concept is at most 300 words**, counting tagline, explain, product, tech, examples, visual text, `in_your_work` and pitfall. Code does not count.
+- Exactly **2 examples** per concept, `kind` `everyday` or `industry`.
+- `in_your_work` is optional: **one sentence, at most 30 words**, with `evidence_ids` from the concept map. It must make sense to someone who never read the chat.
+- `visual` is optional: `{ "type": "flow", "title", "steps": 3–4 × { label, detail } }` or `{ "type": "compare", "title", "left": { "title", "points": 1–3 }, "right": { … } }`.
+- `code` is optional, hidden in the business focus, at most 10 lines.
+- `pitfall` is optional, at most 30 words.
+- Exactly **3 quiz** questions, each with 3–4 options, exactly one `correct: true`, and a `why` on every option.
 - 2–3 `next` items.
 - `share.x` at most 260 characters. `share.linkedin` at most 1300 characters.
-- No evidence IDs, file paths from private projects, secrets, or personal data in any visible text.
+- No references back to the chat ("as we discussed", "in our chat", "you just", "the bug we…"), no evidence IDs, file paths, secrets or personal data in visible text.

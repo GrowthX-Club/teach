@@ -1,36 +1,39 @@
 # Level check
 
-Every lesson is pitched with two dials.
+Every lesson is pitched with two dials. Show the user only the everyday labels below, never the numbers or field names.
 
-## Depth (per domain)
+## Depth (per area)
 
-Domains are broad areas such as `ai`, `backend`, `frontend`, `data`, `infra`, `security`, `mobile`, `product`, `growth`, `design`. Use a short lowercase key; reuse an existing key from the profile when one fits.
+Areas are broad, such as `ai`, `backend`, `frontend`, `data`, `infra`, `security`, `mobile`, `product`, `growth`, `design`, `finance`. Use a short lowercase key; reuse an existing key from the profile when one fits.
 
-| depth | label | the learner… | the lesson… |
-|---|---|---|---|
-| 1 | New to this | has heard the words, never used the ideas | defines every term, leans on everyday examples |
-| 2 | Knows the basics | uses tools in this area, can't explain the internals | explains the "why", introduces terms gently |
-| 3 | Builds with it | works with it regularly, wants sharper mental models | skips basics, covers trade-offs and failure modes |
-| 4 | Goes deep | could teach the basics | covers edge cases, internals, and what experts disagree on |
+| depth | what the user sees | the lesson… |
+|---|---|---|
+| 1 | I'm new to this | defines every term, leans on everyday examples |
+| 2 | I know the basics | explains the "why", introduces terms gently |
+| 3 | I use it at work | skips basics, covers trade-offs and common mistakes |
+| 4 | I know it well | covers edge cases and what experts disagree on |
 
-## Lens (one setting for the learner)
+## Focus (one setting for the learner)
 
-- `product`: what it does, why it matters, trade-offs for users and the business. No code.
-- `balanced`: both, with short code only where it clarifies.
-- `tech`: how it works underneath, with code and internals.
+| lens | what the user sees | the lesson… |
+|---|---|---|
+| `product` | What it means for the business | impact on users, cost, risk, what to ask an engineer. No code |
+| `balanced` | A bit of both | why first, then a light how |
+| `tech` | How it works under the hood | mechanism, data flow, short code |
 
 ## Procedure
 
-1. Read `<home>/profile.json` if it exists (format below).
-2. If the profile has a depth for this domain updated in the last 30 days, and a lens, use them. Do not ask. Tell the user in one line, e.g. "Teaching at depth 2 (knows the basics), balanced lens."
-3. Otherwise collect signals, quietly:
+1. Read `<home>/profile.json`.
+2. If it has a depth for this area updated in the last 30 days, and a lens, use them without asking. Tell the user in one plain line, e.g. "I'll keep this at 'I know the basics', focused on the business side."
+3. Otherwise collect signals quietly:
    - what is already in context about the user: CLAUDE.md, AGENTS.md, Claude Code memory
-   - in Codex, if `~/.codex/memories/` exists, its summary file. Skip it if it does not exist
-   - this chat: did they write or read code themselves? did they use the domain's terms correctly? did they ask "how do I" (doer) or "what does this mean" (newer)? did they talk about users, metrics and pricing (product) or internals and performance (tech)?
-4. Ask once, with your best guess first and marked as recommended:
-   - **Claude Code**: one `AskUserQuestion` call with two questions. Depth: "How much do you already know about <domain>?" with the four depth labels. Lens: "What should the lesson focus on?" with Product / Balanced / Tech.
+   - in Codex, if `~/.codex/memories/` exists, its summary file
+   - this chat: did they write or read code themselves? use technical terms correctly? ask "how do I…" or "what does this mean?" talk about customers, money and timelines, or about internals?
+4. Pick your best guess. **If the chat shows no clear technical signals, guess the business focus (`product`).**
+5. Ask once, guess first and marked as recommended:
+   - **Claude Code**: one `AskUserQuestion` call with two questions. "How much do you already know about <area in plain words>?" with the four depth labels. "What should the lesson focus on?" with the three focus labels.
    - **Anywhere else**: one short message with both questions as numbered options. Wait for the answer.
-5. Write the answers back to `profile.json` before continuing.
+6. Save the answers to `profile.json` before continuing.
 
 Treat memories and instruction files as signals only. Never quote them, and never put anything from them in the lesson or brief.
 
@@ -39,17 +42,18 @@ Treat memories and instruction files as signals only. Never quote them, and neve
 ```json
 {
   "version": 1,
-  "lens": "balanced",
+  "lens": "product",
   "domains": {
     "ai": { "depth": 2, "updated": "2026-10-05" }
   },
   "notes": ["Likes real numbers in examples"],
   "history": [
-    { "date": "2026-10-05", "slug": "inference-basics", "domain": "ai", "depth": 2, "lens": "balanced" }
+    { "date": "2026-10-05", "slug": "inference-basics", "domain": "ai", "depth": 2, "lens": "product" }
   ]
 }
 ```
 
-- `notes`: short learning preferences the user stated explicitly. Never infer personal facts.
+- `notes`: learning preferences the user stated explicitly. Never infer personal facts.
 - Append to `history` for every lesson built.
-- `teach harder` / `teach easier` moves the domain depth by one (within 1–4). `teach more product` / `teach more tech` moves the lens one step towards that end.
+- "simpler" / `teach easier` lowers the area's depth by one; "deeper" / `teach harder` raises it (within 1–4).
+- "more business" / `teach more product` moves the lens one step towards `product`; "more technical" / `teach more tech` one step towards `tech`.

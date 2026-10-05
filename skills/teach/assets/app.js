@@ -4,7 +4,7 @@
 
   var REPO_URL = "https://github.com/GrowthX-Club/teach";
   var DEPTH_LABELS = { 1: "New to this", 2: "Knows the basics", 3: "Builds with it", 4: "Goes deep" };
-  var KIND_LABELS = { everyday: "Everyday", industry: "In the industry", "your-work": "In your work" };
+  var KIND_LABELS = { everyday: "Everyday", industry: "In the industry" };
   var LENSES = [
     ["product", "Product"],
     ["balanced", "Balanced"],
@@ -102,17 +102,12 @@
     var level = meta.level || {};
     var eyebrow = [meta.domain, DEPTH_LABELS[level.depth], meta.minutes ? meta.minutes + " min" : ""]
       .filter(Boolean).map(esc).join(" · ");
-    var nav = concepts.map(function (c, i) {
-      return '<a class="pill" href="#c-' + esc(c.id) + '">' + (i + 1) + ". " + esc(c.name) + "</a>";
-    }).join("");
-    nav += '<a class="pill" href="#quiz">Quiz</a>';
     return (
-      '<section class="hero wrap">' +
+      '<section class="hero" id="start" data-nav="Start">' +
       '<p class="eyebrow">' + eyebrow + "</p>" +
       "<h1>" + rich(meta.title, true) + "</h1>" +
       (lesson.hook ? '<p class="lede">' + rich(lesson.hook) + "</p>" : "") +
       (lesson.goal ? '<div class="goal"><span class="eyebrow">By the end</span><p>' + rich(lesson.goal) + "</p></div>" : "") +
-      '<nav class="pills" aria-label="Lesson parts">' + nav + "</nav>" +
       "</section>"
     );
   }
@@ -138,7 +133,7 @@
   function concept(c, i) {
     var examples = (c.examples || []).map(function (e) {
       return (
-        '<article class="example' + (e.kind === "your-work" ? " own" : "") + '">' +
+        '<article class="example">' +
         '<span class="chip">' + esc(KIND_LABELS[e.kind] || e.kind) + "</span>" +
         "<h4>" + rich(e.title) + "</h4><p>" + rich(e.text) + "</p></article>"
       );
@@ -149,7 +144,7 @@
         '<pre class="code"><code>' + esc(c.code.text) + "</code></pre></div>"
       : "";
     return (
-      '<section class="block wrap" id="c-' + esc(c.id) + '">' +
+      '<section class="block" id="c-' + esc(c.id) + '" data-nav="' + esc(plain(c.name)) + '">' +
       '<div class="sec-head"><span class="sec-num">' + String(i + 1).padStart(2, "0") + "</span><h2>" + rich(c.name) + "</h2></div>" +
       '<p class="tagline">' + rich(c.tagline) + "</p>" +
       '<div class="prose">' + paras(c.explain) + "</div>" +
@@ -160,19 +155,8 @@
       visual(c.visual) +
       '<div class="examples">' + examples + "</div>" +
       code +
+      (c.in_your_work && c.in_your_work.text ? '<div class="in-work"><span class="eyebrow">In your work</span><p>' + rich(c.in_your_work.text) + "</p></div>" : "") +
       (c.pitfall ? '<div class="callout"><span class="eyebrow">Common mistake</span><p>' + rich(c.pitfall) + "</p></div>" : "") +
-      "</section>"
-    );
-  }
-
-  function connect() {
-    var c = lesson.connect;
-    if (!c) return "";
-    return (
-      '<section class="block wrap" id="connect">' +
-      '<div class="sec-head"><span class="sec-num">' + String(concepts.length + 1).padStart(2, "0") + "</span><h2>" + rich(c.title || "How it fits together") + "</h2></div>" +
-      (c.text ? '<div class="prose">' + paras(c.text) + "</div>" : "") +
-      visual({ type: "flow", steps: c.steps }) +
       "</section>"
     );
   }
@@ -186,7 +170,7 @@
       return '<div class="question" id="q-' + qi + '"><span class="eyebrow">Question ' + (qi + 1) + " of " + quiz.length + "</span><h3>" + rich(q.question) + '</h3><div class="options">' + opts + "</div></div>";
     }).join("");
     return (
-      '<section class="block wrap" id="quiz">' +
+      '<section class="block" id="quiz" data-nav="Quiz">' +
       '<div class="sec-head"><span class="sec-num">Quiz</span><h2>Check yourself</h2></div>' +
       '<p class="score" id="score" aria-live="polite">0 of ' + quiz.length + " answered</p>" +
       qs +
@@ -199,7 +183,7 @@
     var next = lesson.next || [];
     if (!next.length) return "";
     return (
-      '<section class="block wrap" id="next">' +
+      '<section class="block" id="next" data-nav="Keep going">' +
       '<div class="sec-head"><span class="sec-num">Next</span><h2>Keep going</h2></div>' +
       '<p class="lede">Paste one of these into your coding agent.</p>' +
       '<div class="next-list">' + next.map(function (n, i) {
@@ -212,7 +196,7 @@
     var s = lesson.share || {};
     if (!s.linkedin && !s.x) return "";
     return (
-      '<section class="block wrap" id="share">' +
+      '<section class="block" id="share" data-nav="Share">' +
       '<div class="sec-head"><span class="sec-num">Share</span><h2>Tell people what you learned</h2></div>' +
       '<div class="share-grid">' +
       '<div class="share-card"><span class="eyebrow">LinkedIn</span><textarea id="share-li" aria-label="LinkedIn post">' + esc(s.linkedin) + "</textarea>" +
@@ -239,8 +223,54 @@
 
   // ---------- render ----------
   document.title = plain(meta.title || "Lesson") + " · GrowthX teach";
+  var body = hero() + concepts.map(concept).join("") + quizSection() + nextSection() + shareSection();
   document.getElementById("app").innerHTML =
-    topbar() + "<main>" + hero() + concepts.map(concept).join("") + connect() + quizSection() + nextSection() + shareSection() + "</main>" + footer();
+    topbar() +
+    '<div class="layout wrap"><nav class="sidebar" id="sidebar" aria-label="Lesson sections"></nav><main class="content">' + body + "</main></div>" +
+    footer();
+
+  // ---------- sidebar ----------
+  var sections = Array.prototype.slice.call(document.querySelectorAll("[data-nav]"));
+  var conceptCount = 0;
+  document.getElementById("sidebar").innerHTML =
+    '<span class="eyebrow side-title">In this lesson</span><ol>' +
+    sections.map(function (sec) {
+      var isConcept = sec.id.indexOf("c-") === 0;
+      var mark = isConcept ? String(++conceptCount) : "";
+      return '<li><a href="#' + sec.id + '" data-target="' + sec.id + '"><span class="tick" aria-hidden="true">' + mark + "</span><span>" + esc(sec.getAttribute("data-nav")) + "</span></a></li>";
+    }).join("") +
+    "</ol>";
+  var links = {};
+  document.querySelectorAll("#sidebar a").forEach(function (a) { links[a.getAttribute("data-target")] = a; });
+  // Keep the sidebar just below the top bar, whose height changes when it wraps on phones.
+  function measureTopbar() {
+    var top = document.querySelector(".topbar");
+    if (top) document.documentElement.style.setProperty("--topbar-h", top.offsetHeight + "px");
+  }
+  measureTopbar();
+  addEventListener("resize", measureTopbar);
+
+  function updateSidebar() {
+    var line = innerHeight * 0.35;
+    var current = sections[0];
+    sections.forEach(function (sec) {
+      if (sec.getBoundingClientRect().top <= line) current = sec;
+    });
+    var passed = true;
+    sections.forEach(function (sec) {
+      var a = links[sec.id];
+      if (sec === current) passed = false;
+      a.classList.toggle("active", sec === current);
+      a.classList.toggle("done", passed);
+      if (sec === current) a.setAttribute("aria-current", "true");
+      else a.removeAttribute("aria-current");
+    });
+    var active = links[current.id];
+    var bar = document.getElementById("sidebar");
+    if (active && bar.scrollWidth > bar.clientWidth) {
+      bar.scrollLeft = active.offsetLeft - bar.clientWidth / 2 + active.clientWidth / 2;
+    }
+  }
 
   // ---------- theme ----------
   var root = document.documentElement;
@@ -439,6 +469,7 @@
   function onScroll() {
     var max = document.documentElement.scrollHeight - innerHeight;
     bar.style.width = (max > 0 ? Math.min(100, (scrollY / max) * 100) : 100) + "%";
+    updateSidebar();
   }
   addEventListener("scroll", onScroll, { passive: true });
   onScroll();

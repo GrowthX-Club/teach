@@ -69,22 +69,27 @@ The first time you learn about an area, teach asks two quick questions: how much
 
 ## What a lesson has
 
-- A hook and a clear goal
-- 2–4 concepts, each with a one-line tagline, an explanation, a "why it matters" and a "how it works" angle, 2–3 examples, an optional diagram or code sample, and the most common mistake
-- A switch between Product, Balanced and Tech focus, plus light and dark themes
-- A 3–5 question multiple-choice quiz with an explanation for every option
+- A short hook and a clear goal
+- 2–3 concepts, each under 300 words: a one-line tagline, a short explanation, "why it matters" and "how it works", an everyday and an industry example, an optional diagram or code sample, the common mistake, and one line on where the idea shows up in your own work
+- A sidebar with every section, ticking them off as you read
+- A switch between business, balanced and technical focus, plus light and dark themes
+- A 3-question multiple-choice quiz with an explanation for every option
 - Follow-up prompts to keep learning
 - Ready-to-post LinkedIn and X text and a downloadable share image
 - A "Built using GrowthX teach" footer
 
-Each lesson is one self-contained HTML file. It never calls a model, a server or analytics.
+Lessons teach ideas, not a recap of the chat: most learners never read the chat, so every lesson stands on its own.
+
+When the lesson is ready, teach says so with a link to click. In the Claude desktop app it opens in the app's built-in browser; in a terminal it opens in your browser.
+
+Each lesson is one self-contained HTML file. It never calls a model, a server on the internet or analytics.
 
 ## Your teach folder
 
 ```
 ~/growthx-teach/
 ├── index.html          # library of every lesson
-├── theme.css           # the look of every lesson; edit it to restyle
+├── theme.css           # colours and fonts of every lesson; edit it to restyle
 ├── profile.json        # your levels and focus per area
 └── lessons/
     └── 2026-10-05-safe-retries/
@@ -94,15 +99,16 @@ Each lesson is one self-contained HTML file. It never calls a model, a server or
         └── brief.md            # the context handed to the lesson designer
 ```
 
-The theme lives in your teach folder so the agent never has to write CSS, which keeps lessons fast and cheap to generate. Reinstalling never overwrites a theme you have edited; the latest default is saved next to it as `theme.default.css`.
+The theme lives in your teach folder so the agent never has to write CSS, which keeps lessons fast and cheap to generate. It holds only colours and fonts; layout ships with the skill and updates with it. Reinstalling never overwrites a theme you have edited; the latest default is saved next to it as `theme.default.css`.
 
 ## How it works
 
-1. **Level check**: reads your profile and what your agent already knows about you, then asks at most one question.
-2. **Brief**: the agent writes a short summary of the chat, without secrets or personal data.
-3. **Concept investigator** (a separate agent): confirms which concepts were really used and where, with evidence from code, tests or the chat.
+1. **Level check**: reads your profile and what your agent already knows about you, then asks at most one question in everyday words.
+2. **Brief**: the agent picks 2–3 concepts and writes a short brief, without secrets or personal data.
+3. **Concept finder** (a separate agent): confirms which concepts were really used, with evidence from code, tests or the chat.
 4. **Lesson designer** (another separate agent): sees only the brief and the concept map and writes `lesson.json`.
-5. **Validate and build**: `validate.mjs` checks the lesson; `build.sh` inlines your theme, the lesson and the renderer into one HTML file and refreshes the library.
+5. **Check and build**: `validate.mjs` enforces the rules (including 300 words per concept and no references back to the chat); `build.sh` inlines your theme, the layout, the lesson and the renderer into one HTML file and refreshes the library.
+6. **Hand-off**: the lesson opens (built-in browser in the desktop app via `serve.sh`, your browser in a terminal) and teach replies with a link.
 
 Keeping fact-finding and teaching in separate agents stops the lesson from inventing things about your work.
 
@@ -113,8 +119,8 @@ Keeping fact-finding and teaching in separate agents stops the lesson from inven
 skills/teach/
 ├── SKILL.md            # the orchestrator instructions
 ├── references/         # prompts and formats for each step
-├── assets/             # theme.css, lesson and library templates, renderer
-├── scripts/            # setup.sh, build.sh, validate.mjs
+├── assets/             # theme.css (tokens), base.css (layout), templates, renderer
+├── scripts/            # setup.sh, build.sh, serve.sh, validate.mjs
 └── examples/           # a sample lesson and concept map
 ```
 
