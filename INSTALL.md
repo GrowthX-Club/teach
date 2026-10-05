@@ -15,7 +15,7 @@ claude plugin marketplace add GrowthX-Club/teach
 claude plugin install teach@growthx
 ```
 
-If adding the marketplace fails because the repo is private, retry with the SSH URL, which uses the user's GitHub SSH key:
+If adding the marketplace fails with a network or access error, retry with the SSH URL:
 
 ```sh
 claude plugin marketplace add git@github.com:GrowthX-Club/teach.git
@@ -36,7 +36,7 @@ npx -y skills add GrowthX-Club/teach -g -y -a codex
 
 Replace `-a codex` with your agent's name if you are a different agent. Do not add `claude-code` here when the plugin from step 1 is installed.
 
-If it fails because the repo is private, retry with the SSH URL:
+If it fails with a network or access error, retry with the SSH URL:
 
 ```sh
 npx -y skills add git@github.com:GrowthX-Club/teach.git -g -y -a codex
