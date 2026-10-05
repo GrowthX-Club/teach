@@ -1,71 +1,97 @@
 ---
 name: teach
-description: Turn the current chat, project, or a named topic into a short, interactive lesson pitched at the learner's own level. Teaches the concepts behind the work with examples, not a recap of what was built. Use when the user types "teach", "teach <topic>", "teach me <topic>", or asks to learn or understand the ideas behind what they just did. Do not use for ordinary coding, writing docs, or one-line explanations.
+description: Turn the current chat, project, or a named topic into a short, interactive lesson pitched at the learner's own level. Teaches the concepts behind the work with everyday examples, never a recap of what was built. Use when the user types "teach", "teach <topic>", "teach me <topic>", or asks to learn or understand the ideas behind what they just did. Do not use for ordinary coding, writing docs, or one-line explanations.
 ---
 
 # teach
 
-`teach` alone is a complete request: teach the concepts behind this chat. `teach <topic>` teaches that topic, using this chat and project as examples when they are relevant.
+`teach` alone is a complete request: teach the concepts behind this chat. `teach <topic>` teaches that topic.
 
-Paths used below:
+**Who this is for:** mostly non-technical people. They usually have not read the chat closely, so nothing you show them may rely on it. Talk to them in plain, friendly words; never mention scripts, JSON, file formats, Node, validation, or folder paths unless they ask.
+
+Paths used below (never show these to the user):
 
 - `<skill>`: the directory that contains this `SKILL.md`. Never resolve it from the user's project.
-- `<home>`: `$TEACH_HOME` if set, otherwise `~/growthx-teach`. It holds `theme.css`, `profile.json`, `lessons/`, and the library page `index.html`.
+- `<home>`: `$TEACH_HOME` if set, otherwise `~/growthx-teach`. Everything teach makes lives here.
 
-Before anything else, run `sh <skill>/scripts/setup.sh`. It creates `<home>` on first use and prints its path; on later runs it changes nothing.
+## While you work
 
-## 1. Pick the subject
+Before anything else, run `sh <skill>/scripts/setup.sh` (it creates `<home>` on first use and changes nothing later).
+
+Give the user short, friendly progress lines and nothing else, for example:
+
+1. "Looking at what we worked on…"
+2. "Picking the ideas worth learning…"
+3. "Writing your lesson…"
+4. "Almost done…"
+
+## 1. Pick the concepts
 
 - `teach <topic>` → the topic is the subject.
 - bare `teach` → the subject is what this chat was about. If the chat has no real substance yet, ask the user what they want to learn and stop until they answer.
-- Name 2–4 candidate concepts the lesson should cover. A concept is an idea the user can reuse elsewhere (e.g. "idempotency", "vector search", "funnel conversion"), not a feature of their project.
+- Pick 2–3 **concepts**: ideas the user can reuse anywhere (e.g. "scheduling", "idempotency", "conversion funnels"), never features or events from this chat.
 
 ## 2. Set the learner's level
 
-Read [level-check](references/level-check.md) and follow it. It decides two dials, **depth** (1–4) and **lens** (`product`, `balanced`, `tech`), from `<home>/profile.json`, what you already know about the user (CLAUDE.md, AGENTS.md, memories), and this chat. Ask at most one question, then save the answer.
+Follow [level-check](references/level-check.md). It sets **depth** (how much they know) and **focus** (business, both, or technical), asking at most one question in everyday words, and saves the answer.
 
-## 3. Write the context brief
+## 3. Write the brief
 
-Create `<home>/lessons/<YYYY-MM-DD>-<slug>/` (`slug`: lowercase words joined by hyphens). Write `brief.md` there with:
+Create `<home>/lessons/<YYYY-MM-DD>-<slug>/` (`slug`: lowercase words joined by hyphens) and write `brief.md` there with:
 
 - the subject and candidate concepts
-- the learner's depth and lens, and one line on why
-- the parts of this chat that show those concepts at work: what the user tried, what broke, what decision was made. Summarise; do not paste the transcript
+- the learner's depth and focus
+- for each concept, one plain sentence on where it showed up in the user's work, written so it makes sense to someone who never saw the chat ("Your sale now switches on by itself at a set time"), never "the bug we fixed earlier"
 - the project root path, if a project is involved
 
 Never put secrets, tokens, credentials, customer data, or private personal details in the brief.
 
 ## 4. Run two separate agents
 
-Finding facts and designing a lesson are different jobs. Use the environment's subagent or delegation tool for each and give each a fresh context.
+Use the environment's subagent or delegation tool for each, with a fresh context.
 
-1. **Concept investigator** (skip when the subject is a pure topic with no chat or project material). Give it `brief.md`, read access to the project, [investigator](references/investigator.md) and [concept-map format](references/concept-map-format.md). It writes `concept-map.json` in the lesson folder.
-2. **Lesson designer**. Give it `brief.md`, `concept-map.json` if it exists, [designer](references/designer.md), [teaching method](references/teaching-method.md) and [lesson format](references/lesson-format.md). It writes `lesson.json` in the lesson folder. It must not read the project or the chat.
+1. **Concept finder** (skip for a pure topic with no chat or project material). Give it `brief.md`, read access to the project, [investigator](references/investigator.md) and [concept-map format](references/concept-map-format.md). It writes `concept-map.json` in the lesson folder.
+2. **Lesson designer**. Give it `brief.md`, `concept-map.json` if it exists, [designer](references/designer.md), [teaching method](references/teaching-method.md) and [lesson format](references/lesson-format.md). It writes `lesson.json`. It must not read the project or the chat.
 
-If no delegation tool exists, do the two passes yourself one after the other and say so in one line. Never merge them into a single pass.
+If no delegation tool exists, do the two passes yourself one after the other. Never merge them into one pass.
 
-## 5. Validate and build
+## 5. Check and build
+
+If `node` is available, run:
 
 ```sh
-node <skill>/scripts/validate.mjs <lesson-dir>/lesson.json <lesson-dir>/concept-map.json   # skip the map argument if there is none
-sh <skill>/scripts/build.sh <lesson-dir>
+node <skill>/scripts/validate.mjs <lesson-dir>/lesson.json <lesson-dir>/concept-map.json
 ```
 
-- If `node` is missing, skip validation and check `lesson.json` against [lesson format](references/lesson-format.md) yourself.
-- Send validation errors back to the designer (or fix them yourself if they are trivial). Rebuild until it passes.
-- `build.sh` writes one self-contained `index.html` into the lesson folder (theme, data and code inlined) and refreshes the library page `<home>/index.html`.
+(leave out the map if there is none). Send any problems back to the designer, or fix small ones yourself, until it passes. Without `node`, check `lesson.json` against [lesson format](references/lesson-format.md) yourself, especially the 300-word limit per concept. Say nothing to the user about this step.
+
+Then build:
+
+- **Terminal (Claude Code CLI, Codex CLI)**: `sh <skill>/scripts/build.sh --open <lesson-dir>`. This opens the lesson in the user's browser.
+- **Desktop app with a built-in browser tool** (for example the Claude desktop app's browser pane): `sh <skill>/scripts/build.sh <lesson-dir>`, then `sh <skill>/scripts/serve.sh <lesson-dir>`, and open the URL it prints in the built-in browser. Do not also open the real browser. If `serve.sh` fails, run `build.sh --open` instead.
+
+`build.sh` prints `LESSON_URL`, `LIBRARY_URL` and `OPENED=yes|no`.
 
 ## 6. Hand it over
 
-Open `<lesson-dir>/index.html` (`open` on macOS, `xdg-open` on Linux, `start` on Windows). Reply in at most three lines: the lesson title, the file path, and "Say `teach harder`, `teach easier`, `teach more product` or `teach more tech` to adjust."
+This step is required. Reply with exactly this shape, in plain words, and nothing else:
+
+> Your lesson on **<lesson title>** is built. [Click here to see it](<URL>)
+>
+> [See all your lessons](<LIBRARY_URL>)
+
+- `<URL>` is the localhost URL in the desktop app, otherwise `LESSON_URL`.
+- If the lesson did not open by itself (`OPENED=no` in a terminal), add: "If the link doesn't open, copy this into your browser's address bar:" followed by `LESSON_URL` in a code block.
+- Then one short line: "Want it simpler, deeper, more about the business, or more technical? Just say so."
 
 ## Follow-ups
 
-- `teach harder` / `teach easier` / `teach more product` / `teach more tech`: update the dial in `profile.json`, then rerun only the designer with the same brief and concept map, into the same folder.
-- New facts or a new subject: start again from step 1.
+- "simpler" / "easier", "deeper" / "harder", "more business", "more technical" (or `teach easier`, `teach harder`, `teach more product`, `teach more tech`): change the dial in `profile.json` as [level-check](references/level-check.md) describes, then rerun only the designer with the same brief and concept map, into the same folder, and hand it over again.
+- New subject: start again from step 1.
 
 ## Rules
 
-- Teach concepts with examples. The user's own work is at most one example per concept.
+- Teach concepts only. Never retell what happened in the chat. The user's own work appears at most as one self-contained sentence per concept.
+- Each concept stays under 300 words; 2–3 concepts per lesson.
 - Every claim about the user's own work needs evidence in `concept-map.json`. General knowledge needs none, but must be correct.
-- The finished page never calls a model, a server, or analytics. It is a local file.
+- The finished page never calls a model, a server on the internet, or analytics. It is a local file.

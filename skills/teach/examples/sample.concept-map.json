@@ -1,40 +1,34 @@
 {
-  "version": 1,
+  "version": 2,
   "subject": "Making payment webhooks safe to retry",
   "domain": "backend",
   "concepts": [
     {
       "id": "retries",
       "name": "Retries with backoff",
-      "why_it_matters": "Networks fail briefly all the time; retrying turns a temporary failure into a delay instead of a lost event",
-      "seen_in_work": [
-        {
-          "summary": "The payment provider re-sends a webhook when the handler does not answer within its timeout",
-          "evidence_ids": ["e1"]
-        }
-      ]
+      "why_it_matters": "Networks fail briefly all the time; retrying turns a temporary failure into a delay instead of a lost message",
+      "in_your_work": {
+        "summary": "The payment provider re-sent a payment notice because the app answered too slowly",
+        "evidence_ids": ["e1"]
+      }
     },
     {
       "id": "idempotency",
       "name": "Idempotency",
       "why_it_matters": "Retries are only safe if doing the same thing twice has the same effect as doing it once",
-      "seen_in_work": [
-        {
-          "summary": "The webhook handler now stores each event ID and skips events it has already processed",
-          "evidence_ids": ["e2", "e3"]
-        }
-      ]
+      "in_your_work": {
+        "summary": "The payment handler now remembers each notice and ignores repeats",
+        "evidence_ids": ["e2", "e3"]
+      }
     },
     {
       "id": "atomic-check",
-      "name": "Check and act atomically",
-      "why_it_matters": "A duplicate check done separately from the write still lets two simultaneous retries both pass",
-      "seen_in_work": [
-        {
-          "summary": "The event-ID insert and the order update run in one database transaction with a unique index",
-          "evidence_ids": ["e4"]
-        }
-      ]
+      "name": "Check and act in one step",
+      "why_it_matters": "A duplicate check done separately from the work still lets two simultaneous repeats both pass",
+      "in_your_work": {
+        "summary": "Saving the notice ID and updating the order now happen together in the database",
+        "evidence_ids": ["e4"]
+      }
     }
   ],
   "discarded": [

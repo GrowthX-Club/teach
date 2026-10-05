@@ -2,24 +2,22 @@
 
 ```json
 {
-  "version": 1,
-  "subject": "Retrying webhook deliveries",
+  "version": 2,
+  "subject": "Making payment webhooks safe to retry",
   "domain": "backend",
   "concepts": [
     {
       "id": "idempotency",
       "name": "Idempotency",
       "why_it_matters": "Retries are only safe when doing the same thing twice has the same effect as doing it once",
-      "seen_in_work": [
-        {
-          "summary": "The payment webhook handler skips events whose ID is already stored",
-          "evidence_ids": ["e1", "e2"]
-        }
-      ]
+      "in_your_work": {
+        "summary": "The payment handler now remembers each notice and ignores repeats",
+        "evidence_ids": ["e1", "e2"]
+      }
     }
   ],
   "discarded": [
-    { "detail": "Uses a date library for timestamps", "reason": "Does not change the mental model" }
+    { "detail": "Uses a date library for timestamps", "reason": "Not a reusable idea" }
   ],
   "uncertainties": [],
   "evidence": [
@@ -31,7 +29,6 @@
 
 Rules (checked by `validate.mjs`):
 
-- 2–4 concepts. Concept and evidence `id`s are lowercase words joined by hyphens, and unique.
-- `seen_in_work` may be empty for a concept the chat discussed but the project does not show.
-- Every `evidence_ids` entry exists in `evidence`.
+- 2–3 concepts. Concept and evidence `id`s are lowercase words joined by hyphens, and unique.
+- `in_your_work` is optional (leave it out for a concept the chat discussed but the work does not use). When present it has a `summary` and `evidence_ids` that exist in `evidence`.
 - `kind` is one of `chat`, `code`, `docs`, `test`, `runtime`.
