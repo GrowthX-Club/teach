@@ -305,7 +305,8 @@ pre.code { margin: 0; overflow-x: auto; background: var(--code-bg); color: var(-
 .sc-author > span:last-child { display: grid; }
 .sc-author b { font-size: 13.5px; }
 .sc-author span span { font-size: 12px; color: var(--muted); }
-.sc-avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font: 600 10.5px var(--sans); background: var(--hairline-2); color: var(--muted); }
+.sc-avatar { flex: none; width: 34px; height: 34px; border-radius: 50%; overflow: hidden; display: grid; place-items: end center; background: linear-gradient(160deg, color-mix(in srgb, var(--net) 22%, var(--card)), color-mix(in srgb, var(--net) 40%, var(--card))); }
+.sc-avatar svg { width: 100%; height: 100%; fill: color-mix(in srgb, var(--net) 55%, var(--card)); }
 .sc-post textarea { width: 100%; min-height: 120px; resize: none; overflow: hidden; font: 14.5px/1.55 var(--sans); color: var(--fg); background: none; border: 0; padding: 0 0 8px; outline: none; }
 .btn.sc-go { background: var(--net); border-color: var(--net); color: var(--net-fg); font-weight: 600; }
 .btn.sc-go:hover { background: var(--net); filter: brightness(1.1); }
