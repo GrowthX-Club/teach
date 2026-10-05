@@ -15,7 +15,6 @@ Teach the ideas behind the work so the learner can spot them anywhere. Never ret
 1. **Hook**: a question or situation anyone recognises. One or two sentences.
 2. **Goal**: what they will be able to explain, with a concrete verb (explain, spot, choose).
 3. **Concepts** (2–3), each under 300 words:
-   - a tagline they could repeat to a friend
    - a short explanation at their depth (about 60–120 words)
    - "why it matters" (`product`) and "how it works" (`tech`), 1–2 sentences each; the page shows them by focus
    - 2 examples: everyday, then industry

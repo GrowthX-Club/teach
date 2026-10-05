@@ -21,7 +21,6 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
     {
       "id": "idempotency",
       "name": "Idempotency",
-      "tagline": "Doing it twice has the same effect as doing it once.",
       "explain": "An action is **idempotent** when repeating it changes nothing after the first time...",
       "product": "Customers never see double charges or duplicate emails, even when the network misbehaves.",
       "tech": "Store a record keyed by the request ID and check it before acting.",
@@ -66,9 +65,9 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
 - `meta.domain` is a [catalogue](catalogue.json) area id. teach only covers tech and AI.
 - A concept whose `id` is in the catalogue must use the catalogue `name`. Concepts outside the catalogue are allowed but produce a warning.
 - `meta.slug`: lowercase words joined by hyphens. `meta.minutes`: 2–8. `meta.level.depth`: 1–4. `meta.level.lens`: `product`, `balanced` or `tech`.
-- `goal`, `hook`, and every concept's `name`, `tagline`, `explain`, `product` and `tech` are required.
+- `goal`, `hook`, and every concept's `name`, `explain`, `product` and `tech` are required. There is no tagline.
 - **2–3 concepts**, unique `id`s (lowercase, hyphens).
-- **Each concept is at most 300 words**, counting tagline, explain, product, tech, examples, visual text, `in_your_work` and pitfall. Code does not count.
+- **Each concept is at most 300 words**, counting explain, product, tech, examples, visual text, `in_your_work` and pitfall. Code does not count.
 - Exactly **2 examples** per concept, `kind` `everyday` or `industry`.
 - `in_your_work` is optional: **one sentence, at most 30 words**, with `evidence_ids` from the concept map. It must make sense to someone who never read the chat.
 - `visual` is optional: `{ "type": "flow", "title", "steps": 3–4 × { label, detail } }` or `{ "type": "compare", "title", "left": { "title", "points": 1–3 }, "right": { … } }`.

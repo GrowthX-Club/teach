@@ -51,6 +51,11 @@ if [ "$labels_ok" = true ]; then pass "depth labels match the level question eve
 
 if grep -q "run_in_background" "$skill/SKILL.md" && grep -q "Never hand the whole chain to a single agent" "$skill/SKILL.md" && [ "$(grep -c '^## [123]\. ' "$skill/references/agent-prompts.md")" -eq 3 ]; then pass "background mode chains one fresh agent per pass"; else fail "background mode chains one fresh agent per pass"; fi
 
+tag="$work/tag.json"
+node -e 'const l=require(process.argv[1]); l.concepts[0].tagline="A catchy line."; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$tag"
+if node "$skill/scripts/validate.mjs" "$tag" 2>"$work/err"; then fail "lesson with a tagline passed"; fi
+if grep -q "tagline is no longer used" "$work/err" && ! grep -q 'class="tagline"' "$skill/assets/app.js"; then pass "concepts have no tagline"; else fail "concepts have no tagline"; fi
+
 echo "build"
 export TEACH_HOME="$work/home with space"
 lesson="$TEACH_HOME/lessons/2026-01-01-sample"

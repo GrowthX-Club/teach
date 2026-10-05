@@ -152,7 +152,6 @@
     return (
       '<section class="block" id="c-' + esc(c.id) + '" data-nav="' + esc(plain(c.name)) + '">' +
       '<div class="sec-head"><span class="sec-num">' + String(i + 1).padStart(2, "0") + "</span><h2>" + rich(c.name) + "</h2></div>" +
-      '<p class="tagline">' + rich(c.tagline) + "</p>" +
       '<div class="prose">' + paras(c.explain) + "</div>" +
       '<div class="lens-blocks">' +
       '<div class="lens-card" data-lens-block="product"><span class="eyebrow">Why it matters</span>' + paras(c.product) + "</div>" +

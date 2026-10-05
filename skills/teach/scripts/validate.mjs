@@ -88,7 +88,7 @@ export function validateConceptMap(map, cat = loadCatalogue()) {
 }
 
 function conceptWords(c) {
-  let n = words(c.tagline) + words(c.explain) + words(c.product) + words(c.tech) + words(c.pitfall);
+  let n = words(c.explain) + words(c.product) + words(c.tech) + words(c.pitfall);
   for (const e of c.examples || []) n += words(e.title) + words(e.text);
   if (c.in_your_work) n += words(c.in_your_work.text);
   const v = c.visual;
@@ -125,7 +125,8 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     if (!ID.test(c.id || "")) err(`${at}.id must be lowercase-hyphenated`);
     if (conceptIds.has(c.id)) err(`duplicate concept id "${c.id}"`);
     conceptIds.add(c.id);
-    for (const k of ["name", "tagline", "explain", "product", "tech"]) if (!isText(c[k])) err(`${at}.${k} is required`);
+    for (const k of ["name", "explain", "product", "tech"]) if (!isText(c[k])) err(`${at}.${k} is required`);
+    if (c.tagline !== undefined) err(`${at}.tagline is no longer used; remove it`);
     if (c.id && cat.concepts.has(c.id) && isText(c.name) && c.name !== cat.concepts.get(c.id).name) err(`${at}.name must be the catalogue name "${cat.concepts.get(c.id).name}" so concepts are named the same in every lesson`);
     if (c.id && !cat.concepts.has(c.id)) warnings.push(`${at} is not in the catalogue; use a catalogue id if one fits, or add the concept to references/catalogue.json`);
 
@@ -199,7 +200,7 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
   if (DASHES.test(text)) err("contains em or en dashes; use a period, comma, colon or parentheses instead (humanizer section 8)");
   if (CURLY_DOUBLE.test(text)) err("contains curly double quotes; use straight quotes");
   for (const c of concepts) {
-    const bold = [c.tagline, c.explain, c.product, c.tech, c.pitfall].join(" ").match(/\*\*[^*]+\*\*/g) || [];
+    const bold = [c.explain, c.product, c.tech, c.pitfall].join(" ").match(/\*\*[^*]+\*\*/g) || [];
     if (bold.length > 2) err(`concept "${c.id}" bolds ${bold.length} phrases; bold only the concept's own term (humanizer section 19)`);
   }
   // Only IDs containing a digit (e1, code-2) are distinctive enough to detect without false positives.
