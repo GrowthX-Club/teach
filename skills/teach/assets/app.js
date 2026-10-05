@@ -3,12 +3,13 @@
   "use strict";
 
   var REPO_URL = "https://github.com/GrowthX-Club/teach";
-  var DEPTH_LABELS = { 1: "New to this", 2: "Knows the basics", 3: "Builds with it", 4: "Goes deep" };
+  var DEPTH_LABELS = { 1: "I'm new to this", 2: "I know the basics", 3: "I use it at work", 4: "I know it well" };
   var KIND_LABELS = { everyday: "Everyday", industry: "In the industry" };
+  // Short forms of the focus question's answers (references/level-check.md); the full answer is the tooltip.
   var LENSES = [
-    ["product", "Product"],
-    ["balanced", "Balanced"],
-    ["tech", "Tech"]
+    ["product", "Business", "What it means for the business"],
+    ["balanced", "Both", "A bit of both"],
+    ["tech", "Under the hood", "How it works under the hood"]
   ];
 
   var lesson;
@@ -91,7 +92,7 @@
   // ---------- sections ----------
   function topbar() {
     var lensButtons = LENSES.map(function (l) {
-      return '<button type="button" data-lens="' + l[0] + '">' + l[1] + "</button>";
+      return '<button type="button" data-lens="' + l[0] + '" title="' + l[2] + '">' + l[1] + "</button>";
     }).join("");
     return (
       '<header class="topbar"><div class="wrap">' +
