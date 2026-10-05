@@ -111,6 +111,13 @@ section.block { padding-block: 40px; border-top: 1px solid var(--hairline); disp
 .sub { display: grid; gap: 8px; }
 .sub h3 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
 .sub .prose { font-size: 16.5px; }
+.videos { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.videos li { border: 1px solid var(--hairline); border-radius: var(--radius); background: var(--card); padding: 14px 16px; display: grid; gap: 4px; }
+.video-link { display: flex; align-items: baseline; gap: 10px; text-decoration: none; font-weight: 650; }
+.video-link:hover .video-title { text-decoration: underline; }
+.video-start { flex: none; font: 600 13px var(--mono); color: var(--brand-fg); background: var(--red); border-radius: 6px; padding: 2px 7px; }
+.video-meta { font: 12.5px var(--mono); color: var(--muted); }
+.video-why { color: var(--muted); font-size: 15px; }
 .mistakes { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 68ch; }
 .mistakes li::marker { color: var(--red); }
 

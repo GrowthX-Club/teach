@@ -32,7 +32,7 @@ const NOT_X_BUT_Y = /\b(not just|isn't just|is not just|not only|it's not about)
 const DASHES = /[\u2014\u2013]|\s--\s/;
 const CURLY_DOUBLE = /[\u201c\u201d]/;
 // Keys whose values are not shown as prose: identifiers, references, code and the prompts to copy.
-const NOT_PROSE = new Set(["evidence_ids", "code", "prompt", "slug", "id", "concept_id", "kind", "created", "domain", "lens", "correct", "depth", "minutes", "version", "language"]);
+const NOT_PROSE = new Set(["videos", "evidence_ids", "code", "prompt", "slug", "id", "concept_id", "kind", "created", "domain", "lens", "correct", "depth", "minutes", "version", "language"]);
 
 // teach only teaches tech and AI. The catalogue lists the areas and the standard concepts.
 const CATALOGUE_PATH = fileURLToPath(new URL("../references/catalogue.json", import.meta.url));
@@ -102,7 +102,7 @@ export function validateConceptMap(map, cat = loadCatalogue()) {
 }
 
 function conceptWords(c) {
-  let n = words(c.story) + words(c.explain) + words(c.real_world) + (c.pitfalls || []).reduce((t, p) => t + words(p), 0);
+  let n = words(c.story) + words(c.explain) + words(c.real_world) + words(c.fun_fact) + (c.pitfalls || []).reduce((t, p) => t + words(p), 0);
   if (c.in_your_work) n += words(c.in_your_work.text);
   const v = c.visual;
   if (v) {
@@ -148,6 +148,7 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     }
     if (!isText(c.real_world)) err(`${at}.real_world is required: how a well-known company or product uses the idea`);
     else if (words(c.real_world) < 40 || words(c.real_world) > 100) err(`${at}.real_world has ${words(c.real_world)} words; elaborate it in 40-100 words`);
+    if (c.fun_fact !== undefined && (!isText(c.fun_fact) || words(c.fun_fact) > 50)) err(`${at}.fun_fact must be at most 50 words (or left out)`);
     const pitfalls = isList(c.pitfalls) ? c.pitfalls : [];
     if (pitfalls.length < 2 || pitfalls.length > 3) err(`${at}.pitfalls needs 2-3 common mistakes`);
     for (const [j, p] of pitfalls.entries()) if (!isText(p) || words(p) > 35) err(`${at}.pitfalls[${j}] must be a sentence or two of at most 35 words`);
@@ -160,7 +161,12 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
       if (!isText(w.text)) err(`${at}.in_your_work.text is required`);
       else if (words(w.text) < 40 || words(w.text) > 100) err(`${at}.in_your_work has ${words(w.text)} words; elaborate it in 40-100 words`);
       if (!isList(w.evidence_ids) || w.evidence_ids.length === 0) err(`${at}.in_your_work needs evidence_ids`);
-      else if (evidence) for (const id of w.evidence_ids) if (!evidence.has(id)) err(`${at}.in_your_work cites evidence "${id}" missing from the concept map`);
+      else if (!map) err(`${at}.in_your_work needs a concept map: only write it when the chat and project show it`);
+      else {
+        for (const id of w.evidence_ids) if (!evidence.has(id)) err(`${at}.in_your_work cites evidence "${id}" missing from the concept map`);
+        const kinds = w.evidence_ids.map((id) => (map.evidence || []).find((e) => e.id === id)).filter(Boolean).map((e) => e.kind);
+        if (!kinds.includes("chat")) err(`${at}.in_your_work must cite at least one "chat" evidence: it has to come from this session, not from guessing about the project`);
+      }
     }
 
     const v = c.visual;
@@ -201,6 +207,25 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     if (isText(m.title) && m.title.toLowerCase().replace(/\*\*/g, "").includes(t)) err(`meta.title uses the jargon "${g.term}"; make the title an analogy with no jargon`);
   }
 
+  // Videos: optional annex of YouTube links that start at the exact moment.
+  const videos = lesson.videos === undefined ? [] : lesson.videos;
+  if (!isList(videos) || videos.length > 4) err("videos must be a list of at most 4");
+  for (const [i, vid] of (isList(videos) ? videos : []).entries()) {
+    const at = `videos[${i}]`;
+    for (const k of ["title", "channel", "url", "start", "why"]) if (!isText(vid[k])) err(`${at}.${k} is required`);
+    if (vid.concept_id && !conceptIds.has(vid.concept_id)) err(`${at} refers to unknown concept "${vid.concept_id}"`);
+    const m2 = String(vid.url || "").match(/^https:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=([\w-]{11})(?:&[^#]*)?|youtu\.be\/([\w-]{11})\?(?:[^#]*))$/);
+    const t = String(vid.url || "").match(/[?&]t=(\d+)s?(?:&|$)/);
+    if (!m2) err(`${at}.url must be a youtube.com/watch?v=… or youtu.be/… link`);
+    else if (!t) err(`${at}.url must start at the right moment with a t= parameter in seconds`);
+    else {
+      const parts = String(vid.start || "").split(":").map(Number);
+      const secs = parts.reduce((a, b) => a * 60 + b, 0);
+      if (!/^\d{1,2}(:\d{2}){1,2}$/.test(vid.start || "") || secs !== Number(t[1])) err(`${at}.start "${vid.start}" must match t=${t[1]} (as m:ss or h:mm:ss)`);
+    }
+    if (isText(vid.why) && words(vid.why) > 25) err(`${at}.why must be at most 25 words`);
+  }
+
   const quiz = isList(lesson.quiz) ? lesson.quiz : [];
   if (quiz.length !== 3) err("needs exactly 3 quiz questions");
   for (const [i, q] of quiz.entries()) {
@@ -234,7 +259,7 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
   if (DASHES.test(text)) err("contains em or en dashes; use a period, comma, colon or parentheses instead (humanizer section 8)");
   if (CURLY_DOUBLE.test(text)) err("contains curly double quotes; use straight quotes");
   for (const c of concepts) {
-    const bold = [c.story, c.explain, c.real_world].concat(c.pitfalls || []).join(" ").match(/\*\*[^*]+\*\*/g) || [];
+    const bold = [c.story, c.explain, c.real_world, c.fun_fact].concat(c.pitfalls || []).join(" ").match(/\*\*[^*]+\*\*/g) || [];
     if (bold.length > 2) err(`concept "${c.id}" bolds ${bold.length} phrases; bold only the concept's own term (humanizer section 19)`);
   }
   // Only IDs containing a digit (e1, code-2) are distinctive enough to detect without false positives.

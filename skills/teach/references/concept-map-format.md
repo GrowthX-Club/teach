@@ -31,5 +31,5 @@ Rules (checked by `validate.mjs`):
 
 - `domain` is a [catalogue](catalogue.json) area id.
 - 2–3 concepts. Concept and evidence `id`s are lowercase words joined by hyphens, and unique. Use catalogue ids and names wherever they fit.
-- `in_your_work` is optional (leave it out for a concept the chat discussed but the work does not use). When present it has a `summary` and `evidence_ids` that exist in `evidence`.
+- `in_your_work` is optional and only for what this session shows: leave it out unless the chat shows the learner working on it. When present it has a `summary` and `evidence_ids` that exist in `evidence`, including at least one `chat` evidence.
 - `kind` is one of `chat`, `code`, `docs`, `test`, `runtime`.

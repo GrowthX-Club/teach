@@ -22,7 +22,8 @@
         "summary": "The payment handler now remembers each notice and ignores repeats",
         "evidence_ids": [
           "e2",
-          "e3"
+          "e3",
+          "e5"
         ]
       }
     },
@@ -33,7 +34,8 @@
       "in_your_work": {
         "summary": "Saving the notice ID and updating the order now happen together in the database",
         "evidence_ids": [
-          "e4"
+          "e4",
+          "e6"
         ]
       }
     }
@@ -69,6 +71,18 @@
       "kind": "code",
       "source": "src/webhooks/payment.ts:recordEvent",
       "supports": "Insert and update share one transaction; event_id has a unique index"
+    },
+    {
+      "id": "e5",
+      "kind": "chat",
+      "source": "chat",
+      "supports": "User asked for the payment handler to ignore payment messages it had already processed"
+    },
+    {
+      "id": "e6",
+      "kind": "chat",
+      "source": "chat",
+      "supports": "User asked what happens if two copies of the same payment message arrive at once"
     }
   ]
 }

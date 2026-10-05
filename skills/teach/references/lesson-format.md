@@ -67,7 +67,7 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
 1. **Story**: a short, concrete situation that sets up the problem before the idea has a name.
 2. **The concept's name** as the heading, then the explanation in an "Analogy" card: start from an analogy or a real-life example, then name the concept and say exactly what it is.
 3. **Diagram**: drawn by the page in a hand-sketched notebook style.
-4. **In the real world**, **In your work** (when there is one) and **Common mistakes**, each as a plain subheading with text or a bullet list underneath.
+4. **In the real world**, **In your work** (only when this session shows it), **Did you know?** (optional) and **Common mistakes**, each as a plain subheading with text or a bullet list underneath.
 
 There is no code anywhere in a lesson and no share image.
 
@@ -86,9 +86,11 @@ Jargon anywhere in the lesson is underlined; hovering or tapping it shows its gl
 - **Each concept is at most 450 words**, counting story, explain, visual text, `real_world`, `in_your_work` and pitfalls.
 - `visual` is required: `{ "type": "flow", "title", "steps": 3–4 × { label, detail } }` or `{ "type": "compare", "title", "left": { "title", "tone"?, "points": 1–3 }, "right": { … } }`. `tone` is `good`, `bad` or `neutral`. Labels at most 6 words, details and points at most 10.
 - `real_world`: **40–100 words** on how a well-known company or product uses the idea, told as a small story with concrete details.
-- `in_your_work` (when the concept map has one): **40–100 words** on where the idea shows up in the learner's own work and what it changed, with `evidence_ids` from the concept map. It must make sense to someone who never read the chat.
+- `in_your_work` (only when the concept map has one): **40–100 words** on where the idea shows up in what the learner did in this session and what it changed. Its `evidence_ids` come from the concept map and include at least one `chat` evidence. It must make sense to someone who never read the chat. No concept map, no `in_your_work`.
+- `fun_fact` is optional: at most 50 words, a genuinely interesting, verifiable fact. Leave it out rather than force one.
 - `pitfalls`: 2–3 common mistakes, each at most 35 words, written to the learner: what people get wrong and why it bites.
 - `glossary`: 3–12 entries covering every piece of jargon a newcomer might not know. Each `term` appears in the lesson's visible text; each `tip` is at most 30 words and explains with an analogy or everyday comparison.
+- `videos` is optional, added by the video finder: at most 4 items of `{ concept_id, title, channel, url, start, why }`. `url` is a YouTube link with `t=<seconds>`, `start` shows the same moment as `m:ss` or `h:mm:ss`, `why` is at most 25 words. Only videos and timestamps checked in this run.
 - Exactly **3 quiz** questions, each with 3–4 options, exactly one `correct: true`, and a `why` on every option.
 - 2–3 `next` items.
 - `share.x` at most 260 characters. `share.linkedin` at most 1300 characters.

@@ -54,6 +54,20 @@ node <skill>/scripts/validate.mjs <lesson-dir>/lesson.json <lesson-dir>/concept-
 Reply with one line: the validator's result.
 ```
 
+## 4. Video finder
+
+Needs web search and the ability to open web pages. Skip it where those aren't available.
+
+```text
+You are the video finder for the teach skill. Read and follow exactly:
+- <skill>/references/video-finder.md
+
+<skill> = <skill>
+Lesson folder: <lesson-dir>
+Only add the "videos" list to lesson.json; change nothing else. Do not read the brief, the project or any chat.
+Reply with one line: how many videos you kept.
+```
+
 ## Re-running for a follow-up
 
 For "simpler", "deeper", "more business" or "more technical", update `brief.md` first, then run prompts 2 and 3 again into the same folder.
