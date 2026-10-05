@@ -288,20 +288,38 @@
     );
   }
 
+  // Social logos (Simple Icons, CC0). Both use currentColor.
+  var LOGO_LI = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>';
+  var LOGO_X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></svg>';
+  // Every post ends with a link to teach, so readers can make their own lessons.
+  function withRepoLink(text) {
+    text = String(text || "").replace(/\s+$/, "");
+    return text.indexOf(REPO_URL.replace(/^https:\/\//, "")) >= 0 ? text : text + "\n\n" + REPO_URL;
+  }
+  function shareCard(id, cls, logo, name, sub, text, open) {
+    return (
+      '<article class="share-card ' + cls + '">' +
+      '<header class="sc-head"><span class="sc-logo">' + logo + '</span><span class="sc-title"><b>' + name + "</b><span>" + sub + "</span></span>" +
+      '<span class="count" id="' + id + '-count"></span></header>' +
+      '<div class="sc-post"><div class="sc-author"><span class="sc-avatar" aria-hidden="true">You</span><span><b>You</b><span>Now · your post</span></span></div>' +
+      '<textarea id="' + id + '" aria-label="' + name + ' post" spellcheck="true">' + esc(withRepoLink(text)) + "</textarea></div>" +
+      '<div class="btn-row"><a class="btn sc-go" id="' + id + '-open" target="_blank" rel="noopener">' + logo + open + '</a><button type="button" class="btn" data-copy="' + id + '">Copy text</button></div>' +
+      "</article>"
+    );
+  }
+
   function shareSection() {
     var s = lesson.share || {};
     if (!s.linkedin && !s.x) return "";
     return (
       '<section class="block" id="share" data-nav="Share">' +
       '<div class="sec-head"><span class="sec-num">Share</span><h2>Tell people what you learned</h2></div>' +
+      '<p class="muted">Two ready-made posts. Edit them as you like, then post or copy.</p>' +
       '<div class="share-grid">' +
-      '<div class="share-card"><span class="eyebrow">LinkedIn</span><textarea id="share-li" aria-label="LinkedIn post">' + esc(s.linkedin) + "</textarea>" +
-      '<div class="btn-row"><button type="button" class="btn" data-copy="share-li">Copy</button><a class="btn" id="open-li" target="_blank" rel="noopener">Open LinkedIn</a></div></div>' +
-      '<div class="share-card"><span class="eyebrow">X</span><textarea id="share-x" aria-label="X post">' + esc(s.x) + "</textarea>" +
-      '<span class="count" id="x-count"></span>' +
-      '<div class="btn-row"><button type="button" class="btn" data-copy="share-x">Copy</button><a class="btn" id="open-x" target="_blank" rel="noopener">Post on X</a></div></div>' +
+      (s.linkedin ? shareCard("share-li", "li", LOGO_LI, "LinkedIn", "Post to your network", s.linkedin, "Post on LinkedIn") : "") +
+      (s.x ? shareCard("share-x", "x", LOGO_X, "X", "Post to your followers", s.x, "Post on X") : "") +
       "</div>" +
-
+      '<p class="share-repo">Make lessons like this from your own chats: <a href="' + REPO_URL + '" target="_blank" rel="noopener">github.com/GrowthX-Club/teach</a></p>' +
       "</section>"
     );
   }
@@ -453,20 +471,27 @@
       copy(el.value, el);
     });
   });
-  var xBox = document.getElementById("share-x");
-  var liBox = document.getElementById("share-li");
-  function updateShareLinks() {
-    if (xBox) {
-      document.getElementById("x-count").textContent = xBox.value.length + " / 280";
-      document.getElementById("open-x").href = "https://x.com/intent/post?text=" + encodeURIComponent(xBox.value);
+  // X counts every link as 23 characters.
+  function xLength(t) { return t.replace(/https?:\/\/\S+/g, "x".repeat(23)).length; }
+  function fit(el) { el.style.height = "auto"; el.style.height = el.scrollHeight + 2 + "px"; }
+  [
+    { id: "share-li", limit: 3000, len: function (t) { return t.length; }, url: function (t) { return "https://www.linkedin.com/feed/?shareActive=true&text=" + encodeURIComponent(t); } },
+    { id: "share-x", limit: 280, len: xLength, url: function (t) { return "https://x.com/intent/post?text=" + encodeURIComponent(t); } },
+  ].forEach(function (p) {
+    var box = document.getElementById(p.id);
+    if (!box) return;
+    var count = document.getElementById(p.id + "-count"), open = document.getElementById(p.id + "-open");
+    function update() {
+      var n = p.len(box.value);
+      count.textContent = n + " / " + p.limit;
+      count.classList.toggle("over", n > p.limit);
+      open.href = p.url(box.value);
+      fit(box);
     }
-    if (liBox) {
-      document.getElementById("open-li").href = "https://www.linkedin.com/feed/?shareActive=true&text=" + encodeURIComponent(liBox.value);
-    }
-  }
-  if (xBox) xBox.addEventListener("input", updateShareLinks);
-  if (liBox) liBox.addEventListener("input", updateShareLinks);
-  updateShareLinks();
+    box.addEventListener("input", update);
+    update();
+    addEventListener("load", function () { fit(box); });
+  });
 
   // ---------- bespoke animations ----------
   var THEME_VARS = ["--bg", "--bg-2", "--fg", "--muted", "--card", "--card-2", "--hairline", "--hairline-2", "--glass", "--glass-2", "--brand", "--brand-fg", "--green", "--green-bg", "--red", "--red-bg", "--amber", "--amber-bg", "--violet", "--sans", "--mono"];

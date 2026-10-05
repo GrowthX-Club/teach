@@ -283,9 +283,35 @@ pre.code { margin: 0; overflow-x: auto; background: var(--code-bg); color: var(-
 .next-list { display: grid; gap: 10px; }
 .next-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--hairline); border-radius: var(--radius); padding: 12px 16px; background: var(--card); flex-wrap: wrap; }
 .next-item > div { min-width: 0; display: grid; gap: 2px; }
-.share-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.share-card { border: 1px solid var(--hairline); border-radius: var(--radius); padding: 14px 16px; background: var(--card); display: grid; gap: 10px; min-width: 0; align-content: start; }
-.share-card textarea { width: 100%; min-height: 150px; resize: vertical; font: 14px/1.5 var(--sans); color: var(--fg); background: var(--bg-2); border: 1px solid var(--hairline-2); border-radius: var(--radius-sm); padding: 10px 12px; }
+.share-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+/* Share cards look like a post on each network: logo header, author line, editable post. */
+.share-card { --net: #0a66c2; --net-fg: #fff; border: 1px solid var(--hairline); border-top: 4px solid var(--net); border-radius: var(--radius); padding: 14px 16px 16px; background: var(--card); display: grid; gap: 12px; min-width: 0; align-content: start; }
+.share-card.x { --net: #000; --net-fg: #fff; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .share-card.x { --net: #fff; --net-fg: #000; } }
+:root[data-theme="dark"] .share-card.x { --net: #fff; --net-fg: #000; }
+.sc-head { display: flex; align-items: center; gap: 10px; }
+.sc-logo { flex: none; width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; background: var(--net); color: var(--net-fg); }
+.share-card.li .sc-logo { background: none; color: var(--net); }
+.sc-logo svg { width: 20px; height: 20px; }
+.share-card.li .sc-logo svg { width: 32px; height: 32px; }
+.sc-title { display: grid; line-height: 1.25; min-width: 0; }
+.sc-title b { font-size: 16px; }
+.sc-title span { font-size: 12.5px; color: var(--muted); }
+.sc-head .count { margin-left: auto; }
+.count.over { color: var(--red); font-weight: 600; }
+.sc-post { border: 1px solid var(--hairline-2); border-radius: var(--radius-sm); background: var(--bg-2); padding: 12px 12px 4px; display: grid; gap: 8px; transition: border-color 0.15s, box-shadow 0.15s; }
+.sc-post:focus-within { border-color: var(--net); box-shadow: 0 0 0 3px color-mix(in srgb, var(--net) 18%, transparent); }
+.sc-author { display: flex; align-items: center; gap: 8px; line-height: 1.2; }
+.sc-author > span:last-child { display: grid; }
+.sc-author b { font-size: 13.5px; }
+.sc-author span span { font-size: 12px; color: var(--muted); }
+.sc-avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font: 600 10.5px var(--sans); background: var(--hairline-2); color: var(--muted); }
+.sc-post textarea { width: 100%; min-height: 120px; resize: none; overflow: hidden; font: 14.5px/1.55 var(--sans); color: var(--fg); background: none; border: 0; padding: 0 0 8px; outline: none; }
+.btn.sc-go { background: var(--net); border-color: var(--net); color: var(--net-fg); font-weight: 600; }
+.btn.sc-go:hover { background: var(--net); filter: brightness(1.1); }
+.btn.sc-go svg { width: 15px; height: 15px; }
+.share-repo { margin-top: 14px; font-size: 14px; color: var(--muted); }
+.share-repo a { color: var(--fg); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .share-image { display: grid; gap: 10px; }
 .share-image canvas { width: 100%; height: auto; border-radius: var(--radius); border: 1px solid var(--hairline); }
 .count { font: 12px var(--mono); color: var(--muted); }
