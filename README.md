@@ -35,10 +35,16 @@ Needs Node.js. Installs for Codex, Claude Code and other agents that read skills
 npx skills add GrowthX-Club/teach -g
 ```
 
-### From a clone
+### From the terminal
 
 ```sh
-git clone git@github.com:GrowthX-Club/teach.git
+curl -fsSL https://raw.githubusercontent.com/GrowthX-Club/teach/main/install.sh | sh
+```
+
+Or from a clone:
+
+```sh
+git clone https://github.com/GrowthX-Club/teach.git
 cd teach
 sh install.sh
 ```
@@ -47,7 +53,6 @@ The installer copies the skill to `~/.claude/skills/teach` and/or `~/.agents/ski
 
 ### Notes
 
-- While the repo is private, every method needs your GitHub access (SSH key or `gh auth login`). [INSTALL.md](INSTALL.md) has the SSH variants.
 - Your teach folder, `~/growthx-teach/` (override with `TEACH_HOME`), is created the first time you type `teach`, whichever way you installed.
 - Requirements: macOS, Linux or WSL (Git Bash on Windows) with `sh`, `sed` and `awk`. Node.js is optional; when present it validates every lesson before it is built.
 
