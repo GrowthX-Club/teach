@@ -120,7 +120,7 @@ node -e 'const l=require(process.argv[1]); l.quiz.forEach(q=>{ const r=q.options
 node "$skill/scripts/validate.mjs" "$easy" "$skill/examples/sample.concept-map.json" 2>"$work/err" >/dev/null || true
 if grep -q "correct option is much longer" "$work/err" && grep -q "easy-to-rule-out extreme" "$work/err" && grep -q "same position in every quiz question" "$work/err"; then pass "quizzes can't be guessed from length, extremes or position"; else fail "quizzes can't be guessed from length, extremes or position"; fi
 
-if grep -q "Ask about this" "$skill/assets/app.js" && grep -q "Question about my GrowthX teach lesson" "$skill/assets/app.js" && grep -q "Question about my GrowthX teach lesson" "$skill/SKILL.md" && grep -q 'showCoach("terms"' "$skill/assets/app.js" && grep -q 'showCoach("ask"' "$skill/assets/app.js" && grep -q 'class="fact"' "$skill/assets/app.js"; then pass "select-to-ask, one-time hints and the did-you-know card are on the page"; else fail "select-to-ask, one-time hints and the did-you-know card are on the page"; fi
+if grep -q "Ask about this" "$skill/assets/app.js" && grep -q "tutor-fab" "$skill/assets/app.js" && grep -q "mark.className = \"asked\"" "$skill/assets/app.js" && grep -q "Question about my GrowthX teach lesson" "$skill/SKILL.md" && grep -q 'showCoach("terms"' "$skill/assets/app.js" && grep -q 'showCoach("ask"' "$skill/assets/app.js" && grep -q 'class="fact"' "$skill/assets/app.js"; then pass "lesson tutor, marked passages, one-time hints and the did-you-know card are on the page"; else fail "lesson tutor, marked passages, one-time hints and the did-you-know card are on the page"; fi
 
 guess="$work/guess-map.json"
 node -e 'const m=require(process.argv[1]); m.evidence=m.evidence.filter(e=>e.kind!=="chat"); m.concepts.forEach(c=>{ if(c.in_your_work) c.in_your_work.evidence_ids=c.in_your_work.evidence_ids.filter(id=>m.evidence.some(e=>e.id===id)); }); console.log(JSON.stringify(m))' "$skill/examples/sample.concept-map.json" > "$guess"
@@ -167,6 +167,32 @@ code_short=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "X-Teach-Token: $
 if [ "$code_none" = 403 ] && [ "$code_origin" = 403 ] && [ "$code_short" = 400 ]; then pass "playground refuses requests without its key, from other sites, or with no real transcript"; else fail "playground refuses requests without its key, from other sites, or with no real transcript ($code_none $code_origin $code_short)"; fi
 if [ "$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$PGPORT/lessons/x/brief.md")" = 404 ] && [ "$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$PGPORT/profile.json")" = 404 ]; then pass "playground never serves briefs or the profile"; else fail "playground never serves briefs or the profile"; fi
 kill $pg_pid 2>/dev/null || true
+
+echo "lesson server"
+ls_home="$work/ls home"
+mkdir -p "$ls_home/lessons/2026-01-01-demo"
+cp "$skill/examples/sample.lesson.json" "$ls_home/lessons/2026-01-01-demo/lesson.json"
+echo "secret brief" > "$ls_home/lessons/2026-01-01-demo/brief.md"
+TEACH_HOME="$ls_home" sh "$skill/scripts/build.sh" "$ls_home/lessons/2026-01-01-demo" >/dev/null
+LSPORT=8758
+node "$skill/scripts/lesson-server.mjs" --port $LSPORT --home "$ls_home" > "$work/ls.log" 2>&1 &
+ls_pid=$!
+i=0; while [ $i -lt 30 ] && ! grep -q LESSON_SERVER "$work/ls.log"; do sleep 0.2; i=$((i+1)); done
+b="http://localhost:$LSPORT"
+h_page=$(curl -s -o /dev/null -w "%{http_code}" "$b/lessons/2026-01-01-demo/index.html")
+h_brief=$(curl -s -o /dev/null -w "%{http_code}" "$b/lessons/2026-01-01-demo/brief.md")
+h_q=$(curl -s -o /dev/null -w "%{http_code}" "$b/lessons/2026-01-01-demo/questions.json")
+h_noheader=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" -d '{"lesson":"2026-01-01-demo","question":"hi"}' "$b/api/ask")
+h_origin=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "X-Teach: 1" -H "Origin: https://evil.example" -H "Content-Type: application/json" -d '{"lesson":"2026-01-01-demo","question":"hi"}' "$b/api/ask")
+h_list=$(curl -s -H "X-Teach: 1" "$b/api/questions?lesson=2026-01-01-demo")
+h_bad=$(curl -s -o /dev/null -w "%{http_code}" -H "X-Teach: 1" "$b/api/questions?lesson=../../etc")
+if [ "$h_page" = 200 ] && [ "$h_brief" = 404 ] && [ "$h_q" = 404 ] && [ "$h_noheader" = 403 ] && [ "$h_origin" = 403 ] && [ "$h_list" = '{"questions":[]}' ] && [ "$h_bad" = 404 ]; then pass "lesson server serves lessons, hides private files, and only answers its own pages"; else fail "lesson server serves lessons, hides private files, and only answers its own pages ($h_page $h_brief $h_q $h_noheader $h_origin $h_list $h_bad)"; fi
+kill $ls_pid 2>/dev/null || true
+first=$(TEACH_HOME="$ls_home" sh "$skill/scripts/serve.sh" "$ls_home/lessons/2026-01-01-demo")
+again=$(TEACH_HOME="$ls_home" sh "$skill/scripts/serve.sh" "$ls_home/lessons/2026-01-01-demo")
+if [ -n "$first" ] && [ "$first" = "$again" ] && curl -s "$first" | grep -q "Built using GrowthX"; then pass "serve.sh starts the lesson server once and reuses it"; else fail "serve.sh starts the lesson server once and reuses it ($first / $again)"; fi
+port=$(echo "$first" | sed -n "s|http://localhost:\([0-9]*\)/.*|\1|p")
+[ -n "$port" ] && pkill -f "lesson-server.mjs --port $port " 2>/dev/null || true
 
 echo "first-run setup"
 fresh="$work/fresh"
