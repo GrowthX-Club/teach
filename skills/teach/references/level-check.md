@@ -25,17 +25,18 @@ The lesson page's focus switch shows short forms of these answers: Business, Bot
 
 ## Procedure
 
+**Always ask both questions, for every lesson**, even when the profile already has answers. Never assume and never start building before the user has answered.
+
 1. Read `<home>/profile.json`.
-2. If it has a depth for this area updated in the last 30 days, and a lens, use them without asking. Tell the user in one plain line, e.g. "I'll keep this at 'I know the basics', focused on the business side."
-3. Otherwise collect signals quietly:
+2. Work out your best guess for each question. A saved answer for this area (depth) and the saved focus come first. Without them, collect signals quietly:
    - what is already in context about the user: CLAUDE.md, AGENTS.md, Claude Code memory
    - in Codex, if `~/.codex/memories/` exists, its summary file
    - this chat: did they write or read code themselves? use technical terms correctly? ask "how do I…" or "what does this mean?" talk about customers, money and timelines, or about internals?
-4. Pick your best guess. **If the chat shows no clear technical signals, guess the business focus (`product`).**
-5. Ask once, guess first and marked as recommended:
+3. **If there is no saved focus and the chat shows no clear technical signals, guess the business focus (`product`).**
+4. Ask once, with your best guess first and marked as recommended (saved answers make answering a single click):
    - **Claude Code**: one `AskUserQuestion` call with two questions. "How much do you already know about <area in plain words>?" with the four depth labels. "What should the lesson focus on?" with the three focus labels.
    - **Anywhere else**: one short message with both questions as numbered options. Wait for the answer.
-6. Save the answers to `profile.json` before continuing.
+5. Wait for the answer. Then save it to `profile.json` and continue.
 
 Treat memories and instruction files as signals only. Never quote them, and never put anything from them in the lesson or brief.
 
