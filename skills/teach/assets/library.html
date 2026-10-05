@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your lessons · GrowthX teach</title>
+<style>
+/*@@THEME@@*/
+</style>
+</head>
+<body>
+<header class="topbar"><div class="wrap">
+  <a class="brand" href="https://github.com/GrowthX-Club/teach" target="_blank" rel="noopener">GrowthX <span class="grad">teach</span></a>
+  <div class="controls"><button type="button" class="icon-btn" id="theme-toggle" aria-label="Switch light or dark theme">◐</button></div>
+</div></header>
+<main>
+  <section class="hero wrap">
+    <p class="eyebrow" id="count"></p>
+    <h1>Your <span class="grad">lessons</span></h1>
+    <p class="lede">Every lesson teach has made for you, newest first. Type <code>teach</code> in Claude Code or Codex to add one.</p>
+    <label for="search" class="eyebrow">Search</label>
+    <input class="search" id="search" type="search" placeholder="Search by title, topic or concept">
+  </section>
+  <section class="wrap" style="padding-bottom:48px"><div class="lib-grid" id="grid"></div></section>
+</main>
+<footer class="site"><div class="wrap">
+  <a class="watermark" href="https://github.com/GrowthX-Club/teach" target="_blank" rel="noopener">Built using GrowthX <span class="grad">teach</span></a>
+  <span>Generated and stored on your computer</span>
+</div></footer>
+<script>window.LIBRARY = [];</script>
+<!--@@ENTRIES@@-->
+<script>
+(function () {
+  var DEPTH = { 1: "New to this", 2: "Knows the basics", 3: "Builds with it", 4: "Goes deep" };
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function plain(s) { return String(s || "").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/`([^`]+)`/g, "$1"); }
+  var items = (window.LIBRARY || []).slice().sort(function (a, b) { return a.dir < b.dir ? 1 : -1; });
+  var grid = document.getElementById("grid");
+  document.getElementById("count").textContent = items.length + (items.length === 1 ? " lesson" : " lessons");
+  function render(q) {
+    q = (q || "").toLowerCase();
+    var shown = items.filter(function (it) {
+      var l = it.lesson || {};
+      var hay = [plain(l.meta && l.meta.title), l.meta && l.meta.subject, l.meta && l.meta.domain]
+        .concat((l.concepts || []).map(function (c) { return c.name; })).join(" ").toLowerCase();
+      return !q || hay.indexOf(q) !== -1;
+    });
+    if (!items.length) {
+      grid.innerHTML = '<div class="empty">No lessons yet. Finish something in your coding agent and type <code>teach</code>.</div>';
+      return;
+    }
+    if (!shown.length) {
+      grid.innerHTML = '<div class="empty">No lessons match that search.</div>';
+      return;
+    }
+    grid.innerHTML = shown.map(function (it) {
+      var l = it.lesson || {}, m = l.meta || {}, level = m.level || {};
+      var concepts = (l.concepts || []).map(function (c) { return esc(c.name); }).join(" · ");
+      return '<a class="lib-card" href="lessons/' + encodeURIComponent(it.dir) + '/index.html">' +
+        '<span class="eyebrow">' + esc([m.created, m.domain, DEPTH[level.depth]].filter(Boolean).join(" · ")) + "</span>" +
+        "<h3>" + esc(plain(m.title)) + "</h3>" +
+        '<p style="color:var(--muted);font-size:14.5px">' + concepts + "</p></a>";
+    }).join("");
+  }
+  document.getElementById("search").addEventListener("input", function (e) { render(e.target.value); });
+  render("");
+
+  var root = document.documentElement;
+  try { var t = localStorage.getItem("teach:library:theme"); if (t) root.setAttribute("data-theme", t); } catch (e) {}
+  document.getElementById("theme-toggle").addEventListener("click", function () {
+    var cur = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+    var next = cur === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("teach:library:theme", next); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
