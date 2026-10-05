@@ -107,18 +107,73 @@
     );
   }
 
-  // Diagrams are drawn on a canvas in a hand-sketched notebook style (see drawSketch).
-  // The text version stays in the page for screen readers and copy-paste.
+  // Every concept gets an animated figure: it plays one beat at a time when it
+  // scrolls into view and loops. Anything that appears carries data-beat="k" and
+  // is switched on once the player reaches beat k (see the animated figures
+  // section). The same content stays in the page as plain text for screen
+  // readers, and is the whole figure when motion is turned off.
   var visuals = [];
+  function actorIndex(v, id) {
+    var list = v.actors || [];
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return i;
+    return 0;
+  }
+  function stepText(v, s) {
+    var actors = v.actors || [];
+    if (s.at !== undefined) return plain((actors[actorIndex(v, s.at)] || {}).name) + ": " + plain(s.says);
+    return plain((actors[actorIndex(v, s.from)] || {}).name) + " to " + plain((actors[actorIndex(v, s.to)] || {}).name) + ": " + plain(s.label);
+  }
+  function flowStage(v) {
+    var steps = v.steps || [];
+    return {
+      beats: steps.length,
+      alt: steps.map(function (s) { return plain(s.label) + ": " + plain(s.detail); }),
+      html: '<ol class="af" style="--n:' + steps.length + '">' + steps.map(function (s, i) {
+        return '<li data-beat="' + (i + 1) + '"><span class="af-n">' + (i + 1) + "</span><b>" + rich(s.label) + "</b><span>" + rich(s.detail) + "</span></li>";
+      }).join("") + "</ol>"
+    };
+  }
+  function compareStage(v) {
+    var beat = 0, alt = [];
+    var sides = ["left", "right"].map(function (k) {
+      var x = v[k] || {}, pts = x.points || [], first = beat + 1;
+      var tone = x.tone === "good" || x.tone === "bad" ? x.tone : "neutral";
+      var items = pts.map(function (p) { beat++; return '<li data-beat="' + beat + '">' + rich(p) + "</li>"; }).join("");
+      alt.push(plain(x.title) + ": " + pts.map(plain).join("; "));
+      var mark = tone === "neutral" ? "" : '<i class="ac-mark" data-beat="' + beat + '">' + (tone === "good" ? "✓" : "✗") + "</i>";
+      return '<div class="ac-side tone-' + tone + '" data-beat="' + first + '"><div class="ac-title"><b>' + rich(x.title) + "</b>" + mark + "</div><ul>" + items + "</ul></div>";
+    });
+    return { beats: beat, alt: alt, html: '<div class="ac">' + sides[0] + '<span class="ac-vs">vs</span>' + sides[1] + "</div>" };
+  }
+  function sequenceStage(v) {
+    var actors = v.actors || [], steps = v.steps || [];
+    return {
+      beats: steps.length,
+      alt: steps.map(function (s) { return stepText(v, s); }),
+      html: '<div class="as" style="--n:' + actors.length + '">' +
+        '<div class="as-actors">' + actors.map(function (a) {
+          return '<div class="as-actor"><b>' + rich(a.name) + "</b>" + (a.role ? '<span class="as-role">' + rich(a.role) + "</span>" : "") + '<span class="as-state"></span></div>';
+        }).join("") + "</div>" +
+        '<div class="as-lane"><span class="as-msg"></span></div>' +
+        '<ol class="as-log">' + steps.map(function (s, i) {
+          var who = s.at !== undefined
+            ? plain((actors[actorIndex(v, s.at)] || {}).name)
+            : plain((actors[actorIndex(v, s.from)] || {}).name) + " → " + plain((actors[actorIndex(v, s.to)] || {}).name);
+          return '<li data-beat="' + (i + 1) + '"><span class="as-who">' + esc(who) + "</span><span>" + rich(s.at !== undefined ? s.says : s.label) + "</span></li>";
+        }).join("") + "</ol></div>"
+    };
+  }
   function visual(v) {
     if (!v) return "";
-    var idx = visuals.push(v) - 1;
-    var alt = v.type === "flow"
-      ? (v.steps || []).map(function (s, i) { return (i + 1) + ". " + plain(s.label) + ": " + plain(s.detail); }).join(" ")
-      : ["left", "right"].map(function (k) { var x = v[k] || {}; return plain(x.title) + ": " + (x.points || []).map(plain).join("; "); }).join(". ");
+    var stage = v.type === "sequence" ? sequenceStage(v) : v.type === "compare" ? compareStage(v) : flowStage(v);
+    var idx = visuals.push({ v: v, beats: stage.beats }) - 1;
     return (
-      '<figure class="sketch">' +
-      '<canvas data-visual="' + idx + '" role="img" aria-label="' + esc(plain(v.title) + ". " + alt) + '"></canvas>' +
+      '<figure class="anim" data-anim="' + idx + '" data-type="' + esc(v.type) + '">' +
+      '<div class="anim-head"><strong>' + rich(v.title) + "</strong>" +
+      '<button class="anim-btn" type="button" hidden>Pause</button></div>' +
+      '<div class="anim-stage" aria-hidden="true">' + stage.html + "</div>" +
+      '<ol class="anim-alt">' + stage.alt.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ol>" +
+      (v.caption ? "<figcaption>" + rich(v.caption) + "</figcaption>" : "") +
       "</figure>"
     );
   }
@@ -296,7 +351,6 @@
     var next = current === "dark" ? "light" : "dark";
     root.setAttribute("data-theme", next);
     save("theme", next);
-    drawAllSketches();
   });
 
   // ---------- quiz ----------
@@ -374,223 +428,90 @@
   if (liBox) liBox.addEventListener("input", updateShareLinks);
   updateShareLinks();
 
-  // ---------- hand-drawn diagrams ----------
-  // A tiny Excalidraw-like renderer: wobbly double strokes, hand-written labels,
-  // seeded randomness so a diagram looks the same every time it is drawn.
-  function seedFrom(str) {
-    var h = 2166136261;
-    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
-    return h >>> 0;
-  }
-  function makeRng(seed) {
-    return function () {
-      seed = (seed + 0x6d2b79f5) | 0;
-      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-  function cssVar(name, fallback) {
-    return getComputedStyle(root).getPropertyValue(name).trim() || fallback;
-  }
-  function roughLine(ctx, r, x1, y1, x2, y2, wobble) {
-    var w = wobble == null ? 1.4 : wobble;
-    for (var pass = 0; pass < 2; pass++) {
-      var j = function () { return (r() - 0.5) * 2 * w; };
-      ctx.beginPath();
-      ctx.moveTo(x1 + j(), y1 + j());
-      ctx.quadraticCurveTo((x1 + x2) / 2 + j(), (y1 + y2) / 2 + j(), x2 + j(), y2 + j());
-      ctx.stroke();
-    }
-  }
-  function roughRect(ctx, r, x, y, w, h, fill) {
-    if (fill) {
-      ctx.save();
-      ctx.fillStyle = fill;
-      ctx.beginPath();
-      ctx.moveTo(x + 3, y + 1);
-      ctx.lineTo(x + w - 2, y + 2);
-      ctx.lineTo(x + w - 1, y + h - 3);
-      ctx.lineTo(x + 2, y + h - 1);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
-    roughLine(ctx, r, x, y, x + w, y);
-    roughLine(ctx, r, x + w, y, x + w, y + h);
-    roughLine(ctx, r, x + w, y + h, x, y + h);
-    roughLine(ctx, r, x, y + h, x, y);
-  }
-  function roughArrow(ctx, r, x1, y1, x2, y2) {
-    roughLine(ctx, r, x1, y1, x2, y2, 1);
-    var a = Math.atan2(y2 - y1, x2 - x1), len = 11;
-    roughLine(ctx, r, x2, y2, x2 - len * Math.cos(a - 0.45), y2 - len * Math.sin(a - 0.45), 0.6);
-    roughLine(ctx, r, x2, y2, x2 - len * Math.cos(a + 0.45), y2 - len * Math.sin(a + 0.45), 0.6);
-  }
-  function wrapText(ctx, text, maxWidth) {
-    var out = [], line = "";
-    String(text).split(/\s+/).forEach(function (w) {
-      var test = line ? line + " " + w : w;
-      if (ctx.measureText(test).width > maxWidth && line) { out.push(line); line = w; } else line = test;
+  // ---------- animated figures ----------
+  // One player per figure. Beat 0 is the empty stage; beat k switches on every
+  // element with data-beat <= k and marks data-beat == k as "now". After the
+  // last beat the figure holds, then starts again. It only runs while the
+  // figure is on screen, and never when the reader asked for reduced motion:
+  // then the finished picture is shown, still.
+  var BEAT_MS = 1700, START_MS = 700, END_MS = 3200, ARRIVE_MS = 900;
+  var reducedMotion = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  function renderSequence(fig, v, i, still) {
+    var actors = fig.querySelectorAll(".as-actor");
+    var msg = fig.querySelector(".as-msg");
+    var steps = v.steps || [];
+    var says = [];
+    for (var k = 0; k < i && k < steps.length; k++) if (steps[k].at !== undefined) says[actorIndex(v, steps[k].at)] = steps[k].says;
+    Array.prototype.forEach.call(actors, function (el, a) {
+      var state = el.querySelector(".as-state");
+      state.innerHTML = says[a] ? rich(says[a]) : "";
+      el.classList.remove("now", "recv");
     });
-    if (line) out.push(line);
-    return out;
-  }
-
-  function drawSketch(canvas) {
-    var v = visuals[Number(canvas.getAttribute("data-visual"))];
-    if (!v) return;
-    var W = canvas.parentNode.clientWidth;
-    if (!W) return;
-    var dpr = window.devicePixelRatio || 1;
-    var ctx = canvas.getContext("2d");
-    var hand = cssVar("--hand", "cursive");
-    var ink = cssVar("--fg", "#111"), muted = cssVar("--muted", "#777"), brand = cssVar("--brand", "#0064ff");
-    var paper = cssVar("--card", "#fff"), good = cssVar("--green", "#16a34a"), bad = cssVar("--red", "#dc2626");
-    var pad = 18, labelFont = "700 21px " + hand, detailFont = "500 18px " + hand, titleFont = "600 19px " + hand;
-    var lineH = 22, titleH = 34;
-    var boxes = [];
-
-    // Lay out first (measuring needs the fonts set), then size the canvas, then draw.
-    ctx.font = titleFont;
-    if (v.type === "flow") {
-      var steps = v.steps || [];
-      var row = W >= 560;
-      var gap = row ? 40 : 34;
-      var boxW = row ? (W - pad * 2 - gap * (steps.length - 1)) / steps.length : W - pad * 2;
-      var maxH = 0;
-      steps.forEach(function (s) {
-        ctx.font = labelFont;
-        var l = wrapText(ctx, plain(s.label), boxW - 28);
-        ctx.font = detailFont;
-        var d = wrapText(ctx, plain(s.detail), boxW - 28);
-        var h = 20 + (l.length + d.length) * lineH + 14;
-        boxes.push({ l: l, d: d, h: h });
-        maxH = Math.max(maxH, h);
-      });
-      var y = pad + titleH;
-      boxes.forEach(function (b, i) {
-        b.w = boxW;
-        if (row) { b.x = pad + i * (boxW + gap); b.y = y; b.h = maxH; }
-        else { b.x = pad; b.y = y; y += b.h + gap; }
-      });
-      var H = row ? pad + titleH + maxH + pad : y - gap + pad;
-    } else {
-      var sides = ["left", "right"].map(function (k) { return v[k] || {}; });
-      var cols = W >= 520;
-      var gapC = 44;
-      var colW = cols ? (W - pad * 2 - gapC) / 2 : W - pad * 2;
-      sides.forEach(function (s) {
-        ctx.font = labelFont;
-        var t = wrapText(ctx, plain(s.title), colW - 56);
-        ctx.font = detailFont;
-        var pts = (s.points || []).map(function (p) { return wrapText(ctx, plain(p), colW - 50); });
-        var lines = pts.reduce(function (n, p) { return n + p.length; }, 0);
-        boxes.push({ s: s, t: t, pts: pts, w: colW, h: 22 + t.length * lineH + 10 + lines * lineH + pts.length * 6 + 14 });
-      });
-      var hMax = Math.max(boxes[0].h, boxes[1].h);
-      if (cols) {
-        boxes[0].x = pad; boxes[1].x = pad + colW + gapC;
-        boxes[0].y = boxes[1].y = pad + titleH;
-        boxes[0].h = boxes[1].h = hMax;
-        var H = pad + titleH + hMax + pad;
-      } else {
-        boxes[0].x = boxes[1].x = pad;
-        boxes[0].y = pad + titleH;
-        boxes[1].y = boxes[0].y + boxes[0].h + 40;
-        var H = boxes[1].y + boxes[1].h + pad;
-      }
+    clearTimeout(fig._arrive);
+    var step = steps[i - 1];
+    if (!step || still) { msg.classList.remove("show"); return; }
+    if (step.at !== undefined) {
+      msg.classList.remove("show");
+      actors[actorIndex(v, step.at)].classList.add("now");
+      return;
     }
+    var from = actorIndex(v, step.from), to = actorIndex(v, step.to);
+    msg.innerHTML = (to < from ? "← " : "") + rich(step.label) + (to < from ? "" : " →");
+    msg.style.transition = "none";
+    msg.style.setProperty("--at", from);
+    msg.classList.add("show");
+    actors[from].classList.add("now");
+    void msg.offsetWidth; // start the trip from the sender, not from wherever the last message stopped
+    msg.style.transition = "";
+    msg.style.setProperty("--at", to);
+    fig._arrive = setTimeout(function () {
+      actors[from].classList.remove("now");
+      actors[to].classList.add("recv");
+    }, ARRIVE_MS);
+  }
 
-    canvas.width = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
-    canvas.style.width = W + "px";
-    canvas.style.height = H + "px";
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, W, H);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.textBaseline = "top";
-    var r = makeRng(seedFrom(JSON.stringify(v)));
+  function renderBeat(fig, entry, i, still) {
+    Array.prototype.forEach.call(fig.querySelectorAll("[data-beat]"), function (el) {
+      var k = Number(el.getAttribute("data-beat"));
+      el.classList.toggle("on", k <= i);
+      el.classList.toggle("now", !still && k === i);
+    });
+    if (entry.v.type === "sequence") renderSequence(fig, entry.v, i, still);
+  }
 
-    ctx.fillStyle = muted;
-    ctx.font = titleFont;
-    ctx.fillText(plain(v.title || ""), pad, pad);
+  function startFigure(fig) {
+    var entry = visuals[Number(fig.getAttribute("data-anim"))];
+    if (!entry) return;
+    var n = entry.beats;
+    if (reducedMotion || !n) { fig.classList.add("still"); renderBeat(fig, entry, n, true); return; }
 
-    if (v.type === "flow") {
-      boxes.forEach(function (b, i) {
-        ctx.strokeStyle = ink;
-        ctx.lineWidth = 1.6;
-        roughRect(ctx, r, b.x, b.y, b.w, b.h, paper);
-        // numbered marker
-        ctx.strokeStyle = brand;
-        ctx.fillStyle = brand;
-        ctx.beginPath();
-        ctx.arc(b.x + 4, b.y + 4, 11, 0, Math.PI * 2);
-        ctx.fillStyle = paper;
-        ctx.fill();
-        ctx.lineWidth = 1.4;
-        ctx.stroke();
-        ctx.fillStyle = brand;
-        ctx.font = "700 15px " + hand;
-        ctx.textAlign = "center";
-        ctx.fillText(String(i + 1), b.x + 4, b.y - 4);
-        ctx.textAlign = "left";
-        var ty = b.y + 18;
-        ctx.fillStyle = ink;
-        ctx.font = labelFont;
-        b.l.forEach(function (line) { ctx.fillText(line, b.x + 14, ty); ty += lineH; });
-        ctx.fillStyle = muted;
-        ctx.font = detailFont;
-        b.d.forEach(function (line) { ctx.fillText(line, b.x + 14, ty); ty += lineH; });
-        var next = boxes[i + 1];
-        if (next) {
-          ctx.strokeStyle = muted;
-          ctx.lineWidth = 1.5;
-          if (next.y === b.y) roughArrow(ctx, r, b.x + b.w + 6, b.y + b.h / 2, next.x - 6, next.y + next.h / 2);
-          else roughArrow(ctx, r, b.x + 40, b.y + b.h + 5, b.x + 40, next.y - 5);
-        }
-      });
-    } else {
-      boxes.forEach(function (b, i) {
-        var tone = b.s.tone === "good" ? good : b.s.tone === "bad" ? bad : ink;
-        ctx.strokeStyle = tone;
-        ctx.lineWidth = 1.7;
-        roughRect(ctx, r, b.x, b.y, b.w, b.h, paper);
-        var ty = b.y + 16;
-        if (b.s.tone === "good" || b.s.tone === "bad") {
-          ctx.fillStyle = tone;
-          ctx.font = "700 24px " + hand;
-          ctx.fillText(b.s.tone === "good" ? "✓" : "✗", b.x + 14, ty - 3);
-        }
-        ctx.fillStyle = tone;
-        ctx.font = labelFont;
-        b.t.forEach(function (line) { ctx.fillText(line, b.x + (b.s.tone && b.s.tone !== "neutral" ? 40 : 14), ty); ty += lineH; });
-        ty += 10;
-        ctx.font = detailFont;
-        b.pts.forEach(function (lines) {
-          ctx.fillStyle = muted;
-          ctx.fillText("•", b.x + 16, ty);
-          ctx.fillStyle = ink;
-          lines.forEach(function (line) { ctx.fillText(line, b.x + 32, ty); ty += lineH; });
-          ty += 6;
-        });
-      });
-      ctx.fillStyle = muted;
-      ctx.font = "700 20px " + hand;
-      ctx.textAlign = "center";
-      if (boxes[1].x > boxes[0].x) ctx.fillText("vs", (boxes[0].x + boxes[0].w + boxes[1].x) / 2, boxes[0].y + boxes[0].h / 2 - 10);
-      else ctx.fillText("vs", W / 2, boxes[0].y + boxes[0].h + 10);
-      ctx.textAlign = "left";
+    var i = 0, timer = null, inView = false, paused = false;
+    var btn = fig.querySelector(".anim-btn");
+    function schedule() {
+      clearTimeout(timer);
+      if (!inView || paused) return;
+      timer = setTimeout(function () {
+        i = i >= n ? 0 : i + 1;
+        renderBeat(fig, entry, i, false);
+        schedule();
+      }, i === 0 ? START_MS : i === n ? END_MS : BEAT_MS);
     }
+    btn.hidden = false;
+    btn.addEventListener("click", function () {
+      paused = !paused;
+      btn.textContent = paused ? "Play" : "Pause";
+      schedule();
+    });
+    renderBeat(fig, entry, 0, false);
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (items) {
+        inView = items[items.length - 1].isIntersecting;
+        schedule();
+      }, { threshold: 0.35 }).observe(fig);
+    } else { inView = true; schedule(); }
   }
-  function drawAllSketches() {
-    document.querySelectorAll("canvas[data-visual]").forEach(drawSketch);
-  }
-  var resizeTimer;
-  addEventListener("resize", function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(drawAllSketches, 120); });
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawAllSketches);
-  drawAllSketches();
+  Array.prototype.forEach.call(document.querySelectorAll("figure.anim"), startFigure);
 
   // ---------- jargon tooltips ----------
   // Underline the first use of each glossary term per section; hover, focus or tap shows the tip.

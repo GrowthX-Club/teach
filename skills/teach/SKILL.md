@@ -107,7 +107,7 @@ This step is required, also in background mode, where it arrives as its own mess
 
 ## Rules
 
-- Teach tech and AI concepts only, named as in the catalogue. Each concept is eased in with a short story, explained through an analogy, and drawn as a diagram.
+- Teach tech and AI concepts only, named as in the catalogue. Each concept is eased in with a short story, explained through an analogy, and acted out in a short animation.
 - Connect every concept to the user's own work where there is one: the story is built on their situation and `in_your_work` says where it shows up. Both must make sense to someone who never read the chat; never retell the chat step by step.
 - Each concept stays under 450 words; 2–4 concepts per lesson. No code anywhere, and the title is an analogy with no jargon.
 - Every claim about the user's own work needs evidence in `concept-map.json`. General knowledge needs none, but must be correct.

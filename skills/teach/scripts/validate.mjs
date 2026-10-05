@@ -108,7 +108,9 @@ function conceptWords(c) {
   const v = c.visual;
   if (v) {
     n += words(v.title);
-    for (const s of v.steps || []) n += words(s.label) + words(s.detail);
+    n += words(v.caption);
+    for (const a of v.actors || []) n += words(a.name) + words(a.role);
+    for (const s of v.steps || []) n += words(s.label) + words(s.detail) + words(s.says);
     for (const side of [v.left, v.right]) if (side) n += words(side.title) + (side.points || []).reduce((t, p) => t + words(p), 0);
   }
   return n;
@@ -171,14 +173,14 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     }
 
     const v = c.visual;
-    if (!v) err(`${at}.visual is required: every concept gets a diagram`);
+    if (!v) err(`${at}.visual is required: every concept gets an animation`);
     else {
       if (!isText(v.title)) err(`${at}.visual.title is required`);
       if (v.type === "flow") {
         if (!isList(v.steps) || v.steps.length < 3 || v.steps.length > 4) err(`${at}.visual flow needs 3-4 steps`);
         for (const [j, s] of (v.steps || []).entries()) {
           if (!isText(s.label) || !isText(s.detail)) err(`${at}.visual.steps[${j}] needs label and detail`);
-          else if (words(s.label) > 6 || words(s.detail) > 10) err(`${at}.visual.steps[${j}] is too long for a diagram (label 6 words, detail 10)`);
+          else if (words(s.label) > 6 || words(s.detail) > 10) err(`${at}.visual.steps[${j}] is too long for the animation (label 6 words, detail 10)`);
         }
       } else if (v.type === "compare") {
         for (const side of ["left", "right"]) {
@@ -187,7 +189,37 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
           if (s.tone !== undefined && !["good", "bad", "neutral"].includes(s.tone)) err(`${at}.visual.${side}.tone must be good, bad or neutral`);
           if ((s.points || []).some((p) => words(p) > 10)) err(`${at}.visual.${side} has a point over 10 words`);
         }
-      } else err(`${at}.visual.type must be flow or compare`);
+      } else if (v.type === "sequence") {
+        const actors = isList(v.actors) ? v.actors : [];
+        if (actors.length < 2 || actors.length > 3) err(`${at}.visual sequence needs 2-3 actors`);
+        const actorIds = new Set();
+        for (const [j, a] of actors.entries()) {
+          if (!a || !isText(a.id) || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(a.id)) err(`${at}.visual.actors[${j}].id must be lowercase words joined by hyphens`);
+          else if (actorIds.has(a.id)) err(`${at}.visual.actors[${j}].id "${a.id}" is used twice`);
+          else actorIds.add(a.id);
+          if (!a || !isText(a.name) || words(a.name) > 3) err(`${at}.visual.actors[${j}].name is required, at most 3 words`);
+          if (a && a.role !== undefined && (!isText(a.role) || words(a.role) > 5)) err(`${at}.visual.actors[${j}].role must be at most 5 words`);
+        }
+        const steps = isList(v.steps) ? v.steps : [];
+        if (steps.length < 3 || steps.length > 6) err(`${at}.visual sequence needs 3-6 steps`);
+        let messages = 0;
+        for (const [j, s] of steps.entries()) {
+          const isState = s && s.at !== undefined;
+          const isMessage = s && (s.from !== undefined || s.to !== undefined);
+          if (isState === isMessage) { err(`${at}.visual.steps[${j}] must be either a message { from, to, label } or a moment { at, says }`); continue; }
+          if (isState) {
+            if (!actorIds.has(s.at)) err(`${at}.visual.steps[${j}].at "${s.at}" is not an actor id`);
+            if (!isText(s.says) || words(s.says) > 8) err(`${at}.visual.steps[${j}].says is required, at most 8 words`);
+          } else {
+            messages++;
+            if (!actorIds.has(s.from) || !actorIds.has(s.to)) err(`${at}.visual.steps[${j}] from and to must be actor ids`);
+            else if (s.from === s.to) err(`${at}.visual.steps[${j}] travels nowhere: from and to are the same actor`);
+            if (!isText(s.label) || words(s.label) > 8) err(`${at}.visual.steps[${j}].label is required, at most 8 words`);
+          }
+        }
+        if (steps.length && messages === 0) err(`${at}.visual sequence needs at least one message that travels between actors`);
+      } else err(`${at}.visual.type must be flow, compare or sequence`);
+      if (v.caption !== undefined && (!isText(v.caption) || words(v.caption) > 25)) err(`${at}.visual.caption must be at most 25 words`);
     }
 
     const n = conceptWords(c);
