@@ -80,6 +80,8 @@ if grep -q 'videos\[0\].url must start at the right moment' "$work/err" && grep 
 
 if grep -q "check-videos.mjs" "$skill/SKILL.md" && grep -q "oembed" "$skill/scripts/check-videos.mjs"; then pass "videos are checked against YouTube before building"; else fail "videos are checked against YouTube before building"; fi
 
+if grep -q 'window.open(url.href, "_blank")' "$skill/assets/app.js" && grep -q 'window.open(url.href, "_blank")' "$skill/assets/library.html" && grep -q 'window.open(url.href, "_blank")' "$skill/playground/page.html" && grep -q "flex-direction: column" "$skill/assets/base.css"; then pass "external links open in a new tab; section labels sit above titles"; else fail "external links open in a new tab; section labels sit above titles"; fi
+
 guess="$work/guess-map.json"
 node -e 'const m=require(process.argv[1]); m.evidence=m.evidence.filter(e=>e.kind!=="chat"); m.concepts.forEach(c=>{ if(c.in_your_work) c.in_your_work.evidence_ids=c.in_your_work.evidence_ids.filter(id=>m.evidence.some(e=>e.id===id)); }); console.log(JSON.stringify(m))' "$skill/examples/sample.concept-map.json" > "$guess"
 if node "$skill/scripts/validate.mjs" "$skill/examples/sample.lesson.json" "$guess" 2>"$work/err"; then fail "in-your-work without chat evidence passed"; fi
