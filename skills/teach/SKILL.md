@@ -12,6 +12,8 @@ Paths used below:
 - `<skill>`: the directory that contains this `SKILL.md`. Never resolve it from the user's project.
 - `<home>`: `$TEACH_HOME` if set, otherwise `~/growthx-teach`. It holds `theme.css`, `profile.json`, `lessons/`, and the library page `index.html`.
 
+Before anything else, run `sh <skill>/scripts/setup.sh`. It creates `<home>` on first use and prints its path; on later runs it changes nothing.
+
 ## 1. Pick the subject
 
 - `teach <topic>` → the topic is the subject.

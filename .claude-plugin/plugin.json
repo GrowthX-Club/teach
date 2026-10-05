@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "teach",
+  "version": "1.1.0",
+  "description": "Turn any chat, project or topic into a short interactive lesson at your level. Teaches the concepts behind the work with examples.",
+  "author": {
+    "name": "GrowthX"
+  },
+  "homepage": "https://github.com/GrowthX-Club/teach",
+  "repository": "https://github.com/GrowthX-Club/teach",
+  "keywords": [
+    "learning",
+    "teaching",
+    "lessons",
+    "education"
+  ]
+}
