@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "about": "Every tech and AI concept teach can teach, grouped by area. Lessons use these ids and names; next lists what to learn after a concept.",
+  "areas": [
+    {
+      "id": "ai-basics",
+      "name": "How AI works",
+      "concepts": [
+        { "id": "llm", "name": "Large language models", "plain": "Software that writes by predicting the next word, trained on huge amounts of text", "next": ["tokens", "training-vs-inference"] },
+        { "id": "tokens", "name": "Tokens", "plain": "The small chunks of text an AI reads and writes, and what you pay for", "next": ["context-window", "ai-cost-latency"] },
+        { "id": "context-window", "name": "Context window", "plain": "How much an AI can keep in mind at once", "next": ["rag", "prompting"] },
+        { "id": "prompting", "name": "Prompting", "plain": "Giving an AI clear instructions and examples so it does what you mean", "next": ["temperature", "evals"] },
+        { "id": "temperature", "name": "Temperature and randomness", "plain": "Why the same question can get different answers", "next": ["hallucination"] },
+        { "id": "hallucination", "name": "Hallucination", "plain": "When an AI states something false with full confidence", "next": ["rag", "evals"] },
+        { "id": "training-vs-inference", "name": "Training vs using a model", "plain": "Teaching a model once versus asking it questions every day", "next": ["fine-tuning", "ai-cost-latency"] },
+        { "id": "multimodal", "name": "Multimodal AI", "plain": "AI that works with images, audio and video as well as text", "next": ["llm"] }
+      ]
+    },
+    {
+      "id": "ai-building",
+      "name": "Building with AI",
+      "concepts": [
+        { "id": "embeddings", "name": "Embeddings", "plain": "Turning text into numbers so a computer can tell what means the same thing", "next": ["vector-search"] },
+        { "id": "vector-search", "name": "Vector search", "plain": "Finding things by meaning instead of exact words", "next": ["rag"] },
+        { "id": "rag", "name": "Retrieval-augmented generation (RAG)", "plain": "Letting an AI look things up in your documents before it answers", "next": ["evals", "context-window"] },
+        { "id": "agents", "name": "AI agents", "plain": "An AI that plans steps and takes actions on its own to reach a goal", "next": ["tool-use", "guardrails"] },
+        { "id": "tool-use", "name": "Tool use", "plain": "Letting an AI call other software, like search or a calculator", "next": ["mcp", "agents"] },
+        { "id": "mcp", "name": "Model Context Protocol (MCP)", "plain": "A standard plug that connects AI apps to tools and data", "next": ["agents", "api-keys-secrets"] },
+        { "id": "fine-tuning", "name": "Fine-tuning", "plain": "Extra training that teaches a model your style or task", "next": ["evals"] },
+        { "id": "evals", "name": "Evals", "plain": "Testing an AI's answers so you know it is getting better, not worse", "next": ["guardrails"] },
+        { "id": "guardrails", "name": "Guardrails", "plain": "Rules and checks that stop an AI from doing harmful or off-topic things", "next": ["prompt-injection"] },
+        { "id": "ai-cost-latency", "name": "AI cost and speed", "plain": "Why bigger models are slower and pricier, and how to choose", "next": ["caching"] }
+      ]
+    },
+    {
+      "id": "web-apps",
+      "name": "How apps and websites work",
+      "concepts": [
+        { "id": "frontend-backend", "name": "Frontend and backend", "plain": "The part you see versus the part that does the work behind it", "next": ["client-server", "apis"] },
+        { "id": "client-server", "name": "Clients and servers", "plain": "Your device asks, a computer elsewhere answers", "next": ["http"] },
+        { "id": "http", "name": "HTTP requests", "plain": "The way browsers and apps ask servers for things", "next": ["apis", "status-codes"] },
+        { "id": "status-codes", "name": "Status codes", "plain": "The short numbers like 200 and 404 that say how a request went", "next": ["monitoring-logs"] },
+        { "id": "apis", "name": "APIs", "plain": "A menu of things one piece of software lets another ask for", "next": ["json", "api-keys-secrets", "webhooks"] },
+        { "id": "json", "name": "JSON", "plain": "The plain-text format apps use to pass data to each other", "next": ["databases"] },
+        { "id": "databases", "name": "Databases", "plain": "Where an app keeps its information so it is still there tomorrow", "next": ["sql", "transactions"] },
+        { "id": "authentication", "name": "Logins and authentication", "plain": "How an app checks you are who you say you are", "next": ["sessions-cookies", "permissions"] },
+        { "id": "sessions-cookies", "name": "Sessions and cookies", "plain": "How a website remembers you between clicks", "next": ["privacy"] }
+      ]
+    },
+    {
+      "id": "infra",
+      "name": "Hosting and shipping",
+      "concepts": [
+        { "id": "hosting-cloud", "name": "Hosting and the cloud", "plain": "Renting computers somewhere else to run your app", "next": ["serverless", "domains-dns"] },
+        { "id": "serverless", "name": "Serverless", "plain": "Running code without managing a server yourself", "next": ["scaling"] },
+        { "id": "domains-dns", "name": "Domains and DNS", "plain": "How a name like growthx.club finds the right computer", "next": ["https-encryption"] },
+        { "id": "git", "name": "Git and version control", "plain": "Saving every version of your code so you can undo and work together", "next": ["deployment", "ci-cd"] },
+        { "id": "environments", "name": "Environments", "plain": "Separate copies of an app for building, testing and real users", "next": ["deployment"] },
+        { "id": "deployment", "name": "Deployment", "plain": "Putting a new version of your app live", "next": ["ci-cd", "rollbacks"] },
+        { "id": "ci-cd", "name": "CI/CD", "plain": "Robots that test and ship your code every time it changes", "next": ["rollbacks"] },
+        { "id": "rollbacks", "name": "Rollbacks", "plain": "Going back to the last working version when a release breaks", "next": ["monitoring-logs"] },
+        { "id": "scaling", "name": "Scaling", "plain": "Keeping an app fast when many more people use it", "next": ["caching", "queues"] }
+      ]
+    },
+    {
+      "id": "systems",
+      "name": "Reliability and speed",
+      "concepts": [
+        { "id": "caching", "name": "Caching", "plain": "Keeping a ready copy of an answer so you don't work it out twice", "next": ["scaling"] },
+        { "id": "queues", "name": "Queues and background jobs", "plain": "Doing slow work later, in line, so the app stays quick", "next": ["retries", "scheduling"] },
+        { "id": "webhooks", "name": "Webhooks", "plain": "One app tapping another on the shoulder when something happens", "next": ["retries", "idempotency"] },
+        { "id": "retries", "name": "Retries with backoff", "plain": "Trying again, waiting longer each time, when something fails", "next": ["idempotency"] },
+        { "id": "idempotency", "name": "Idempotency", "plain": "Making sure doing something twice has the same effect as once", "next": ["transactions"] },
+        { "id": "transactions", "name": "Transactions", "plain": "Several changes that all succeed together or all fail together", "next": ["databases"] },
+        { "id": "scheduling", "name": "Scheduling and cron", "plain": "Making software do something at a set time, by itself", "next": ["queues"] },
+        { "id": "rate-limiting", "name": "Rate limiting", "plain": "Capping how often someone can ask, so no one hogs the system", "next": ["retries"] },
+        { "id": "monitoring-logs", "name": "Monitoring and logs", "plain": "How teams notice something broke, and work out why", "next": ["rollbacks"] }
+      ]
+    },
+    {
+      "id": "security",
+      "name": "Staying safe",
+      "concepts": [
+        { "id": "https-encryption", "name": "Encryption and HTTPS", "plain": "Scrambling data so only the right person can read it", "next": ["password-hashing"] },
+        { "id": "password-hashing", "name": "Password hashing", "plain": "Why good apps can't tell you your own password", "next": ["two-factor"] },
+        { "id": "two-factor", "name": "Two-factor authentication", "plain": "Proving it's you with something you know and something you have", "next": ["phishing"] },
+        { "id": "api-keys-secrets", "name": "API keys and secrets", "plain": "The passwords software uses, and why they must never be shared", "next": ["permissions"] },
+        { "id": "permissions", "name": "Permissions", "plain": "Deciding who can see and change what", "next": ["privacy"] },
+        { "id": "prompt-injection", "name": "Prompt injection", "plain": "Tricking an AI with hidden instructions in what it reads", "next": ["guardrails"] },
+        { "id": "phishing", "name": "Phishing", "plain": "Fake messages that trick people into giving away access", "next": ["two-factor"] },
+        { "id": "privacy", "name": "Data privacy", "plain": "Collecting and keeping only the personal data you need, safely", "next": ["permissions"] }
+      ]
+    },
+    {
+      "id": "data",
+      "name": "Data and analytics",
+      "concepts": [
+        { "id": "sql", "name": "SQL", "plain": "The language for asking a database questions", "next": ["data-warehouse"] },
+        { "id": "event-tracking", "name": "Event tracking", "plain": "Recording what people do in an app so you can learn from it", "next": ["dashboards-metrics", "privacy"] },
+        { "id": "dashboards-metrics", "name": "Dashboards and metrics", "plain": "Turning raw numbers into a few that tell you what's happening", "next": ["ab-testing"] },
+        { "id": "data-pipelines", "name": "Data pipelines", "plain": "Moving and cleaning data from where it's made to where it's used", "next": ["data-warehouse"] },
+        { "id": "data-warehouse", "name": "Data warehouses", "plain": "One big store that pulls together data from every tool", "next": ["dashboards-metrics"] },
+        { "id": "ab-testing", "name": "A/B testing", "plain": "Showing two versions to different people to see which works better", "next": ["dashboards-metrics"] }
+      ]
+    },
+    {
+      "id": "automation",
+      "name": "Automation and no-code",
+      "concepts": [
+        { "id": "triggers-actions", "name": "Triggers and actions", "plain": "When this happens, do that: the heart of every automation", "next": ["integrations", "webhooks"] },
+        { "id": "integrations", "name": "Integrations", "plain": "Connecting two apps so data flows between them on its own", "next": ["apis", "api-keys-secrets"] },
+        { "id": "no-code-tools", "name": "No-code tools", "plain": "Building apps and automations by clicking instead of coding", "next": ["triggers-actions"] },
+        { "id": "workflow-automation", "name": "Workflow automation", "plain": "Chaining steps across tools so a whole process runs itself", "next": ["ai-automations", "scheduling"] },
+        { "id": "ai-automations", "name": "AI in automations", "plain": "Adding an AI step that reads, writes or decides inside a workflow", "next": ["agents", "guardrails"] }
+      ]
+    }
+  ]
+}

@@ -156,6 +156,9 @@ footer.site a { color: var(--fg); text-decoration-color: var(--hairline-2); text
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: var(--radius-pill); font-size: 14px; z-index: 40; }
 
 /* ===== Library ===== */
+.lib-groups { display: grid; gap: 32px; }
+.lib-group { display: grid; gap: 12px; }
+.lib-area { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
 .lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
 .lib-card { text-decoration: none; border: 1px solid var(--hairline); border-radius: var(--radius); padding: 16px; background: var(--card); display: grid; gap: 8px; align-content: start; transition: border-color 0.15s; }
 .lib-card:hover { border-color: var(--hairline-2); }

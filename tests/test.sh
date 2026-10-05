@@ -34,6 +34,13 @@ if node "$skill/scripts/validate.mjs" "$ai" 2>"$work/err"; then fail "AI-soundin
 if grep -q 'stock AI word "crucial"' "$work/err" && grep -q "em or en dashes" "$work/err" && grep -q "X but Y" "$work/err"; then pass "AI writing tells are rejected"; else fail "AI writing tells are rejected"; fi
 if grep -q "Siqi Chen" "$skill/references/humanizer.LICENSE" && grep -q "^# Humanizer" "$skill/references/humanizer.md"; then pass "humanizer bundled with its licence"; else fail "humanizer bundled with its licence"; fi
 
+if VALIDATE="$skill/scripts/validate.mjs" node -e 'import(require("url").pathToFileURL(process.env.VALIDATE).href).then(m=>{const e=m.validateCatalogue(m.loadCatalogue()); if(e.length){console.error(e.join("\n")); process.exit(1)}})'; then pass "catalogue ids are unique and every next link resolves"; else fail "catalogue ids are unique and every next link resolves"; fi
+
+offtopic="$work/offtopic.json"
+node -e 'const l=require(process.argv[1]); l.meta.domain="marketing"; l.concepts[0].name="Retry magic"; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$offtopic"
+if node "$skill/scripts/validate.mjs" "$offtopic" 2>"$work/err"; then fail "non-tech lesson passed"; fi
+if grep -q "only covers tech and AI" "$work/err" && grep -q 'catalogue name "Retries with backoff"' "$work/err"; then pass "non-tech areas and off-catalogue names are rejected"; else fail "non-tech areas and off-catalogue names are rejected"; fi
+
 echo "build"
 export TEACH_HOME="$work/home with space"
 lesson="$TEACH_HOME/lessons/2026-01-01-sample"
@@ -42,7 +49,7 @@ node -e 'const l=require(process.argv[1]); l.hook += " </script><b>not html</b>"
 sh "$skill/scripts/build.sh" "$lesson" > "$work/build.out"
 if [ -f "$lesson/index.html" ]; then pass "lesson page written"; else fail "lesson page written"; fi
 grep -q "@@" "$lesson/index.html" && fail "placeholder left in lesson page"
-if [ "$(grep -ci '</script' "$lesson/index.html")" -eq 2 ]; then pass "lesson data cannot close its script tag"; else fail "lesson data cannot close its script tag"; fi
+if [ "$(grep -ci '</script' "$lesson/index.html")" -eq 3 ]; then pass "lesson data cannot close its script tag"; else fail "lesson data cannot close its script tag"; fi
 if grep -q "Built using GrowthX" "$lesson/index.html"; then pass "watermark present"; else fail "watermark present"; fi
 if grep -q 'id="sidebar"' "$lesson/index.html" && grep -q "^\.layout" "$lesson/index.html"; then pass "sidebar and layout styles inlined"; else fail "sidebar and layout styles inlined"; fi
 if grep -q "^LESSON_URL=file://.*home%20with%20space/lessons/2026-01-01-sample/index.html$" "$work/build.out" && grep -q "^OPENED=no$" "$work/build.out"; then pass "build prints a clickable link and only opens with --open"; else fail "build prints a clickable link and only opens with --open"; fi
@@ -53,6 +60,7 @@ if curl -s -m 3 "$url" | grep -q "Built using GrowthX"; then pass "serve.sh serv
 pids=$(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)
 [ -n "$pids" ] && kill $pids 2>/dev/null || true
 if grep -q "2026-01-01-sample/library-entry.js" "$TEACH_HOME/index.html"; then pass "library lists the lesson"; else fail "library lists the lesson"; fi
+if grep -q '"Reliability and speed"' "$TEACH_HOME/index.html" && grep -q '"Reliability and speed"' "$lesson/index.html"; then pass "catalogue inlined for area names"; else fail "catalogue inlined for area names"; fi
 if [ -f "$TEACH_HOME/theme.css" ]; then pass "theme.css created on first build"; else fail "theme.css created on first build"; fi
 
 echo "first-run setup"

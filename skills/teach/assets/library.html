@@ -22,12 +22,15 @@
     <label for="search" class="eyebrow">Search</label>
     <input class="search" id="search" type="search" placeholder="Search by title, topic or concept">
   </section>
-  <section class="wrap" style="padding-bottom:48px"><div class="lib-grid" id="grid"></div></section>
+  <section class="wrap" style="padding-bottom:48px"><div class="lib-groups" id="grid"></div></section>
 </main>
 <footer class="site"><div class="wrap">
   <a class="watermark" href="https://github.com/GrowthX-Club/teach" target="_blank" rel="noopener">Built using GrowthX <span class="grad">teach</span></a>
   <span>Generated and stored on your computer</span>
 </div></footer>
+<script id="teach-catalogue" type="application/json">
+/*@@CATALOGUE@@*/
+</script>
 <script>window.LIBRARY = [];</script>
 <!--@@ENTRIES@@-->
 <script>
@@ -37,6 +40,10 @@
     return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   function plain(s) { return String(s || "").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/`([^`]+)`/g, "$1"); }
+  var areas = [];
+  try { areas = JSON.parse(document.getElementById("teach-catalogue").textContent).areas; } catch (e) {}
+  var areaName = {};
+  areas.forEach(function (a) { areaName[a.id] = a.name; });
   var items = (window.LIBRARY || []).slice().sort(function (a, b) { return a.dir < b.dir ? 1 : -1; });
   var grid = document.getElementById("grid");
   document.getElementById("count").textContent = items.length + (items.length === 1 ? " lesson" : " lessons");
@@ -56,13 +63,27 @@
       grid.innerHTML = '<div class="empty">No lessons match that search.</div>';
       return;
     }
-    grid.innerHTML = shown.map(function (it) {
+    function card(it) {
       var l = it.lesson || {}, m = l.meta || {}, level = m.level || {};
       var concepts = (l.concepts || []).map(function (c) { return esc(c.name); }).join(" · ");
       return '<a class="lib-card" href="lessons/' + encodeURIComponent(it.dir) + '/index.html">' +
-        '<span class="eyebrow">' + esc([m.created, m.domain, DEPTH[level.depth]].filter(Boolean).join(" · ")) + "</span>" +
+        '<span class="eyebrow">' + esc([m.created, DEPTH[level.depth]].filter(Boolean).join(" · ")) + "</span>" +
         "<h3>" + esc(plain(m.title)) + "</h3>" +
         '<p style="color:var(--muted);font-size:14.5px">' + concepts + "</p></a>";
+    }
+    // Group by catalogue area, in catalogue order; anything else goes last.
+    var order = areas.map(function (a) { return a.id; });
+    var groups = {};
+    shown.forEach(function (it) {
+      var d = (it.lesson && it.lesson.meta && it.lesson.meta.domain) || "other";
+      (groups[d] = groups[d] || []).push(it);
+    });
+    var keys = Object.keys(groups).sort(function (a, b) {
+      var ia = order.indexOf(a), ib = order.indexOf(b);
+      return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
+    });
+    grid.innerHTML = keys.map(function (k) {
+      return '<section class="lib-group"><h2 class="lib-area">' + esc(areaName[k] || "Other") + '</h2><div class="lib-grid">' + groups[k].map(card).join("") + "</div></section>";
     }).join("");
   }
   document.getElementById("search").addEventListener("input", function (e) { render(e.target.value); });

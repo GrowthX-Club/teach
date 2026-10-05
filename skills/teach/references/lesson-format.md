@@ -9,7 +9,7 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
     "slug": "safe-retries",
     "title": "Why safe retries need **idempotency**",
     "subject": "Making payment webhooks safe to retry",
-    "domain": "backend",
+    "domain": "systems",
     "one_liner": "Retrying is easy. Retrying without doing things twice is the real trick.",
     "minutes": 5,
     "created": "2026-10-05",
@@ -63,6 +63,8 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
 
 ## Rules (checked by `validate.mjs`)
 
+- `meta.domain` is a [catalogue](catalogue.json) area id. teach only covers tech and AI.
+- A concept whose `id` is in the catalogue must use the catalogue `name`. Concepts outside the catalogue are allowed but produce a warning.
 - `meta.slug`: lowercase words joined by hyphens. `meta.minutes`: 2–8. `meta.level.depth`: 1–4. `meta.level.lens`: `product`, `balanced` or `tech`.
 - `goal`, `hook`, and every concept's `name`, `tagline`, `explain`, `product` and `tech` are required.
 - **2–3 concepts**, unique `id`s (lowercase, hyphens).

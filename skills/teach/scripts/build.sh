@@ -58,9 +58,10 @@ sep=$(printf '\034')
 
 # JSON inside <script type="application/json">: escape "<" so no "</script" can end it early.
 sed 's/</\\u003c/g' "$lesson_json" > "$tmp/lesson.safe.json"
+sed 's/</\\u003c/g' "$skill_dir/references/catalogue.json" > "$tmp/catalogue.safe.json"
 
 inline "$assets/lesson.html" "$tmp/index.html" \
-  "/*@@THEME@@*/${sep}$theme${sep}/*@@BASE@@*/${sep}$assets/base.css${sep}/*@@LESSON@@*/${sep}$tmp/lesson.safe.json${sep}/*@@APP@@*/${sep}$assets/app.js"
+  "/*@@THEME@@*/${sep}$theme${sep}/*@@BASE@@*/${sep}$assets/base.css${sep}/*@@LESSON@@*/${sep}$tmp/lesson.safe.json${sep}/*@@CATALOGUE@@*/${sep}$tmp/catalogue.safe.json${sep}/*@@APP@@*/${sep}$assets/app.js"
 mv "$tmp/index.html" "$lesson_dir/index.html"
 
 # Library entry for this lesson. One file per lesson, so one broken lesson cannot break the library.
@@ -82,7 +83,7 @@ for entry in "$teach_home"/lessons/*/library-entry.js; do
   printf '<script src="lessons/%s/library-entry.js"></script>\n' "$name" >> "$tmp/entries.html"
 done
 inline "$assets/library.html" "$tmp/library.html" \
-  "/*@@THEME@@*/${sep}$theme${sep}/*@@BASE@@*/${sep}$assets/base.css${sep}<!--@@ENTRIES@@-->${sep}$tmp/entries.html"
+  "/*@@THEME@@*/${sep}$theme${sep}/*@@BASE@@*/${sep}$assets/base.css${sep}/*@@CATALOGUE@@*/${sep}$tmp/catalogue.safe.json${sep}<!--@@ENTRIES@@-->${sep}$tmp/entries.html"
 mv "$tmp/library.html" "$teach_home/index.html"
 
 # file:// URLs with spaces and other unsafe characters escaped.

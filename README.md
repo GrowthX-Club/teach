@@ -2,7 +2,13 @@
 
 Learn the ideas behind what you just did.
 
-Type `teach` in Claude Code or Codex and get a short, interactive lesson on the concepts your chat or project relied on, pitched at your level. It teaches the ideas with everyday, industry and your-own-work examples, not a recap of what you built.
+Type `teach` in Claude Code or Codex and get a short, interactive lesson on the tech and AI concepts your chat or project relied on, pitched at your level. It teaches the ideas with everyday and industry examples, not a recap of what you built.
+
+## What it teaches
+
+Tech and AI only, across eight areas: how AI works, building with AI, how apps and websites work, hosting and shipping, reliability and speed, staying safe, data and analytics, and automation and no-code. Every area's standard concepts live in [`skills/teach/references/catalogue.json`](skills/teach/references/catalogue.json), so a concept is named the same in every lesson and "keep going" suggests a sensible next step.
+
+If your chat was about marketing or strategy, teach finds the tech behind it (an email campaign becomes a lesson on scheduling and webhooks). If there's no tech in it at all, teach says so and offers the closest tech or AI lessons instead.
 
 ## Install
 
@@ -119,11 +125,13 @@ Keeping fact-finding and teaching in separate agents stops the lesson from inven
 .claude-plugin/          # Claude Code plugin + marketplace manifests
 skills/teach/
 ├── SKILL.md            # the orchestrator instructions
-├── references/         # prompts and formats for each step
+├── references/         # prompts, formats and catalogue.json (areas and concepts)
 ├── assets/             # theme.css (tokens), base.css (layout), templates, renderer
 ├── scripts/            # setup.sh, build.sh, serve.sh, validate.mjs
 └── examples/           # a sample lesson and concept map
 ```
+
+Adding a concept: add it to `catalogue.json` under its area with an id, name, one plain line and `next` links; the tests check every link resolves.
 
 Releasing: bump `version` in `.claude-plugin/plugin.json` so plugin users get the update. Validate the manifests with `claude plugin validate .`.
 

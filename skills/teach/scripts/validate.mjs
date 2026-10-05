@@ -2,7 +2,7 @@
 // Validates lesson.json (and optionally concept-map.json) against the teach formats.
 // Usage: node validate.mjs <lesson.json> [concept-map.json]
 import { readFileSync } from "node:fs";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const LENSES = ["product", "balanced", "tech"];
@@ -20,13 +20,46 @@ const CURLY_DOUBLE = /[\u201c\u201d]/;
 // Keys whose values are not shown as prose: identifiers, references, code and the prompts to copy.
 const NOT_PROSE = new Set(["evidence_ids", "code", "prompt", "slug", "id", "concept_id", "kind", "created", "domain", "lens", "correct", "depth", "minutes", "version", "language"]);
 
+// teach only teaches tech and AI. The catalogue lists the areas and the standard concepts.
+const CATALOGUE_PATH = fileURLToPath(new URL("../references/catalogue.json", import.meta.url));
+export function loadCatalogue(path = CATALOGUE_PATH) {
+  const catalogue = JSON.parse(readFileSync(path, "utf8"));
+  const areas = new Map();
+  const concepts = new Map();
+  for (const a of catalogue.areas) {
+    areas.set(a.id, a);
+    for (const c of a.concepts) concepts.set(c.id, { ...c, area: a.id });
+  }
+  return { catalogue, areas, concepts };
+}
+
+export function validateCatalogue(cat) {
+  const errors = [];
+  const seen = new Set();
+  for (const a of cat.catalogue.areas) {
+    if (!ID.test(a.id) || !isTextValue(a.name)) errors.push(`catalogue: area "${a.id}" needs a lowercase id and a name`);
+    for (const c of a.concepts) {
+      if (seen.has(c.id)) errors.push(`catalogue: duplicate concept id "${c.id}"`);
+      seen.add(c.id);
+      if (!ID.test(c.id) || !isTextValue(c.name) || !isTextValue(c.plain)) errors.push(`catalogue: concept "${c.id}" needs an id, name and plain line`);
+      for (const n of c.next || []) if (!cat.concepts.has(n)) errors.push(`catalogue: "${c.id}" lists unknown next concept "${n}"`);
+    }
+  }
+  return errors;
+}
+
+function isTextValue(v) {
+  return typeof v === "string" && v.trim().length > 0;
+}
+
 const isText = (v) => typeof v === "string" && v.trim().length > 0;
 const isList = (v) => Array.isArray(v);
 const words = (s) => (typeof s === "string" ? s.trim().split(/\s+/).filter(Boolean).length : 0);
 
-export function validateConceptMap(map) {
+export function validateConceptMap(map, cat = loadCatalogue()) {
   const errors = [];
   const err = (msg) => errors.push(`concept-map: ${msg}`);
+  if (!cat.areas.has(map.domain)) err(`domain "${map.domain}" is not a teach area (${[...cat.areas.keys()].join(", ")}); teach only covers tech and AI`);
   const evidence = new Set();
   if (!isList(map.evidence)) err("evidence must be a list");
   for (const [i, e] of (map.evidence || []).entries()) {
@@ -67,14 +100,15 @@ function conceptWords(c) {
   return n;
 }
 
-export function validateLesson(lesson, map) {
+export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []) {
   const errors = [];
   const err = (msg) => errors.push(`lesson: ${msg}`);
-  const evidence = map ? validateConceptMap(map).evidence : null;
+  const evidence = map ? validateConceptMap(map, cat).evidence : null;
 
   const m = lesson.meta || {};
   if (!ID.test(m.slug || "")) err("meta.slug must be lowercase words joined by hyphens");
   for (const k of ["title", "subject", "domain", "one_liner"]) if (!isText(m[k])) err(`meta.${k} is required`);
+  if (isText(m.domain) && !cat.areas.has(m.domain)) err(`meta.domain "${m.domain}" is not a teach area (${[...cat.areas.keys()].join(", ")}); teach only covers tech and AI`);
   if (!Number.isInteger(m.minutes) || m.minutes < 2 || m.minutes > 8) err("meta.minutes must be an integer from 2 to 8");
   const level = m.level || {};
   if (!Number.isInteger(level.depth) || level.depth < 1 || level.depth > 4) err("meta.level.depth must be 1-4");
@@ -92,6 +126,8 @@ export function validateLesson(lesson, map) {
     if (conceptIds.has(c.id)) err(`duplicate concept id "${c.id}"`);
     conceptIds.add(c.id);
     for (const k of ["name", "tagline", "explain", "product", "tech"]) if (!isText(c[k])) err(`${at}.${k} is required`);
+    if (c.id && cat.concepts.has(c.id) && isText(c.name) && c.name !== cat.concepts.get(c.id).name) err(`${at}.name must be the catalogue name "${cat.concepts.get(c.id).name}" so concepts are named the same in every lesson`);
+    if (c.id && !cat.concepts.has(c.id)) warnings.push(`${at} is not in the catalogue; use a catalogue id if one fits, or add the concept to references/catalogue.json`);
 
     const examples = isList(c.examples) ? c.examples : [];
     if (examples.length !== 2) err(`${at} needs exactly 2 examples`);
@@ -189,7 +225,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   }
   const lesson = readJson(lessonPath);
   const map = mapPath ? readJson(mapPath) : null;
-  const errors = [...(map ? validateConceptMap(map).errors : []), ...validateLesson(lesson, map)];
+  const cat = loadCatalogue();
+  const warnings = [];
+  const errors = [...(map ? validateConceptMap(map, cat).errors : []), ...validateLesson(lesson, map, cat, warnings)];
+  for (const w of warnings) console.error(`warning: ${w}`);
   if (errors.length) {
     console.error(`${errors.length} problem(s):\n- ${errors.join("\n- ")}`);
     process.exit(1);

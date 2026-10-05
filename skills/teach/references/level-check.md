@@ -1,10 +1,10 @@
 # Level check
 
-Every lesson is pitched with two dials. Show the user only the everyday labels below, never the numbers or field names.
+Every lesson is pitched with two dials. The focus changes how a tech or AI concept is explained, never which kind of subject is taught. Show the user only the everyday labels below, never the numbers or field names.
 
 ## Depth (per area)
 
-Areas are broad, such as `ai`, `backend`, `frontend`, `data`, `infra`, `security`, `mobile`, `product`, `growth`, `design`, `finance`. Use a short lowercase key; reuse an existing key from the profile when one fits.
+Areas are the [catalogue](catalogue.json) areas: `ai-basics` (How AI works), `ai-building` (Building with AI), `web-apps` (How apps and websites work), `infra` (Hosting and shipping), `systems` (Reliability and speed), `security` (Staying safe), `data` (Data and analytics), `automation` (Automation and no-code). Ask about the area by its plain name.
 
 | depth | what the user sees | the lesson… |
 |---|---|---|
@@ -17,7 +17,7 @@ Areas are broad, such as `ai`, `backend`, `frontend`, `data`, `infra`, `security
 
 | lens | what the user sees | the lesson… |
 |---|---|---|
-| `product` | What it means for the business | impact on users, cost, risk, what to ask an engineer. No code |
+| `product` | What it means for the business | the same tech concept, explained through its impact on users, cost and risk, and what to ask an engineer. No code |
 | `balanced` | A bit of both | why first, then a light how |
 | `tech` | How it works under the hood | mechanism, data flow, short code |
 
@@ -44,11 +44,11 @@ Treat memories and instruction files as signals only. Never quote them, and neve
   "version": 1,
   "lens": "product",
   "domains": {
-    "ai": { "depth": 2, "updated": "2026-10-05" }
+    "ai-basics": { "depth": 2, "updated": "2026-10-05" }
   },
   "notes": ["Likes real numbers in examples"],
   "history": [
-    { "date": "2026-10-05", "slug": "inference-basics", "domain": "ai", "depth": 2, "lens": "product" }
+    { "date": "2026-10-05", "slug": "inference-basics", "domain": "ai-basics", "depth": 2, "lens": "product" }
   ]
 }
 ```

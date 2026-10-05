@@ -4,11 +4,14 @@
     "slug": "safe-retries",
     "title": "Why safe retries need **idempotency**",
     "subject": "Making payment webhooks safe to retry",
-    "domain": "backend",
+    "domain": "systems",
     "one_liner": "Retrying is easy. Retrying without doing things twice is the real trick.",
     "minutes": 5,
     "created": "2026-10-05",
-    "level": { "depth": 2, "lens": "product" }
+    "level": {
+      "depth": 2,
+      "lens": "product"
+    }
   },
   "goal": "By the end you can explain why trying again can charge a customer twice, and the two ideas that stop it.",
   "hook": "Apps resend messages all the time when the internet hiccups. So why don't you get charged twice every time it happens?",
@@ -21,12 +24,22 @@
       "product": "Retries are why payments, emails and alerts still arrive when the internet has a bad moment. The cost: the same message can arrive more than once.",
       "tech": "Senders retry on timeouts and server errors, adding random jitter so thousands of clients don't retry in lockstep. Delivery is \"at least once\", never \"exactly once\".",
       "examples": [
-        { "kind": "everyday", "title": "Calling a friend", "text": "No answer? You call again in a few minutes, not every second. That pause is backoff." },
-        { "kind": "industry", "title": "Payment providers", "text": "Payment platforms resend failed notifications for hours or days, with growing gaps between tries." }
+        {
+          "kind": "everyday",
+          "title": "Calling a friend",
+          "text": "No answer? You call again in a few minutes, not every second. That pause is backoff."
+        },
+        {
+          "kind": "industry",
+          "title": "Payment providers",
+          "text": "Payment platforms resend failed notifications for hours or days, with growing gaps between tries."
+        }
       ],
       "in_your_work": {
         "text": "Your payment provider sent the same payment notice twice because your app took too long to reply.",
-        "evidence_ids": ["e1"]
+        "evidence_ids": [
+          "e1"
+        ]
       },
       "pitfall": "Assuming each message arrives exactly once. With retries, \"at least once\" is the honest promise."
     },
@@ -38,14 +51,34 @@
       "product": "Customers never see double charges, duplicate emails or two identical orders, even when the network misbehaves. A good question for any engineer: \"what happens if this arrives twice?\"",
       "tech": "Store a record keyed by the request or event ID. Look the key up before acting; if it exists, return the saved result instead of redoing the work.",
       "examples": [
-        { "kind": "everyday", "title": "The lift button", "text": "Pressing it five times still calls one lift." },
-        { "kind": "industry", "title": "Payment APIs", "text": "Major payment APIs accept an idempotency key, so a retried charge never runs twice." }
+        {
+          "kind": "everyday",
+          "title": "The lift button",
+          "text": "Pressing it five times still calls one lift."
+        },
+        {
+          "kind": "industry",
+          "title": "Payment APIs",
+          "text": "Major payment APIs accept an idempotency key, so a retried charge never runs twice."
+        }
       ],
       "visual": {
         "type": "compare",
         "title": "Same repeat, two outcomes",
-        "left": { "title": "Without it", "points": ["Message arrives twice", "Customer charged twice"] },
-        "right": { "title": "With it", "points": ["Message arrives twice", "Repeat recognised and skipped"] }
+        "left": {
+          "title": "Without it",
+          "points": [
+            "Message arrives twice",
+            "Customer charged twice"
+          ]
+        },
+        "right": {
+          "title": "With it",
+          "points": [
+            "Message arrives twice",
+            "Repeat recognised and skipped"
+          ]
+        }
       },
       "code": {
         "language": "ts",
@@ -54,33 +87,55 @@
       },
       "in_your_work": {
         "text": "Your payment handler now remembers every payment notice it has seen and ignores repeats.",
-        "evidence_ids": ["e2", "e3"]
+        "evidence_ids": [
+          "e2",
+          "e3"
+        ]
       },
       "pitfall": "Making a new ID for each retry. A repeat must carry the same ID as the original, or nobody can recognise it."
     },
     {
-      "id": "atomic-check",
-      "name": "Check and act in one step",
+      "id": "transactions",
+      "name": "Transactions",
       "tagline": "\"Have I done this?\" and \"do it\" must happen together.",
       "explain": "If two copies of the same message arrive at the **same moment**, both can ask \"seen this before?\", both hear \"no\", and both act.\n\nThe fix is to make the check and the action one **indivisible step**. Databases offer this: a rule that a given ID can only be saved once, checked in the same step as the work.",
       "product": "This is the difference between \"usually no duplicates\" and \"never duplicates\". It matters most for money, stock levels and anything customers see.",
       "tech": "Insert the ID into a table with a unique index inside the same transaction as the business write. The second insert fails, and its transaction rolls back.",
       "examples": [
-        { "kind": "everyday", "title": "The last concert ticket", "text": "Two fans click Buy at the same instant. Exactly one of them can get it, never both." },
-        { "kind": "industry", "title": "Seat booking", "text": "Airlines and cinemas lock a seat in the same step as selling it, so it can't be sold twice." }
+        {
+          "kind": "everyday",
+          "title": "The last concert ticket",
+          "text": "Two fans click Buy at the same instant. Exactly one of them can get it, never both."
+        },
+        {
+          "kind": "industry",
+          "title": "Seat booking",
+          "text": "Airlines and cinemas lock a seat in the same step as selling it, so it can't be sold twice."
+        }
       ],
       "visual": {
         "type": "flow",
         "title": "Two copies arrive together",
         "steps": [
-          { "label": "Both arrive", "detail": "Same ID, same moment" },
-          { "label": "Both try to save the ID", "detail": "The database allows one" },
-          { "label": "One wins", "detail": "Only it does the work" }
+          {
+            "label": "Both arrive",
+            "detail": "Same ID, same moment"
+          },
+          {
+            "label": "Both try to save the ID",
+            "detail": "The database allows one"
+          },
+          {
+            "label": "One wins",
+            "detail": "Only it does the work"
+          }
         ]
       },
       "in_your_work": {
         "text": "Saving the notice's ID and updating the order now happen as one step in your database.",
-        "evidence_ids": ["e4"]
+        "evidence_ids": [
+          "e4"
+        ]
       }
     }
   ],
@@ -89,33 +144,75 @@
       "question": "A server did the work but crashed before replying. What will a well-behaved sender do?",
       "concept_id": "retries",
       "options": [
-        { "text": "Nothing, the work was done", "correct": false, "why": "The sender never got a reply, so it can't know that." },
-        { "text": "Send the same message again after a pause", "correct": true, "why": "No reply looks like failure, so it retries with backoff." },
-        { "text": "Send a brand-new message with a new ID", "correct": false, "why": "Retries resend the same message. A new ID would hide that it's a repeat." }
+        {
+          "text": "Nothing, the work was done",
+          "correct": false,
+          "why": "The sender never got a reply, so it can't know that."
+        },
+        {
+          "text": "Send the same message again after a pause",
+          "correct": true,
+          "why": "No reply looks like failure, so it retries with backoff."
+        },
+        {
+          "text": "Send a brand-new message with a new ID",
+          "correct": false,
+          "why": "Retries resend the same message. A new ID would hide that it's a repeat."
+        }
       ]
     },
     {
       "question": "Which of these actions is idempotent?",
       "concept_id": "idempotency",
       "options": [
-        { "text": "Add one item to the cart", "correct": false, "why": "Doing it twice leaves two items." },
-        { "text": "Send a welcome email", "correct": false, "why": "Twice means two emails." },
-        { "text": "Set the user's plan to Pro", "correct": true, "why": "After the first time, repeating it changes nothing." }
+        {
+          "text": "Add one item to the cart",
+          "correct": false,
+          "why": "Doing it twice leaves two items."
+        },
+        {
+          "text": "Send a welcome email",
+          "correct": false,
+          "why": "Twice means two emails."
+        },
+        {
+          "text": "Set the user's plan to Pro",
+          "correct": true,
+          "why": "After the first time, repeating it changes nothing."
+        }
       ]
     },
     {
       "question": "Two copies of one payment arrive at the same millisecond. What stops a double charge?",
-      "concept_id": "atomic-check",
+      "concept_id": "transactions",
       "options": [
-        { "text": "Waiting a moment before charging", "correct": false, "why": "Timing tricks shrink the gap; they don't close it." },
-        { "text": "Saving the ID and charging in one indivisible step", "correct": true, "why": "Only one save can succeed, so only one charge happens." },
-        { "text": "Logging both payments", "correct": false, "why": "Logs record the duplicate after it happens." }
+        {
+          "text": "Waiting a moment before charging",
+          "correct": false,
+          "why": "Timing tricks shrink the gap; they don't close it."
+        },
+        {
+          "text": "Saving the ID and charging in one indivisible step",
+          "correct": true,
+          "why": "Only one save can succeed, so only one charge happens."
+        },
+        {
+          "text": "Logging both payments",
+          "correct": false,
+          "why": "Logs record the duplicate after it happens."
+        }
       ]
     }
   ],
   "next": [
-    { "title": "Why \"exactly once\" is so hard", "prompt": "teach me why exactly-once delivery is so hard" },
-    { "title": "How message queues handle failures", "prompt": "teach me how message queues handle failures" }
+    {
+      "title": "Why \"exactly once\" is so hard",
+      "prompt": "teach me why exactly-once delivery is so hard"
+    },
+    {
+      "title": "How message queues handle failures",
+      "prompt": "teach me how message queues handle failures"
+    }
   ],
   "share": {
     "linkedin": "Learned something today that explains a lot of \"charged twice\" bugs.\n\nApps resend messages whenever the internet hiccups, so the same message can arrive more than once. The fix is idempotency: design actions so doing them twice has the same effect as once.\n\nAnd the check has to happen in the same step as the work, or two simultaneous repeats can still slip through.\n\nBuilt using GrowthX teach",

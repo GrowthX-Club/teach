@@ -7,14 +7,14 @@ Inputs: `brief.md`, `concept-map.json` if it exists, [teaching method](teaching-
 ## Steps
 
 1. Take depth, focus (lens) and area (domain) from `brief.md`. Copy them into `meta.level` and `meta.domain`.
-2. Use the concept map's concepts (2–3). If there is no map, choose 2–3 concepts for the topic yourself.
+2. Use the concept map's concepts (2–3). If there is no map, choose 2–3 tech or AI concepts for the topic from the [catalogue](catalogue.json). Keep catalogue ids and names exactly.
 3. Write the hook as a general question about the idea, not about the user's project.
 4. For each concept write the tagline, explanation, both focus angles (`product` and `tech`), and 2 examples: one everyday, one from a well-known industry or company.
 5. Add `in_your_work` only from the map's `in_your_work`, rewritten as one plain sentence of at most 30 words, and copy its `evidence_ids`.
 6. Add a visual only where a picture beats a sentence. Add `code` only for depth 3–4 or the technical focus.
 7. Count words. Each concept must stay **under 300 words**; aim for 180–250. Cut before you add.
 8. Write exactly 3 quiz questions that make the learner apply an idea to a new situation.
-9. Write `next` prompts and `share` posts about the concepts, never the private project. LinkedIn: 3–6 short lines ending with "Built using GrowthX teach". X: at most 260 characters, no hashtags.
+9. Write `next` from the catalogue: take the `next` concepts listed for this lesson's concepts that aren't already in the lesson, and phrase each as `teach me <concept name>`. Then write the `share` posts about the concepts, never the private project. LinkedIn: 3–6 short lines ending with "Built using GrowthX teach". X: at most 260 characters, no hashtags.
 10. Set `meta.minutes` honestly (about 200 words per minute plus 30 seconds per quiz question).
 
 ## Voice
