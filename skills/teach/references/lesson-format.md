@@ -66,7 +66,7 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
 
 1. **Story**: a short, concrete situation that sets up the problem before the idea has a name.
 2. **The concept's name** as the heading, then the explanation in an "Analogy" card: start from an analogy or a real-life example, then name the concept and say exactly what it is.
-3. **Animation**: the idea acted out one beat at a time. It starts when it scrolls into view, loops, and can be paused. With motion turned off in the reader's system settings, the finished picture is shown still.
+3. **Animation**: when the animator has added a bespoke `animation`, the page plays it in a sandboxed frame: the idea shown as it really looks, made for this one concept (see [animator](animator.md)). Otherwise the `visual` below is animated by the page: It starts when it scrolls into view, loops, and can be paused. With motion turned off in the reader's system settings, the finished picture is shown still.
 4. **In the real world**, **In your work** (only when this session shows it), **Did you know?** (optional) and **Common mistakes**, each as a plain subheading with text or a bullet list underneath.
 
 There is no code anywhere in a lesson and no share image.
@@ -138,6 +138,7 @@ On the page the actors sit side by side. A message slides from its sender to its
 - `fun_fact` is optional: at most 50 words, a genuinely interesting, verifiable fact. Leave it out rather than force one.
 - `pitfalls`: 2–3 common mistakes, each at most 35 words, written to the learner: what people get wrong and why it bites.
 - `glossary`: 3–12 entries covering every piece of jargon a newcomer might not know. Each `term` appears in the lesson's visible text; each `tip` is at most 30 words and explains with an analogy or everyday comparison.
+- `animation` is optional, added by the animator: `{ title, alt, caption?, height?, html, css?, js? }`. At most 25,000 characters of code, no web addresses, network, imports, storage, string evaluation, or reaching outside its frame. `visual` stays required as the fallback.
 - `videos` is optional, added by the video finder: at most 4 items of `{ concept_id, title, channel, url, start, why }`. `url` is a YouTube link with `t=<seconds>`, `start` shows the same moment as `m:ss` or `h:mm:ss`, `why` is at most 25 words. Only videos and timestamps checked in this run.
 - Exactly **3 quiz** questions, each with 3–4 options, exactly one `correct: true`, and a `why` on every option.
 - 2–3 `next` items.
