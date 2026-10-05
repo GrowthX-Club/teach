@@ -82,7 +82,7 @@ Jargon anywhere in the lesson is underlined; hovering or tapping it shows its gl
 - `goal`, `hook`, and every concept's `name`, `story`, `explain`, `visual`, `real_world` and `pitfalls` are required. There is no tagline, no `product`/`tech` split, no `examples` list and no `code`.
 - `story`: at most 80 words. When the brief says where the concept showed up in the learner's work, build the story around that situation, told so it makes sense to someone who never saw the chat.
 - `explain`: at most 100 words. It opens with an analogy or a real-life example (never "X means…"), then names the concept and says what it is.
-- **2–3 concepts**, unique `id`s (lowercase, hyphens).
+- **2–4 concepts**, unique `id`s (lowercase, hyphens).
 - **Each concept is at most 450 words**, counting story, explain, visual text, `real_world`, `in_your_work` and pitfalls.
 - `visual` is required: `{ "type": "flow", "title", "steps": 3–4 × { label, detail } }` or `{ "type": "compare", "title", "left": { "title", "tone"?, "points": 1–3 }, "right": { … } }`. `tone` is `good`, `bad` or `neutral`. Labels at most 6 words, details and points at most 10.
 - `real_world`: **40–100 words** on how a well-known company or product uses the idea, told as a small story with concrete details.

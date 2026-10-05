@@ -15,7 +15,7 @@ Teach the ideas behind the work so the learner can spot them anywhere. Never ret
 0. **Title**: an analogy in everyday words, never jargon or the concept's name.
 1. **Hook**: a question or situation anyone recognises. One or two sentences.
 2. **Goal**: what they will be able to explain, with a concrete verb (explain, spot, choose).
-3. **Concepts** (2–3), each under 450 words, taught story first:
+3. **Concepts** (2–4), each under 450 words, taught story first:
    - **story**: a short situation that makes the learner feel the problem before the idea has a name, ideally from their own work, told so it stands on its own
    - the concept's **name** as the heading, with an **analogy-led explanation**: an analogy or real-life example first, then the name and what it is (at most 100 words)
    - **a hand-drawn diagram** of how it works or what changes

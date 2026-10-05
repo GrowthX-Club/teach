@@ -82,6 +82,12 @@ if grep -q "check-videos.mjs" "$skill/SKILL.md" && grep -q "oembed" "$skill/scri
 
 if grep -q 'window.open(url.href, "_blank")' "$skill/assets/app.js" && grep -q 'window.open(url.href, "_blank")' "$skill/assets/library.html" && grep -q 'window.open(url.href, "_blank")' "$skill/playground/page.html" && grep -q "flex-direction: column" "$skill/assets/base.css"; then pass "external links open in a new tab; section labels sit above titles"; else fail "external links open in a new tab; section labels sit above titles"; fi
 
+four="$work/four.json"; five="$work/five.json"
+node -e 'const l=require(process.argv[1]); const c=JSON.parse(JSON.stringify(l.concepts[0])); c.id="queues"; c.name="Queues and background jobs"; c.explain=c.explain.replace(/\*\*Retries with backoff\*\*/,"**Queues and background jobs**"); delete c.in_your_work; l.concepts.push(c); console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$four"
+node -e 'const l=require(process.argv[1]); const c=JSON.parse(JSON.stringify(l.concepts[3])); c.id="caching"; c.name="Caching"; c.explain=c.explain.replace(/\*\*Queues and background jobs\*\*/,"**Caching**"); l.concepts.push(c); console.log(JSON.stringify(l))' "$four" > "$five"
+node "$skill/scripts/validate.mjs" "$four" "$skill/examples/sample.concept-map.json" 2>"$work/err4" >/dev/null || true; node "$skill/scripts/validate.mjs" "$five" "$skill/examples/sample.concept-map.json" 2>"$work/err5" >/dev/null || true
+if ! grep -q "needs 2-4 concepts" "$work/err4" && grep -q "needs 2-4 concepts" "$work/err5"; then pass "lessons allow up to 4 concepts, not 5"; else fail "lessons allow up to 4 concepts, not 5"; fi
+
 guess="$work/guess-map.json"
 node -e 'const m=require(process.argv[1]); m.evidence=m.evidence.filter(e=>e.kind!=="chat"); m.concepts.forEach(c=>{ if(c.in_your_work) c.in_your_work.evidence_ids=c.in_your_work.evidence_ids.filter(id=>m.evidence.some(e=>e.id===id)); }); console.log(JSON.stringify(m))' "$skill/examples/sample.concept-map.json" > "$guess"
 if node "$skill/scripts/validate.mjs" "$skill/examples/sample.lesson.json" "$guess" 2>"$work/err"; then fail "in-your-work without chat evidence passed"; fi
