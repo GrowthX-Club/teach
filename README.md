@@ -73,6 +73,20 @@ The installer copies the skill to `~/.claude/skills/teach` and/or `~/.agents/ski
 
 The first time you learn about an area, teach asks two quick questions: how much you already know, and whether you want a product, balanced or tech focus. Your answers are saved in `~/growthx-teach/profile.json` and reused next time.
 
+## Playground
+
+Turn any chat between a person and an AI assistant into a lesson, without using your own chat. Type:
+
+```text
+teach playground
+```
+
+A page opens on your computer. Paste the conversation (or upload a `.txt`, `.md`, `.json` or `.jsonl` file), pick how much the learner knows and what to focus on, and hit **Generate lesson**. It runs the same teach pipeline in the background through Claude Code and shows a link when the lesson is ready; the lesson also lands in your library.
+
+You can also point teach at a transcript from any chat: `teach ~/Downloads/chat.txt`.
+
+Needs Node.js and the Claude Code command line (`claude`), logged in; it uses your Claude plan. The page only talks to `localhost`, needs the access key in the link teach gives you, and refuses requests from other websites. The headless run can only read the skill and your teach folder, write to your teach folder, and run the lesson validator; it has no web access and no MCP servers. Transcripts are kept in `~/growthx-teach/playground/`. The server stops by itself after two hours without use.
+
 ## What a lesson has
 
 - A short hook and a clear goal
