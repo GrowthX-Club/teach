@@ -1,11 +1,13 @@
 ---
 name: teach
-description: Turn the current chat, project, or a named topic into a short, interactive lesson pitched at the learner's own level. Teaches the concepts behind the work with everyday examples, never a recap of what was built. Use when the user types "teach", "teach <topic>", "teach me <topic>", or asks to learn or understand the ideas behind what they just did. Do not use for ordinary coding, writing docs, or one-line explanations.
+description: Turn the current chat, project, or a named topic into a short, interactive lesson on the tech and AI concepts behind it, pitched at the learner's own level. Teaches with everyday examples, never a recap of what was built. Use when the user types "teach", "teach <topic>", "teach me <topic>", or asks to learn or understand the ideas behind what they just did. Do not use for ordinary coding, writing docs, or one-line explanations.
 ---
 
 # teach
 
-`teach` alone is a complete request: teach the concepts behind this chat. `teach <topic>` teaches that topic.
+`teach` alone is a complete request: teach the tech and AI concepts behind this chat. `teach <topic>` teaches that topic.
+
+**What teach covers:** tech and AI only: how AI, software, the internet, data, security and automation work. It does not teach product, marketing, strategy, sales, finance or management. The [catalogue](references/catalogue.json) lists every area and its standard concepts.
 
 **Who this is for:** mostly non-technical people. They usually have not read the chat closely, so nothing you show them may rely on it. Talk to them in plain, friendly words; never mention scripts, JSON, file formats, Node, validation, or folder paths unless they ask.
 
@@ -29,7 +31,9 @@ Give the user short, friendly progress lines and nothing else, for example:
 
 - `teach <topic>` → the topic is the subject.
 - bare `teach` → the subject is what this chat was about. If the chat has no real substance yet, ask the user what they want to learn and stop until they answer.
-- Pick 2–3 **concepts**: ideas the user can reuse anywhere (e.g. "scheduling", "idempotency", "conversion funnels"), never features or events from this chat.
+- Pick one **area** from the [catalogue](references/catalogue.json) and 2–3 **concepts**, using catalogue ids and names wherever one fits. A concept is a tech or AI idea the user can reuse anywhere (e.g. "webhooks", "context window", "caching"), never a feature or event from this chat. Only add a concept that is missing from the catalogue when nothing there fits.
+- **Non-tech chat or topic** (marketing, pricing, strategy, hiring…): look for the tech or AI behind it and teach that. An email campaign chat → "Scheduling and cron", "Webhooks", "AI in automations". A pricing page → "A/B testing", "Event tracking".
+- **Nothing technical in it at all**: don't build a lesson. Say in one line that teach covers tech and AI, then offer the 2–3 closest catalogue concepts as options (use `AskUserQuestion` in Claude Code). Build the one they pick.
 
 ## 2. Set the learner's level
 
@@ -39,7 +43,7 @@ Follow [level-check](references/level-check.md). It sets **depth** (how much the
 
 Create `<home>/lessons/<YYYY-MM-DD>-<slug>/` (`slug`: lowercase words joined by hyphens) and write `brief.md` there with:
 
-- the subject and candidate concepts
+- the subject, the area id, and the candidate concepts (catalogue ids and names)
 - the learner's depth and focus
 - for each concept, one plain sentence on where it showed up in the user's work, written so it makes sense to someone who never saw the chat ("Your sale now switches on by itself at a set time"), never "the bug we fixed earlier"
 - the project root path, if a project is involved
@@ -69,7 +73,7 @@ node <skill>/scripts/validate.mjs <lesson-dir>/lesson.json <lesson-dir>/concept-
 Then build:
 
 - **Terminal (Claude Code CLI, Codex CLI)**: `sh <skill>/scripts/build.sh --open <lesson-dir>`. This opens the lesson in the user's browser.
-- **Desktop app with a built-in browser tool** (for example the Claude desktop app's browser pane): `sh <skill>/scripts/build.sh <lesson-dir>`, then `sh <skill>/scripts/serve.sh <lesson-dir>`, and open the URL it prints in the built-in browser. Do not also open the real browser. If `serve.sh` fails, run `build.sh --open` instead.
+- **Desktop app with a built-in browser tool** (for example the Claude desktop app's browser pane): `sh <skill>/scripts/build.sh <lesson-dir>`, then `sh <skill>/scripts/serve.sh <lesson-dir>`, and open the URL it prints in the built-in browser with its open-a-URL or preview tool (in the Claude desktop app, the preview tool that takes a `url`; a plain "navigate" can be refused for a new local address). Do not also open the real browser. If `serve.sh` fails, run `build.sh --open` instead.
 
 `build.sh` prints `LESSON_URL`, `LIBRARY_URL` and `OPENED=yes|no`.
 
@@ -92,7 +96,7 @@ This step is required. Reply with exactly this shape, in plain words, and nothin
 
 ## Rules
 
-- Teach concepts only. Never retell what happened in the chat. The user's own work appears at most as one self-contained sentence per concept.
+- Teach tech and AI concepts only, named as in the catalogue. Never retell what happened in the chat. The user's own work appears at most as one self-contained sentence per concept.
 - Each concept stays under 300 words; 2–3 concepts per lesson.
 - Every claim about the user's own work needs evidence in `concept-map.json`. General knowledge needs none, but must be correct.
 - The finished page never calls a model, a server on the internet, or analytics. It is a local file.

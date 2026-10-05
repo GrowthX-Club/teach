@@ -1,6 +1,6 @@
 # Teaching method
 
-The goal is a reusable idea the learner enjoys getting, in about five minutes. Most learners are not technical and have not read the chat closely.
+The goal is a reusable tech or AI idea the learner enjoys getting, in about five minutes. Most learners are not technical and have not read the chat closely. teach covers tech and AI only: how AI, software, the internet, data, security and automation work.
 
 ## Concepts only
 

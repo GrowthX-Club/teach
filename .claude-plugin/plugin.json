@@ -1,8 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "teach",
-  "version": "1.3.0",
-  "description": "Turn any chat, project or topic into a short interactive lesson at your level. Teaches the concepts behind the work with examples.",
+  "version": "1.4.0",
+  "description": "Turn any chat, project or topic into a short interactive lesson on the tech and AI concepts behind it, at your level.",
   "author": {
     "name": "GrowthX"
   },

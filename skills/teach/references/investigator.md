@@ -8,7 +8,7 @@ Inputs: `brief.md` and read access to the project. Output: `concept-map.json` in
 
 1. Read `brief.md`. Treat its candidate concepts as a starting point.
 2. Confirm each concept against the project: follow real code paths, not file names or dependency lists. Prefer tests or runtime output when they exist.
-3. Keep 2–3 concepts. A concept must be (a) actually at work here and (b) useful outside this project. Merge concepts that are really one idea. Drop project features, tools and library names that are not ideas.
+3. Keep 2–3 concepts. A concept must be (a) a tech or AI idea, (b) actually at work here, and (c) useful outside this project. Use the id and name from the [catalogue](catalogue.json) wherever one fits, and set `domain` to the catalogue area most of them belong to. Merge concepts that are really one idea. Drop project features, tool and library names, and anything about product, marketing or strategy.
 4. For each concept, write at most one `in_your_work.summary`: one plain sentence on where it shows up, understandable by someone who never saw the chat. No file names, function names, "earlier" or "the bug we fixed". Back it with evidence.
 5. Record open questions in `uncertainties` instead of guessing.
 

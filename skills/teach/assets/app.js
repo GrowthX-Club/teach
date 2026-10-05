@@ -19,6 +19,11 @@
     return;
   }
 
+  var areaNames = {};
+  try {
+    JSON.parse(document.getElementById("teach-catalogue").textContent).areas.forEach(function (a) { areaNames[a.id] = a.name; });
+  } catch (e) {}
+
   var meta = lesson.meta || {};
   var concepts = lesson.concepts || [];
   var quiz = lesson.quiz || [];
@@ -100,7 +105,7 @@
 
   function hero() {
     var level = meta.level || {};
-    var eyebrow = [meta.domain, DEPTH_LABELS[level.depth], meta.minutes ? meta.minutes + " min" : ""]
+    var eyebrow = [areaNames[meta.domain] || meta.domain, DEPTH_LABELS[level.depth], meta.minutes ? meta.minutes + " min" : ""]
       .filter(Boolean).map(esc).join(" · ");
     return (
       '<section class="hero" id="start" data-nav="Start">' +

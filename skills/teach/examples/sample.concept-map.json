@@ -1,7 +1,7 @@
 {
   "version": 2,
   "subject": "Making payment webhooks safe to retry",
-  "domain": "backend",
+  "domain": "systems",
   "concepts": [
     {
       "id": "retries",
@@ -9,7 +9,9 @@
       "why_it_matters": "Networks fail briefly all the time; retrying turns a temporary failure into a delay instead of a lost message",
       "in_your_work": {
         "summary": "The payment provider re-sent a payment notice because the app answered too slowly",
-        "evidence_ids": ["e1"]
+        "evidence_ids": [
+          "e1"
+        ]
       }
     },
     {
@@ -18,27 +20,55 @@
       "why_it_matters": "Retries are only safe if doing the same thing twice has the same effect as doing it once",
       "in_your_work": {
         "summary": "The payment handler now remembers each notice and ignores repeats",
-        "evidence_ids": ["e2", "e3"]
+        "evidence_ids": [
+          "e2",
+          "e3"
+        ]
       }
     },
     {
-      "id": "atomic-check",
-      "name": "Check and act in one step",
+      "id": "transactions",
+      "name": "Transactions",
       "why_it_matters": "A duplicate check done separately from the work still lets two simultaneous repeats both pass",
       "in_your_work": {
         "summary": "Saving the notice ID and updating the order now happen together in the database",
-        "evidence_ids": ["e4"]
+        "evidence_ids": [
+          "e4"
+        ]
       }
     }
   ],
   "discarded": [
-    { "detail": "Timestamps are formatted with a date library", "reason": "Does not change the mental model" }
+    {
+      "detail": "Timestamps are formatted with a date library",
+      "reason": "Does not change the mental model"
+    }
   ],
   "uncertainties": [],
   "evidence": [
-    { "id": "e1", "kind": "chat", "source": "chat", "supports": "User saw the same webhook arrive twice after a slow response" },
-    { "id": "e2", "kind": "code", "source": "src/webhooks/payment.ts:handleEvent", "supports": "Returns early when the event ID already exists" },
-    { "id": "e3", "kind": "test", "source": "src/webhooks/payment.test.ts:ignores duplicate events", "supports": "A repeated event leaves one order update" },
-    { "id": "e4", "kind": "code", "source": "src/webhooks/payment.ts:recordEvent", "supports": "Insert and update share one transaction; event_id has a unique index" }
+    {
+      "id": "e1",
+      "kind": "chat",
+      "source": "chat",
+      "supports": "User saw the same webhook arrive twice after a slow response"
+    },
+    {
+      "id": "e2",
+      "kind": "code",
+      "source": "src/webhooks/payment.ts:handleEvent",
+      "supports": "Returns early when the event ID already exists"
+    },
+    {
+      "id": "e3",
+      "kind": "test",
+      "source": "src/webhooks/payment.test.ts:ignores duplicate events",
+      "supports": "A repeated event leaves one order update"
+    },
+    {
+      "id": "e4",
+      "kind": "code",
+      "source": "src/webhooks/payment.ts:recordEvent",
+      "supports": "Insert and update share one transaction; event_id has a unique index"
+    }
   ]
 }
