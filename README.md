@@ -90,7 +90,7 @@ Needs Node.js and the Claude Code command line (`claude`), logged in; it uses yo
 ## What a lesson has
 
 - A short hook and a clear goal
-- 2–3 concepts, each under 300 words: a one-line tagline, a short explanation, "why it matters" and "how it works", an everyday and an industry example, an optional diagram or code sample, the common mistake, and one line on where the idea shows up in your own work
+- 2–3 concepts, each under 300 words: a short explanation, "why it matters" and "how it works", an everyday and an industry example, an optional diagram or code sample, the common mistake, and one line on where the idea shows up in your own work
 - A sidebar with every section, ticking them off as you read
 - A switch between business, balanced and technical focus, plus light and dark themes
 - A 3-question multiple-choice quiz with an explanation for every option
