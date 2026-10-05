@@ -65,9 +65,20 @@ if grep -q "keep it to 100" "$work/err" && grep -q "must name the concept" "$wor
 
 v3="$work/v3.json"
 node -e 'const l=require(process.argv[1]); l.concepts[0].explain="Retries with backoff means trying again later."; delete l.concepts[1].visual; delete l.concepts[2].story; l.glossary.push({term:"quantum flux",tip:"Not in the text."}); console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$v3"
-if node "$skill/scripts/validate.mjs" "$v3" 2>"$work/err"; then fail "lesson without story, diagram or analogy passed"; fi
-if grep -q "opens with a definition" "$work/err" && grep -q "visual is required" "$work/err" && grep -q "story is required" "$work/err" && grep -q '"quantum flux" never appears' "$work/err"; then pass "every concept needs a story, an analogy-first explanation and a diagram; glossary terms must appear"; else fail "every concept needs a story, an analogy-first explanation and a diagram; glossary terms must appear"; fi
-if ! grep -q 'data-lens' "$skill/assets/app.js" && grep -q "function drawSketch" "$skill/assets/app.js" && grep -q "applyGlossary" "$skill/assets/app.js"; then pass "page has sketch diagrams and jargon tips, no focus switch"; else fail "page has sketch diagrams and jargon tips, no focus switch"; fi
+if node "$skill/scripts/validate.mjs" "$v3" 2>"$work/err"; then fail "lesson without story, animation or analogy passed"; fi
+if grep -q "opens with a definition" "$work/err" && grep -q "visual is required" "$work/err" && grep -q "story is required" "$work/err" && grep -q '"quantum flux" never appears' "$work/err"; then pass "every concept needs a story, an analogy-first explanation and an animation; glossary terms must appear"; else fail "every concept needs a story, an analogy-first explanation and an animation; glossary terms must appear"; fi
+if ! grep -q 'data-lens' "$skill/assets/app.js" && grep -q "function startFigure" "$skill/assets/app.js" && ! grep -q "<canvas" "$skill/assets/app.js" && grep -q "prefers-reduced-motion" "$skill/assets/app.js" && grep -q "applyGlossary" "$skill/assets/app.js"; then pass "page has animated figures that respect reduced motion, jargon tips, no focus switch"; else fail "page has animated figures that respect reduced motion, jargon tips, no focus switch"; fi
+if grep -q '"type": "sequence"' "$skill/examples/sample.lesson.json" && grep -q "sequenceStage" "$skill/assets/app.js" && grep -q "sequence" "$skill/references/designer.md" && grep -q '"type": "sequence"' "$skill/references/lesson-format.md"; then pass "sequence animations are in the sample, the page and the designer's guide"; else fail "sequence animations are in the sample, the page and the designer's guide"; fi
+
+seq="$work/seq.json"
+node -e 'const l=require(process.argv[1]); const v=l.concepts[0].visual; v.actors[1].id="phone"; v.steps[0]={from:"phone",to:"phone",label:"x"}; v.steps[1]={at:"nobody",says:"word ".repeat(9)}; v.steps[2]={at:"phone",says:"ok",from:"phone"}; v.caption="word ".repeat(26); console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$seq"
+if node "$skill/scripts/validate.mjs" "$seq" 2>"$work/err"; then fail "broken sequence animation passed"; fi
+if grep -q 'id "phone" is used twice' "$work/err" && grep -q "travels nowhere" "$work/err" && grep -q 'at "nobody" is not an actor id' "$work/err" && grep -q "says is required, at most 8 words" "$work/err" && grep -q "either a message" "$work/err" && grep -q "caption must be at most 25 words" "$work/err"; then pass "sequence animations need real actors, moving messages and short lines"; else fail "sequence animations need real actors, moving messages and short lines"; fi
+
+still="$work/still.json"
+node -e 'const l=require(process.argv[1]); l.concepts[0].visual.steps=l.concepts[0].visual.steps.filter(s=>s.at!==undefined).concat([{at:"shop",says:"Idle"}]); l.concepts[1].visual.type="chart"; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$still"
+if node "$skill/scripts/validate.mjs" "$still" 2>"$work/err"; then fail "sequence with nothing travelling passed"; fi
+if grep -q "at least one message that travels" "$work/err" && grep -q "must be sequence, flow, compare or bars" "$work/err"; then pass "a sequence needs something to travel; unknown animation types are rejected"; else fail "a sequence needs something to travel; unknown animation types are rejected"; fi
 
 polish="$work/polish.json"
 node -e 'const l=require(process.argv[1]); l.meta.title="Why safe retries need idempotency"; l.concepts[0].code={text:"x()"}; l.concepts[0].real_world="Too short."; l.concepts[1].pitfalls=["Only one."]; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$polish"
@@ -87,6 +98,11 @@ node -e 'const l=require(process.argv[1]); const c=JSON.parse(JSON.stringify(l.c
 node -e 'const l=require(process.argv[1]); const c=JSON.parse(JSON.stringify(l.concepts[3])); c.id="caching"; c.name="Caching"; c.explain=c.explain.replace(/\*\*Queues and background jobs\*\*/,"**Caching**"); l.concepts.push(c); console.log(JSON.stringify(l))' "$four" > "$five"
 node "$skill/scripts/validate.mjs" "$four" "$skill/examples/sample.concept-map.json" 2>"$work/err4" >/dev/null || true; node "$skill/scripts/validate.mjs" "$five" "$skill/examples/sample.concept-map.json" 2>"$work/err5" >/dev/null || true
 if ! grep -q "needs 2-4 concepts" "$work/err4" && grep -q "needs 2-4 concepts" "$work/err5"; then pass "lessons allow up to 4 concepts, not 5"; else fail "lessons allow up to 4 concepts, not 5"; fi
+
+bars="$work/bars.json"
+node -e 'const l=require(process.argv[1]); l.concepts[0].visual={type:"bars",title:"Waits",bars:[{label:"Try 2",value:1,display:"1 second"},{label:"Try 3",value:0,display:"none"},{label:"Try 4",value:4,display:"four whole long seconds here",tone:"meh"}]}; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$bars"
+if node "$skill/scripts/validate.mjs" "$bars" "$skill/examples/sample.concept-map.json" 2>"$work/err"; then fail "bad bars passed"; fi
+if grep -q "bars\[1\].value must be a positive number" "$work/err" && grep -q "bars\[2\].display is required, at most 4 words" "$work/err" && grep -q "bars\[2\].tone must be" "$work/err" && grep -q "function barsStage" "$skill/assets/app.js"; then pass "bars animations need real positive values and short labels"; else fail "bars animations need real positive values and short labels"; fi
 
 guess="$work/guess-map.json"
 node -e 'const m=require(process.argv[1]); m.evidence=m.evidence.filter(e=>e.kind!=="chat"); m.concepts.forEach(c=>{ if(c.in_your_work) c.in_your_work.evidence_ids=c.in_your_work.evidence_ids.filter(id=>m.evidence.some(e=>e.id===id)); }); console.log(JSON.stringify(m))' "$skill/examples/sample.concept-map.json" > "$guess"

@@ -28,26 +28,46 @@
       },
       "story": "You tap Pay on a shopping app just as the lift doors close and your signal drops. The app waits, hears nothing back, and has a choice to make: give up and tell you it failed, or quietly try again?",
       "visual": {
-        "type": "flow",
+        "type": "sequence",
         "title": "What the app does when nothing comes back",
+        "actors": [
+          {
+            "id": "phone",
+            "name": "Your phone",
+            "role": "the app"
+          },
+          {
+            "id": "shop",
+            "name": "The shop",
+            "role": "its server"
+          }
+        ],
         "steps": [
           {
-            "label": "Sends the payment",
-            "detail": "Waits for an answer"
+            "from": "phone",
+            "to": "shop",
+            "label": "Pay ₹500"
           },
           {
-            "label": "Hears nothing",
-            "detail": "Can't tell lost from slow"
+            "at": "phone",
+            "says": "No answer. Lost or slow?"
           },
           {
-            "label": "Waits longer",
-            "detail": "1s, then 2s, then 4s"
+            "at": "phone",
+            "says": "Waits 1s, then 2s"
           },
           {
-            "label": "Sends it again",
-            "detail": "Same payment, same ID"
+            "from": "phone",
+            "to": "shop",
+            "label": "Pay ₹500, same ID"
+          },
+          {
+            "from": "shop",
+            "to": "phone",
+            "label": "Paid"
           }
-        ]
+        ],
+        "caption": "Each wait is longer than the last, and the repeat carries the same ID."
       },
       "real_world": "Payment companies such as Razorpay and Stripe tell a shop about every payment by sending it a message. If the shop's app doesn't answer, they don't give up after one try. They send the same message again a few seconds later, then a minute later, then an hour later, and keep going for up to a few days. Because the gaps keep growing, a shop that was down for a while gets back on its feet before the messages pile up.",
       "pitfalls": [
@@ -78,7 +98,8 @@
             "First copy: charged ₹500",
             "Second copy: seen, skipped"
           ]
-        }
+        },
+        "caption": "The second copy is the same message. Only one side notices."
       },
       "in_your_work": {
         "text": "Your payment handler now keeps a list of every payment message it has already handled, using the ID that comes with each one. When a message shows up again, the handler checks the list, sees the ID, and simply skips it. So even if the payment provider resends a message five times, the customer's order is marked as paid once and nobody is charged twice.",

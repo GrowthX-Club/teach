@@ -18,7 +18,7 @@ Teach the ideas behind the work so the learner can spot them anywhere. Never ret
 3. **Concepts** (2–4), each under 450 words, taught story first:
    - **story**: a short situation that makes the learner feel the problem before the idea has a name, ideally from their own work, told so it stands on its own
    - the concept's **name** as the heading, with an **analogy-led explanation**: an analogy or real-life example first, then the name and what it is (at most 100 words)
-   - **a hand-drawn diagram** of how it works or what changes
+   - **a short animation** that acts out how it works or what changes, one beat at a time
    - **In the real world** (40–100 words), **In your work** (40–100 words, only when this session shows it), an optional **Did you know?** and **Common mistakes** (2–3 bullets)
    - no code, ever
    - jargon is underlined on the page with an analogy-style tip (the glossary)

@@ -91,7 +91,7 @@ Needs Node.js and the Claude Code command line (`claude`), logged in; it uses yo
 
 - A short hook and a clear goal
 - An analogy for a title, with no jargon
-- 2–4 concepts, taught story first: a short situation (from your own work when there is one), then the concept with an analogy-led explanation, a hand-drawn diagram, "In the real world" and "In your work" (about 100 words each) and a short list of common mistakes. No code
+- 2–4 concepts, taught story first: a short situation (from your own work when there is one), then the concept with an analogy-led explanation, a short animation that acts the idea out, "In the real world" and "In your work" (about 100 words each) and a short list of common mistakes. No code
 - Jargon is underlined; hover or tap it for a plain, analogy-style explanation
 - A sidebar with every section, ticking them off as you read
 - Light and dark themes (the focus you pick shapes the writing)
