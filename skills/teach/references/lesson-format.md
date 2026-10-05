@@ -73,6 +73,26 @@ There is no code anywhere in a lesson and no share image.
 
 Jargon anywhere in the lesson is underlined; hovering or tapping it shows its glossary tip.
 
+## A bars animation
+
+Use it whenever the point is *how much*: where the time goes, what each option costs, how big one thing is next to another.
+
+```json
+"visual": {
+  "type": "bars",
+  "title": "How long the app waits before each new try",
+  "bars": [
+    { "label": "Before try 2", "value": 1, "display": "1 second" },
+    { "label": "Before try 3", "value": 2, "display": "2 seconds" },
+    { "label": "Before try 4", "value": 4, "display": "4 seconds" },
+    { "label": "Before try 5", "value": 8, "display": "8 seconds", "tone": "good" }
+  ],
+  "caption": "Each wait doubles, so a struggling server gets more room to recover."
+}
+```
+
+Only use real or clearly typical numbers; never invent precise figures.
+
 ## A sequence animation
 
 Use it whenever two or three things pass something between them: a phone and a server, an app and a payment company, a question, a search index and a model.
@@ -112,6 +132,7 @@ On the page the actors sit side by side. A message slides from its sender to its
   - `{ "type": "sequence", "actors": 2–3 × { id, name, role? }, "steps": 3–6 }`: things talking to each other. Each step is either a **message** `{ from, to, label }` that travels from one actor to another, or a **moment** `{ at, says }` where one actor does or shows something. At least one message. `id` is lowercase with hyphens, `name` at most 3 words, `role` at most 5, `label` and `says` at most 8.
   - `{ "type": "flow", "steps": 3–4 × { label, detail } }`: stages of one thing, lit up in order. Labels at most 6 words, details at most 10.
   - `{ "type": "compare", "left": { "title", "tone"?, "points": 1–3 }, "right": { … } }`: the left side plays out, then the right. `tone` is `good`, `bad` or `neutral`. Points at most 10 words.
+  - `{ "type": "bars", "bars": 2–4 × { label, value, display, tone? } }`: amounts side by side (time, cost, size, speed), each bar growing to its `value` on its own beat. `value` is a positive number on one shared scale; `display` is what the reader sees, at most 4 words ("about 40 ms", "₹2 per chat"). `label` at most 6 words. Tiny values keep a visible sliver.
 - `real_world`: **40–100 words** on how a well-known company or product uses the idea, told as a small story with concrete details.
 - `in_your_work` (only when the concept map has one): **40–100 words** on where the idea shows up in what the learner did in this session and what it changed. Its `evidence_ids` come from the concept map and include at least one `chat` evidence. It must make sense to someone who never read the chat. No concept map, no `in_your_work`.
 - `fun_fact` is optional: at most 50 words, a genuinely interesting, verifiable fact. Leave it out rather than force one.

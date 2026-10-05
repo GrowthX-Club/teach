@@ -163,9 +163,27 @@
         }).join("") + "</ol></div>"
     };
   }
+  // Amounts side by side (time, cost, size): each bar grows to its value on its beat.
+  // Tiny values keep a visible sliver so they don't vanish next to big ones.
+  function barsStage(v) {
+    var bars = v.bars || [];
+    var max = Math.max.apply(null, bars.map(function (b) { return Number(b.value) || 0; }).concat([0])) || 1;
+    return {
+      beats: bars.length,
+      alt: bars.map(function (b) { return plain(b.label) + ": " + plain(b.display); }),
+      html: '<ol class="ab">' + bars.map(function (b, i) {
+        var pct = Math.max(1.5, (Number(b.value) || 0) / max * 100);
+        var tone = b.tone === "good" || b.tone === "bad" ? b.tone : "neutral";
+        return '<li data-beat="' + (i + 1) + '" class="tone-' + tone + '" style="--w:' + pct.toFixed(2) + '%">' +
+          '<div class="ab-text"><b>' + rich(b.label) + '</b><span>' + rich(b.display) + "</span></div>" +
+          '<div class="ab-track"><span class="ab-fill"></span></div></li>';
+      }).join("") + "</ol>"
+    };
+  }
+
   function visual(v) {
     if (!v) return "";
-    var stage = v.type === "sequence" ? sequenceStage(v) : v.type === "compare" ? compareStage(v) : flowStage(v);
+    var stage = v.type === "sequence" ? sequenceStage(v) : v.type === "compare" ? compareStage(v) : v.type === "bars" ? barsStage(v) : flowStage(v);
     var idx = visuals.push({ v: v, beats: stage.beats }) - 1;
     return (
       '<figure class="anim" data-anim="' + idx + '" data-type="' + esc(v.type) + '">' +

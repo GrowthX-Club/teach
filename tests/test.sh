@@ -78,7 +78,7 @@ if grep -q 'id "phone" is used twice' "$work/err" && grep -q "travels nowhere" "
 still="$work/still.json"
 node -e 'const l=require(process.argv[1]); l.concepts[0].visual.steps=l.concepts[0].visual.steps.filter(s=>s.at!==undefined).concat([{at:"shop",says:"Idle"}]); l.concepts[1].visual.type="chart"; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$still"
 if node "$skill/scripts/validate.mjs" "$still" 2>"$work/err"; then fail "sequence with nothing travelling passed"; fi
-if grep -q "at least one message that travels" "$work/err" && grep -q "must be flow, compare or sequence" "$work/err"; then pass "a sequence needs something to travel; unknown animation types are rejected"; else fail "a sequence needs something to travel; unknown animation types are rejected"; fi
+if grep -q "at least one message that travels" "$work/err" && grep -q "must be sequence, flow, compare or bars" "$work/err"; then pass "a sequence needs something to travel; unknown animation types are rejected"; else fail "a sequence needs something to travel; unknown animation types are rejected"; fi
 
 polish="$work/polish.json"
 node -e 'const l=require(process.argv[1]); l.meta.title="Why safe retries need idempotency"; l.concepts[0].code={text:"x()"}; l.concepts[0].real_world="Too short."; l.concepts[1].pitfalls=["Only one."]; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$polish"
@@ -98,6 +98,11 @@ node -e 'const l=require(process.argv[1]); const c=JSON.parse(JSON.stringify(l.c
 node -e 'const l=require(process.argv[1]); const c=JSON.parse(JSON.stringify(l.concepts[3])); c.id="caching"; c.name="Caching"; c.explain=c.explain.replace(/\*\*Queues and background jobs\*\*/,"**Caching**"); l.concepts.push(c); console.log(JSON.stringify(l))' "$four" > "$five"
 node "$skill/scripts/validate.mjs" "$four" "$skill/examples/sample.concept-map.json" 2>"$work/err4" >/dev/null || true; node "$skill/scripts/validate.mjs" "$five" "$skill/examples/sample.concept-map.json" 2>"$work/err5" >/dev/null || true
 if ! grep -q "needs 2-4 concepts" "$work/err4" && grep -q "needs 2-4 concepts" "$work/err5"; then pass "lessons allow up to 4 concepts, not 5"; else fail "lessons allow up to 4 concepts, not 5"; fi
+
+bars="$work/bars.json"
+node -e 'const l=require(process.argv[1]); l.concepts[0].visual={type:"bars",title:"Waits",bars:[{label:"Try 2",value:1,display:"1 second"},{label:"Try 3",value:0,display:"none"},{label:"Try 4",value:4,display:"four whole long seconds here",tone:"meh"}]}; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$bars"
+if node "$skill/scripts/validate.mjs" "$bars" "$skill/examples/sample.concept-map.json" 2>"$work/err"; then fail "bad bars passed"; fi
+if grep -q "bars\[1\].value must be a positive number" "$work/err" && grep -q "bars\[2\].display is required, at most 4 words" "$work/err" && grep -q "bars\[2\].tone must be" "$work/err" && grep -q "function barsStage" "$skill/assets/app.js"; then pass "bars animations need real positive values and short labels"; else fail "bars animations need real positive values and short labels"; fi
 
 guess="$work/guess-map.json"
 node -e 'const m=require(process.argv[1]); m.evidence=m.evidence.filter(e=>e.kind!=="chat"); m.concepts.forEach(c=>{ if(c.in_your_work) c.in_your_work.evidence_ids=c.in_your_work.evidence_ids.filter(id=>m.evidence.some(e=>e.id===id)); }); console.log(JSON.stringify(m))' "$skill/examples/sample.concept-map.json" > "$guess"

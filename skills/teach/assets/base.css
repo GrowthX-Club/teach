@@ -323,3 +323,19 @@ footer.site a { color: var(--fg); text-decoration-color: var(--hairline-2); text
   html { scroll-behavior: auto; }
   * { transition: none !important; }
 }
+
+/* ===== Animated bars: amounts side by side ===== */
+.ab { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.ab li { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 16px; align-items: center; }
+.ab-text { display: grid; gap: 2px; min-width: 0; }
+.ab-text b { font-weight: 600; font-size: 15px; }
+.ab-text span { color: var(--muted); font-size: 13.5px; }
+.ab-track { height: 22px; border-radius: 6px; background: var(--glass-2); overflow: hidden; }
+.ab-fill { display: block; height: 100%; width: 0; border-radius: 6px; background: var(--brand); transition: width 900ms cubic-bezier(.2, .7, .2, 1); }
+.ab li.tone-good .ab-fill { background: var(--green); }
+.ab li.tone-bad .ab-fill { background: var(--red); }
+.ab li.on .ab-fill { width: var(--w); }
+.ab li:not(.on) .ab-text { opacity: 0.45; }
+.anim.still .ab-fill { transition: none; }
+@media (max-width: 560px) { .ab li { grid-template-columns: 1fr; gap: 6px; } }
+@media (prefers-reduced-motion: reduce) { .ab-fill { transition: none; } }

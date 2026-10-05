@@ -111,6 +111,7 @@ function conceptWords(c) {
     n += words(v.caption);
     for (const a of v.actors || []) n += words(a.name) + words(a.role);
     for (const s of v.steps || []) n += words(s.label) + words(s.detail) + words(s.says);
+    for (const bar of v.bars || []) n += words(bar.label) + words(bar.display);
     for (const side of [v.left, v.right]) if (side) n += words(side.title) + (side.points || []).reduce((t, p) => t + words(p), 0);
   }
   return n;
@@ -218,7 +219,16 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
           }
         }
         if (steps.length && messages === 0) err(`${at}.visual sequence needs at least one message that travels between actors`);
-      } else err(`${at}.visual.type must be flow, compare or sequence`);
+      } else if (v.type === "bars") {
+        const bars = isList(v.bars) ? v.bars : [];
+        if (bars.length < 2 || bars.length > 4) err(`${at}.visual bars needs 2-4 bars`);
+        for (const [j, bar] of bars.entries()) {
+          if (!bar || !isText(bar.label) || words(bar.label) > 6) err(`${at}.visual.bars[${j}].label is required, at most 6 words`);
+          if (!bar || typeof bar.value !== "number" || !(bar.value > 0)) err(`${at}.visual.bars[${j}].value must be a positive number`);
+          if (!bar || !isText(bar.display) || words(bar.display) > 4) err(`${at}.visual.bars[${j}].display is required, at most 4 words (e.g. "about 40 ms")`);
+          if (bar && bar.tone !== undefined && !["good", "bad", "neutral"].includes(bar.tone)) err(`${at}.visual.bars[${j}].tone must be good, bad or neutral`);
+        }
+      } else err(`${at}.visual.type must be sequence, flow, compare or bars`);
       if (v.caption !== undefined && (!isText(v.caption) || words(v.caption) > 25)) err(`${at}.visual.caption must be at most 25 words`);
     }
 
