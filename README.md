@@ -86,7 +86,7 @@ The first time you learn about an area, teach asks two quick questions: how much
 
 Lessons teach ideas, not a recap of the chat: most learners never read the chat, so every lesson stands on its own.
 
-When the lesson is ready, teach says so with a link to click. In the Claude desktop app it opens in the app's built-in browser; in a terminal it opens in your browser.
+teach doesn't block your chat. It asks its level question and writes a short brief right away, then builds the lesson in the background while you keep working. When the lesson is ready, teach says so with a link to click. In the Claude desktop app it opens in the app's built-in browser; in a terminal it opens in your browser.
 
 Each lesson is one self-contained HTML file. It never calls a model, a server on the internet or analytics.
 
@@ -116,6 +116,8 @@ The theme lives in your teach folder so the agent never has to write CSS, which 
 5. **Lesson editor** (a third agent): rewrites the wording so it reads like a person wrote it, using the [humanizer](https://github.com/blader/humanizer) rules, without changing facts, structure or quiz answers.
 6. **Check and build**: `validate.mjs` enforces the rules (including 300 words per concept, no references back to the chat, and no obvious AI-writing tells); `build.sh` inlines your theme, the layout, the lesson and the renderer into one HTML file and refreshes the library.
 7. **Hand-off**: the lesson opens (built-in browser in the desktop app via `serve.sh`, your browser in a terminal) and teach replies with a link.
+
+Steps 3 to 6 run in the background where the agent supports it (Claude Code): the main chat starts each agent in the background and starts the next one when it reports back, so every pass still gets its own fresh agent. Ready-made prompts for each pass are in `skills/teach/references/agent-prompts.md`. Where background agents aren't available, the same steps run one after another.
 
 Keeping fact-finding and teaching in separate agents stops the lesson from inventing things about your work.
 

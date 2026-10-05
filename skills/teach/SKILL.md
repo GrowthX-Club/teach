@@ -16,16 +16,21 @@ Paths used below (never show these to the user):
 - `<skill>`: the directory that contains this `SKILL.md`. Never resolve it from the user's project.
 - `<home>`: `$TEACH_HOME` if set, otherwise `~/growthx-teach`. Everything teach makes lives here.
 
-## While you work
+## Don't block the user
+
+Steps 1–3 need this chat (and maybe one answer from the user), so do them right away; they take well under a minute. Steps 4–5 do not need the chat, so run them in the **background** and let the user keep working:
+
+- If you can start agents in the background and get told when each one finishes (Claude Code: the Agent tool with `run_in_background: true`), use **background mode**.
+- Otherwise use **foreground mode**: run the same steps one after another, as normal.
 
 Before anything else, run `sh <skill>/scripts/setup.sh` (it creates `<home>` on first use and changes nothing later).
 
-Give the user short, friendly progress lines and nothing else, for example:
+What the user sees:
 
-1. "Looking at what we worked on…"
-2. "Picking the ideas worth learning…"
-3. "Writing your lesson…" and "Making it read naturally…"
-4. "Almost done…"
+1. "Looking at what we worked on…" while you do steps 1–3 (plus the level question, if it's needed).
+2. In background mode, once the brief is written: "Writing your lesson in the background. Keep working; I'll drop the link here when it's ready." In foreground mode: "Writing your lesson…"
+3. Nothing between the background steps. When an agent finishes, start the next one without a message; if the user is in the middle of something, keep helping them.
+4. The hand-off in step 6.
 
 ## 1. Pick the concepts
 
@@ -52,13 +57,13 @@ Never put secrets, tokens, credentials, customer data, or private personal detai
 
 ## 4. Run three separate agents
 
-Use the environment's subagent or delegation tool for each, with a fresh context.
+Each pass is its own agent with a fresh context, started by **you**, the main chat. In background mode, start one agent in the background, and when it reports back, start the next. Never hand the whole chain to a single agent: an agent cannot start its own sub-agents, so the passes would end up sharing one context, and the lesson gets worse. Use the ready-made prompts in [agent prompts](references/agent-prompts.md); they contain every path the agent needs, because a background agent cannot see this chat.
 
 1. **Concept finder** (skip for a pure topic with no chat or project material). Give it `brief.md`, read access to the project, [investigator](references/investigator.md) and [concept-map format](references/concept-map-format.md). It writes `concept-map.json` in the lesson folder.
 2. **Lesson designer**. Give it `brief.md`, `concept-map.json` if it exists, [designer](references/designer.md), [teaching method](references/teaching-method.md) and [lesson format](references/lesson-format.md). It writes `lesson.json`. It must not read the project or the chat.
 3. **Lesson editor**. Give it the lesson folder, the `<skill>` path, [editor](references/editor.md), [humanizer](references/humanizer.md) and [lesson format](references/lesson-format.md). It rewrites the lesson's wording so it reads like a person, keeping the facts. It must not read the project, the chat or the brief.
 
-If no delegation tool exists, do the passes yourself one after the other. Never merge them into one pass.
+If no delegation tool exists at all, do the passes yourself one after the other. Never merge them into one pass.
 
 ## 5. Check and build
 
@@ -68,7 +73,7 @@ If `node` is available, run:
 node <skill>/scripts/validate.mjs <lesson-dir>/lesson.json <lesson-dir>/concept-map.json
 ```
 
-(leave out the map if there is none). Send any problems back to the designer, or fix small ones yourself, until it passes. Without `node`, check `lesson.json` against [lesson format](references/lesson-format.md) yourself, especially the 300-word limit per concept. Say nothing to the user about this step.
+(leave out the map if there is none). The editor already runs this, so it normally passes. If it doesn't, fix small problems yourself, or start the editor again (in the background, in background mode) with the problems listed, until it passes. Without `node`, check `lesson.json` against [lesson format](references/lesson-format.md) yourself, especially the 300-word limit per concept. Say nothing to the user about this step.
 
 Then build:
 
@@ -79,7 +84,7 @@ Then build:
 
 ## 6. Hand it over
 
-This step is required. Reply with exactly this shape, in plain words, and nothing else:
+This step is required, also in background mode, where it arrives as its own message once the build is done. Reply with exactly this shape, in plain words, and nothing else:
 
 > Your lesson on **<lesson title>** is built. [Click here to see it](<URL>)
 >
@@ -91,7 +96,7 @@ This step is required. Reply with exactly this shape, in plain words, and nothin
 
 ## Follow-ups
 
-- "simpler" / "easier", "deeper" / "harder", "more business", "more technical" (or `teach easier`, `teach harder`, `teach more product`, `teach more tech`): change the dial in `profile.json` as [level-check](references/level-check.md) describes, then rerun only the designer with the same brief and concept map, into the same folder, and hand it over again.
+- "simpler" / "easier", "deeper" / "harder", "more business", "more technical" (or `teach easier`, `teach harder`, `teach more product`, `teach more tech`): change the dial in `profile.json` as [level-check](references/level-check.md) describes, update the depth or focus in `brief.md`, then rerun the designer and the editor (in the background, in background mode) with the same brief and concept map, into the same folder, and hand it over again.
 - New subject: start again from step 1.
 
 ## Rules

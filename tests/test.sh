@@ -49,6 +49,8 @@ for label in "I'm new to this" "I know the basics" "I use it at work" "I know it
 done
 if [ "$labels_ok" = true ]; then pass "depth labels match the level question everywhere"; else fail "depth labels match the level question everywhere"; fi
 
+if grep -q "run_in_background" "$skill/SKILL.md" && grep -q "Never hand the whole chain to a single agent" "$skill/SKILL.md" && [ "$(grep -c '^## [123]\. ' "$skill/references/agent-prompts.md")" -eq 3 ]; then pass "background mode chains one fresh agent per pass"; else fail "background mode chains one fresh agent per pass"; fi
+
 echo "build"
 export TEACH_HOME="$work/home with space"
 lesson="$TEACH_HOME/lessons/2026-01-01-sample"
