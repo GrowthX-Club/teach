@@ -19,11 +19,12 @@ Teach the ideas behind the work so the learner can spot them anywhere. Never ret
    - **story**: a short situation that makes the learner feel the problem before the idea has a name, ideally from their own work, told so it stands on its own
    - the concept's **name** as the heading, with an **analogy-led explanation**: an analogy or real-life example first, then the name and what it is (at most 100 words)
    - **a hand-drawn diagram** of how it works or what changes
-   - **In the real world** (40–100 words), **In your work** (40–100 words, when there is one) and **Common mistakes** (2–3 bullets)
+   - **In the real world** (40–100 words), **In your work** (40–100 words, only when this session shows it), an optional **Did you know?** and **Common mistakes** (2–3 bullets)
    - no code, ever
    - jargon is underlined on the page with an analogy-style tip (the glossary)
 4. **Quiz**: 3 multiple-choice questions that apply an idea to a new situation.
 5. **Next**: 2–3 follow-up topics, phrased as the `teach …` prompt to type.
+6. **Prefer watching?**: an annex of up to 4 YouTube videos that open at the exact moment that explains a concept, added by the video finder when it can verify them.
 
 ## Pitch by depth
 

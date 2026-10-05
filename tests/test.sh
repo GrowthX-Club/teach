@@ -73,6 +73,19 @@ polish="$work/polish.json"
 node -e 'const l=require(process.argv[1]); l.meta.title="Why safe retries need idempotency"; l.concepts[0].code={text:"x()"}; l.concepts[0].real_world="Too short."; l.concepts[1].pitfalls=["Only one."]; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$polish"
 if node "$skill/scripts/validate.mjs" "$polish" 2>"$work/err"; then fail "jargon title, code or thin sections passed"; fi
 if grep -q "make the title an analogy" "$work/err" && grep -q "code is no longer used" "$work/err" && grep -q "elaborate it in 40-100 words" "$work/err" && grep -q "needs 2-3 common mistakes" "$work/err"; then pass "analogy titles, no code, full real-world sections and 2-3 mistakes are enforced"; else fail "analogy titles, no code, full real-world sections and 2-3 mistakes are enforced"; fi
+vids="$work/vids.json"
+node -e 'const l=require(process.argv[1]); l.videos=[{concept_id:"retries",title:"T",channel:"C",url:"https://www.youtube.com/watch?v=abcdefghijk",start:"1:00",why:"w"},{concept_id:"retries",title:"T",channel:"C",url:"https://www.youtube.com/watch?v=abcdefghijk&t=95s",start:"1:30",why:"w"},{concept_id:"retries",title:"T",channel:"C",url:"https://www.youtube.com/watch?v=abcdefghijk&t=272s",start:"4:32",why:"Shows backoff in action."}]; l.concepts[0].fun_fact="word ".repeat(60); console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$vids"
+if node "$skill/scripts/validate.mjs" "$vids" "$skill/examples/sample.concept-map.json" 2>"$work/err"; then fail "bad videos passed"; fi
+if grep -q 'videos\[0\].url must start at the right moment' "$work/err" && grep -q 'videos\[1\].start "1:30" must match t=95' "$work/err" && ! grep -q 'videos\[2\]' "$work/err" && grep -q "fun_fact must be at most 50" "$work/err"; then pass "video links must open at a timestamp that matches; fun facts stay short"; else fail "video links must open at a timestamp that matches; fun facts stay short"; fi
+
+if grep -q "check-videos.mjs" "$skill/SKILL.md" && grep -q "oembed" "$skill/scripts/check-videos.mjs"; then pass "videos are checked against YouTube before building"; else fail "videos are checked against YouTube before building"; fi
+
+guess="$work/guess-map.json"
+node -e 'const m=require(process.argv[1]); m.evidence=m.evidence.filter(e=>e.kind!=="chat"); m.concepts.forEach(c=>{ if(c.in_your_work) c.in_your_work.evidence_ids=c.in_your_work.evidence_ids.filter(id=>m.evidence.some(e=>e.id===id)); }); console.log(JSON.stringify(m))' "$skill/examples/sample.concept-map.json" > "$guess"
+if node "$skill/scripts/validate.mjs" "$skill/examples/sample.lesson.json" "$guess" 2>"$work/err"; then fail "in-your-work without chat evidence passed"; fi
+if node "$skill/scripts/validate.mjs" "$skill/examples/sample.lesson.json" 2>"$work/err2"; then fail "in-your-work without a concept map passed"; fi
+if grep -q 'must cite at least one "chat" evidence' "$work/err" && grep -q "needs a concept map" "$work/err2"; then pass "in-your-work only comes from this session's chat, never guessed"; else fail "in-your-work only comes from this session's chat, never guessed"; fi
+
 if ! grep -q "share-canvas\|Concept <span" "$skill/assets/app.js"; then pass "no share image and no Concept label"; else fail "no share image and no Concept label"; fi
 
 echo "build"

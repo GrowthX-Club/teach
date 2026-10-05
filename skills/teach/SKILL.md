@@ -55,18 +55,19 @@ Create `<home>/lessons/<YYYY-MM-DD>-<slug>/` (`slug`: lowercase words joined by 
 
 - the subject, the area id, and the candidate concepts (catalogue ids and names)
 - the learner's depth and focus
-- for each concept, one plain sentence on where it showed up in the user's work, written so it makes sense to someone who never saw the chat ("Your sale now switches on by itself at a set time"), never "the bug we fixed earlier"
+- for each concept, where it showed up **in this chat**: one plain sentence, written so it makes sense to someone who never saw the chat ("Your sale now switches on by itself at a set time"), never "the bug we fixed earlier". Only write it when this session actually shows the user working on it in the project open here. Don't guess from the project's files or from other projects; when in doubt, write "none"
 - the project root path, if a project is involved
 
 Never put secrets, tokens, credentials, customer data, or private personal details in the brief.
 
-## 4. Run three separate agents
+## 4. Run the agents
 
 Each pass is its own agent with a fresh context, started by **you**, the main chat. In background mode, start one agent in the background, and when it reports back, start the next. Never hand the whole chain to a single agent: an agent cannot start its own sub-agents, so the passes would end up sharing one context, and the lesson gets worse. Use the ready-made prompts in [agent prompts](references/agent-prompts.md); they contain every path the agent needs, because a background agent cannot see this chat.
 
 1. **Concept finder** (skip for a pure topic with no chat or project material). Give it `brief.md`, read access to the project, [investigator](references/investigator.md) and [concept-map format](references/concept-map-format.md). It writes `concept-map.json` in the lesson folder.
 2. **Lesson designer**. Give it `brief.md`, `concept-map.json` if it exists, [designer](references/designer.md), [teaching method](references/teaching-method.md) and [lesson format](references/lesson-format.md). It writes `lesson.json`. It must not read the project or the chat.
 3. **Lesson editor**. Give it the lesson folder, the `<skill>` path, [editor](references/editor.md), [humanizer](references/humanizer.md) and [lesson format](references/lesson-format.md). It rewrites the lesson's wording so it reads like a person, keeping the facts. It must not read the project, the chat or the brief.
+4. **Video finder** (only where agents can search the web). Runs after the editor. It adds up to 4 YouTube links that open at the exact moment that explains a concept, keeping only videos and timestamps it has checked. If it finds nothing reliable, the lesson simply has no video annex.
 
 If no delegation tool exists at all, do the passes yourself one after the other. Never merge them into one pass.
 
@@ -78,7 +79,7 @@ If `node` is available, run:
 node <skill>/scripts/validate.mjs <lesson-dir>/lesson.json <lesson-dir>/concept-map.json
 ```
 
-(leave out the map if there is none). The editor already runs this, so it normally passes. If it doesn't, fix small problems yourself, or start the editor again (in the background, in background mode) with the problems listed, until it passes. Without `node`, check `lesson.json` against [lesson format](references/lesson-format.md) yourself, especially the 300-word limit per concept. Say nothing to the user about this step.
+(leave out the map if there is none). If the lesson has videos, first run `node <skill>/scripts/check-videos.mjs <lesson-dir>/lesson.json`, which drops any video YouTube doesn't confirm. The editor already runs the validator, so it normally passes. If it doesn't, fix small problems yourself, or start the editor again (in the background, in background mode) with the problems listed, until it passes. Without `node`, check `lesson.json` against [lesson format](references/lesson-format.md) yourself, especially the 300-word limit per concept. Say nothing to the user about this step.
 
 Then build:
 

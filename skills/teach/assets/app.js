@@ -133,6 +133,7 @@
       visual(c.visual) +
       (c.real_world ? '<div class="sub"><h3>In the real world</h3><div class="prose">' + paras(c.real_world) + "</div></div>" : "") +
       (c.in_your_work && c.in_your_work.text ? '<div class="sub"><h3>In your work</h3><div class="prose">' + paras(c.in_your_work.text) + "</div></div>" : "") +
+      (c.fun_fact ? '<div class="sub did-you-know"><h3>Did you know?</h3><div class="prose">' + paras(c.fun_fact) + "</div></div>" : "") +
       (mistakes.length ? '<div class="sub"><h3>Common mistakes</h3><ul class="mistakes">' + mistakes.map(function (m) { return "<li>" + rich(m) + "</li>"; }).join("") + "</ul></div>" : "") +
       "</section>"
     );
@@ -169,6 +170,30 @@
     );
   }
 
+  function videosSection() {
+    var videos = (lesson.videos || []).filter(function (v) { return v && v.url && v.title; });
+    if (!videos.length) return "";
+    var names = {};
+    concepts.forEach(function (c) { names[c.id] = plain(c.name); });
+    return (
+      '<section class="block" id="watch" data-nav="Watch">' +
+      '<div class="sec-head"><span class="sec-num">Annex</span><h2>Prefer watching?</h2></div>' +
+      '<p class="lede">Each video opens at the exact moment that explains the idea.</p>' +
+      '<ol class="videos">' + videos.map(function (v) {
+        var safe = /^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test(v.url) ? v.url : "#";
+        return (
+          "<li>" +
+          '<a class="video-link" href="' + esc(safe) + '" target="_blank" rel="noopener">' +
+          '<span class="video-start">▶ ' + esc(v.start) + "</span>" +
+          '<span class="video-title">' + esc(v.title) + "</span></a>" +
+          '<span class="video-meta">' + esc([v.channel, names[v.concept_id]].filter(Boolean).join(" · ")) + "</span>" +
+          (v.why ? '<p class="video-why">' + rich(v.why) + "</p>" : "") +
+          "</li>"
+        );
+      }).join("") + "</ol></section>"
+    );
+  }
+
   function shareSection() {
     var s = lesson.share || {};
     if (!s.linkedin && !s.x) return "";
@@ -199,7 +224,7 @@
 
   // ---------- render ----------
   document.title = plain(meta.title || "Lesson") + " · GrowthX teach";
-  var body = hero() + concepts.map(concept).join("") + quizSection() + nextSection() + shareSection();
+  var body = hero() + concepts.map(concept).join("") + quizSection() + nextSection() + videosSection() + shareSection();
   document.getElementById("app").innerHTML =
     topbar() +
     '<div class="layout wrap"><nav class="sidebar" id="sidebar" aria-label="Lesson sections"></nav><main class="content">' + body + "</main></div>" +

@@ -53,7 +53,8 @@
       "pitfalls": [
         "Assuming each message arrives exactly once. With retries, the honest promise is \"at least once\", so plan for repeats.",
         "Retrying instantly in a tight loop. A struggling server then gets hammered harder, so always wait longer between tries."
-      ]
+      ],
+      "fun_fact": "The idea of waiting longer after each failure was popularised by Ethernet in the 1970s. When two computers talked over the same cable at once, each waited a random, growing amount of time before trying again."
     },
     {
       "id": "idempotency",
@@ -83,7 +84,8 @@
         "text": "Your payment handler now keeps a list of every payment message it has already handled, using the ID that comes with each one. When a message shows up again, the handler checks the list, sees the ID, and simply skips it. So even if the payment provider resends a message five times, the customer's order is marked as paid once and nobody is charged twice.",
         "evidence_ids": [
           "e2",
-          "e3"
+          "e3",
+          "e5"
         ]
       },
       "story": "The retry worked, but there's a catch. The first payment had actually gone through; only the reply got lost. Now the same payment has arrived twice. Should you be charged ₹500 or ₹1,000?",
@@ -118,7 +120,8 @@
       "in_your_work": {
         "text": "In your app, saving a payment message's ID and updating the order now happen together in one database step. If two copies of the same message arrive at the very same moment, only one of them can save the ID. That one updates the order; the other is turned away. So the order can never be marked as paid twice, even when the copies race each other.",
         "evidence_ids": [
-          "e4"
+          "e4",
+          "e6"
         ]
       },
       "story": "One more twist. What if both copies of the payment arrive at the very same moment? Each one checks \"have I seen this before?\", each one hears \"no\", and both go ahead.",
@@ -126,7 +129,8 @@
       "pitfalls": [
         "Checking \"have I seen this?\" first and doing the work in a separate step. The tiny gap between them is exactly where duplicates sneak in.",
         "Treating a rare race as impossible. With enough traffic, two copies landing at the same moment will happen."
-      ]
+      ],
+      "fun_fact": "Banks have used the \"all or nothing\" rule for decades. A transfer either takes money out of one account and puts it into the other, or does neither, so money is never lost halfway."
     }
   ],
   "quiz": [
@@ -228,6 +232,32 @@
     {
       "term": "payment provider",
       "tip": "The company that moves the money for a shop, like Razorpay or Stripe, a bit like the cashier who handles every card swipe."
+    }
+  ],
+  "videos": [
+    {
+      "concept_id": "retries",
+      "title": "Top 5 Microservices Resilience Patterns",
+      "channel": "ByteMonk",
+      "url": "https://www.youtube.com/watch?v=RfPNuaj5Ax0&t=133s",
+      "start": "2:13",
+      "why": "A short, clear walk through trying a failed request again, waiting a little longer each time so a busy service can recover."
+    },
+    {
+      "concept_id": "idempotency",
+      "title": "Idempotency - What it is and How to Implement it",
+      "channel": "Alex Hyett",
+      "url": "https://www.youtube.com/watch?v=XAccGbtl3Z8&t=65s",
+      "start": "1:05",
+      "why": "Defines idempotency in plain terms, then shows how a unique key stops a repeated payment from being charged twice."
+    },
+    {
+      "concept_id": "transactions",
+      "title": "What is a Database Transaction? Be ACID compliant!",
+      "channel": "Be A Better Dev",
+      "url": "https://www.youtube.com/watch?v=wHUOeXbZCYA&t=30s",
+      "start": "0:30",
+      "why": "Explains a transaction as a group of changes that all succeed together or all get undone, followed by a simple example."
     }
   ]
 }
