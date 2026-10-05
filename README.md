@@ -6,6 +6,18 @@ Type `teach` in Claude Code or Codex and get a short, interactive lesson on the 
 
 ## Install
 
+### With your AI (easiest)
+
+Paste this into Claude Code or Codex:
+
+```text
+Install the GrowthX teach skill: clone github.com/GrowthX-Club/teach and follow its INSTALL.md
+```
+
+Your agent downloads teach, installs it, sets up your teach folder and checks it worked. Start a new chat afterwards. The same prompt updates teach later.
+
+### With the terminal
+
 ```sh
 git clone git@github.com:GrowthX-Club/teach.git
 cd teach
