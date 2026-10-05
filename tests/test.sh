@@ -41,6 +41,14 @@ node -e 'const l=require(process.argv[1]); l.meta.domain="marketing"; l.concepts
 if node "$skill/scripts/validate.mjs" "$offtopic" 2>"$work/err"; then fail "non-tech lesson passed"; fi
 if grep -q "only covers tech and AI" "$work/err" && grep -q 'catalogue name "Retries with backoff"' "$work/err"; then pass "non-tech areas and off-catalogue names are rejected"; else fail "non-tech areas and off-catalogue names are rejected"; fi
 
+labels_ok=true
+for label in "I'm new to this" "I know the basics" "I use it at work" "I know it well"; do
+  for f in "$skill/references/level-check.md" "$skill/assets/app.js" "$skill/assets/library.html"; do
+    grep -qF "$label" "$f" || { labels_ok=false; printf '    missing "%s" in %s\n' "$label" "$f"; }
+  done
+done
+if [ "$labels_ok" = true ]; then pass "depth labels match the level question everywhere"; else fail "depth labels match the level question everywhere"; fi
+
 echo "build"
 export TEACH_HOME="$work/home with space"
 lesson="$TEACH_HOME/lessons/2026-01-01-sample"

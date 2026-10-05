@@ -15,6 +15,8 @@ Areas are the [catalogue](catalogue.json) areas: `ai-basics` (How AI works), `ai
 
 ## Focus (one setting for the learner)
 
+The lesson page's focus switch shows short forms of these answers: Business, Both, Under the hood.
+
 | lens | what the user sees | the lesson… |
 |---|---|---|
 | `product` | What it means for the business | the same tech concept, explained through its impact on users, cost and risk, and what to ask an engineer. No code |
