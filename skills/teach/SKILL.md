@@ -22,7 +22,7 @@ Give the user short, friendly progress lines and nothing else, for example:
 
 1. "Looking at what we worked on…"
 2. "Picking the ideas worth learning…"
-3. "Writing your lesson…"
+3. "Writing your lesson…" and "Making it read naturally…"
 4. "Almost done…"
 
 ## 1. Pick the concepts
@@ -46,14 +46,15 @@ Create `<home>/lessons/<YYYY-MM-DD>-<slug>/` (`slug`: lowercase words joined by 
 
 Never put secrets, tokens, credentials, customer data, or private personal details in the brief.
 
-## 4. Run two separate agents
+## 4. Run three separate agents
 
 Use the environment's subagent or delegation tool for each, with a fresh context.
 
 1. **Concept finder** (skip for a pure topic with no chat or project material). Give it `brief.md`, read access to the project, [investigator](references/investigator.md) and [concept-map format](references/concept-map-format.md). It writes `concept-map.json` in the lesson folder.
 2. **Lesson designer**. Give it `brief.md`, `concept-map.json` if it exists, [designer](references/designer.md), [teaching method](references/teaching-method.md) and [lesson format](references/lesson-format.md). It writes `lesson.json`. It must not read the project or the chat.
+3. **Lesson editor**. Give it the lesson folder, the `<skill>` path, [editor](references/editor.md), [humanizer](references/humanizer.md) and [lesson format](references/lesson-format.md). It rewrites the lesson's wording so it reads like a person, keeping the facts. It must not read the project, the chat or the brief.
 
-If no delegation tool exists, do the two passes yourself one after the other. Never merge them into one pass.
+If no delegation tool exists, do the passes yourself one after the other. Never merge them into one pass.
 
 ## 5. Check and build
 

@@ -28,6 +28,12 @@ node -e 'const l=require(process.argv[1]); l.concepts[0].examples[1].kind="your-
 if node "$skill/scripts/validate.mjs" "$recap" 2>"$work/err"; then fail "recap lesson passed"; fi
 if grep -q "everyday or industry" "$work/err" && grep -q "refers back to the chat" "$work/err"; then pass "recaps and chat references are rejected"; else fail "recaps and chat references are rejected"; fi
 
+ai="$work/ai.json"
+node -e 'const l=require(process.argv[1]); l.concepts[0].explain += " This is a crucial idea \u2014 not just for engineers but for everyone."; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$ai"
+if node "$skill/scripts/validate.mjs" "$ai" 2>"$work/err"; then fail "AI-sounding lesson passed"; fi
+if grep -q 'stock AI word "crucial"' "$work/err" && grep -q "em or en dashes" "$work/err" && grep -q "X but Y" "$work/err"; then pass "AI writing tells are rejected"; else fail "AI writing tells are rejected"; fi
+if grep -q "Siqi Chen" "$skill/references/humanizer.LICENSE" && grep -q "^# Humanizer" "$skill/references/humanizer.md"; then pass "humanizer bundled with its licence"; else fail "humanizer bundled with its licence"; fi
+
 echo "build"
 export TEACH_HOME="$work/home with space"
 lesson="$TEACH_HOME/lessons/2026-01-01-sample"

@@ -107,8 +107,9 @@ The theme lives in your teach folder so the agent never has to write CSS, which 
 2. **Brief**: the agent picks 2–3 concepts and writes a short brief, without secrets or personal data.
 3. **Concept finder** (a separate agent): confirms which concepts were really used, with evidence from code, tests or the chat.
 4. **Lesson designer** (another separate agent): sees only the brief and the concept map and writes `lesson.json`.
-5. **Check and build**: `validate.mjs` enforces the rules (including 300 words per concept and no references back to the chat); `build.sh` inlines your theme, the layout, the lesson and the renderer into one HTML file and refreshes the library.
-6. **Hand-off**: the lesson opens (built-in browser in the desktop app via `serve.sh`, your browser in a terminal) and teach replies with a link.
+5. **Lesson editor** (a third agent): rewrites the wording so it reads like a person wrote it, using the [humanizer](https://github.com/blader/humanizer) rules, without changing facts, structure or quiz answers.
+6. **Check and build**: `validate.mjs` enforces the rules (including 300 words per concept, no references back to the chat, and no obvious AI-writing tells); `build.sh` inlines your theme, the layout, the lesson and the renderer into one HTML file and refreshes the library.
+7. **Hand-off**: the lesson opens (built-in browser in the desktop app via `serve.sh`, your browser in a terminal) and teach replies with a link.
 
 Keeping fact-finding and teaching in separate agents stops the lesson from inventing things about your work.
 
@@ -140,6 +141,10 @@ cp skills/teach/examples/sample.lesson.json /tmp/teach-demo/lessons/2026-10-05-s
 TEACH_HOME=/tmp/teach-demo sh skills/teach/scripts/build.sh /tmp/teach-demo/lessons/2026-10-05-safe-retries
 open /tmp/teach-demo/lessons/2026-10-05-safe-retries/index.html
 ```
+
+## Credits
+
+The lesson editor uses [humanizer](https://github.com/blader/humanizer) by Siqi Chen (MIT), bundled at `skills/teach/references/humanizer.md` with its licence in `humanizer.LICENSE`. To update it, copy the latest `SKILL.md` body over that file and bump the version note at its top.
 
 ## Uninstall
 

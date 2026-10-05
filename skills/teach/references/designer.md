@@ -17,6 +17,10 @@ Inputs: `brief.md`, `concept-map.json` if it exists, [teaching method](teaching-
 9. Write `next` prompts and `share` posts about the concepts, never the private project. LinkedIn: 3–6 short lines ending with "Built using GrowthX teach". X: at most 260 characters, no hashtags.
 10. Set `meta.minutes` honestly (about 200 words per minute plus 30 seconds per quiz question).
 
+## Voice
+
+Write like a smart friend explaining over chai: "you", plain words, short sentences mixed with longer ones, one concrete detail over a general claim. A separate editor polishes the wording with the [humanizer](humanizer.md) rules afterwards, but avoid its worst tells now: dashes, "not just X but Y", staged openers like "The surprise:" or "Why bother?", one-line dramatic closers, and bolding more than the concept's own term.
+
 ## Don't
 
 - Retell what happened in the chat, or refer back to it ("as we discussed", "earlier", "you just").

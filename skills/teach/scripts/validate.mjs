@@ -12,6 +12,14 @@ export const MAX_CONCEPT_WORDS = 300;
 // Learners rarely read the chat, so the lesson must never point back at it.
 const CHAT_REFERENCE = /\b(earlier (in|today)|as (we|you) (discussed|saw|did)|we just|you just|in (our|this|the) (chat|conversation|session)|the bug we|our discussion|mentioned above)\b/i;
 
+// The strongest AI-writing tells from the humanizer (references/humanizer.md), checked mechanically.
+const AI_WORDS = /\b(additionally|align with|bolstered|crucial|deep dive|delve|delves|delving|enduring|enhance|enhances|garner|interplay|intricate|intricacies|meticulous|meticulously|pivotal|showcase|showcases|tapestry|testament|underscore|underscores|vibrant|seamless|seamlessly|leverage|game[- ]changer|unlock|unlocks|empower|empowers|in today's|it's worth noting|let's dive)\b/i;
+const NOT_X_BUT_Y = /\b(not just|isn't just|is not just|not only|it's not about)\b/i;
+const DASHES = /[\u2014\u2013]|\s--\s/;
+const CURLY_DOUBLE = /[\u201c\u201d]/;
+// Keys whose values are not shown as prose: identifiers, references, code and the prompts to copy.
+const NOT_PROSE = new Set(["evidence_ids", "code", "prompt", "slug", "id", "concept_id", "kind", "created", "domain", "lens", "correct", "depth", "minutes", "version", "language"]);
+
 const isText = (v) => typeof v === "string" && v.trim().length > 0;
 const isList = (v) => Array.isArray(v);
 const words = (s) => (typeof s === "string" ? s.trim().split(/\s+/).filter(Boolean).length : 0);
@@ -141,10 +149,23 @@ export function validateLesson(lesson, map) {
   if (!isText(share.x) || share.x.length > 260) err("share.x is required and must be at most 260 characters");
   if (!isText(share.linkedin) || share.linkedin.length > 1300) err("share.linkedin is required and must be at most 1300 characters");
 
-  // Visible text: everything except evidence IDs and the share posts' fixed footer.
-  const visible = JSON.stringify(lesson, (key, value) => (key === "evidence_ids" ? undefined : value));
-  const ref = visible.match(CHAT_REFERENCE);
+  // Visible prose only: no identifiers, evidence, code or copyable prompts.
+  const visible = JSON.stringify(lesson, (key, value) => (NOT_PROSE.has(key) ? undefined : value));
+  const prose = [];
+  JSON.parse(visible, (key, value) => { if (typeof value === "string") prose.push(value); return value; });
+  const text = prose.join("\n");
+  const ref = text.match(CHAT_REFERENCE);
   if (ref) err(`refers back to the chat ("${ref[0]}"); learners may not have read it, so describe the idea on its own`);
+  const aiWord = text.match(AI_WORDS);
+  if (aiWord) err(`uses the stock AI word "${aiWord[0]}"; say it plainly (see humanizer section 12)`);
+  const contrast = text.match(NOT_X_BUT_Y);
+  if (contrast) err(`uses the "${contrast[0]} X but Y" contrast; state the point directly (humanizer section 1)`);
+  if (DASHES.test(text)) err("contains em or en dashes; use a period, comma, colon or parentheses instead (humanizer section 8)");
+  if (CURLY_DOUBLE.test(text)) err("contains curly double quotes; use straight quotes");
+  for (const c of concepts) {
+    const bold = [c.tagline, c.explain, c.product, c.tech, c.pitfall].join(" ").match(/\*\*[^*]+\*\*/g) || [];
+    if (bold.length > 2) err(`concept "${c.id}" bolds ${bold.length} phrases; bold only the concept's own term (humanizer section 19)`);
+  }
   // Only IDs containing a digit (e1, code-2) are distinctive enough to detect without false positives.
   if (evidence) for (const id of evidence) if (/\d/.test(id) && new RegExp(`\\b${id}\\b`).test(visible)) err(`evidence id "${id}" appears in visible text`);
 
