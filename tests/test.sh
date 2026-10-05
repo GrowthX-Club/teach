@@ -19,9 +19,9 @@ if node "$skill/scripts/validate.mjs" "$bad" 2>"$work/err"; then fail "broken le
 if grep -q "exactly one correct" "$work/err" && grep -q "260 characters" "$work/err"; then pass "broken lesson is rejected with reasons"; else fail "broken lesson is rejected with reasons"; fi
 
 long="$work/long.json"
-node -e 'const l=require(process.argv[1]); l.concepts[0].explain += " word".repeat(200); console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$long"
+node -e 'const l=require(process.argv[1]); l.concepts[0].explain += " word".repeat(400); console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$long"
 if node "$skill/scripts/validate.mjs" "$long" 2>"$work/err"; then fail "over-long concept passed"; fi
-if grep -q "the limit is 300" "$work/err"; then pass "concepts over 300 words are rejected"; else fail "concepts over 300 words are rejected"; fi
+if grep -q "the limit is 450" "$work/err"; then pass "concepts over 300 words are rejected"; else fail "concepts over 300 words are rejected"; fi
 
 recap="$work/recap.json"
 node -e 'const l=require(process.argv[1]); l.concepts[0].examples=[{kind:"your-work",title:"x",text:"y"}]; l.hook="As we discussed in our chat, the bug we fixed was a retry."; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$recap"
@@ -68,6 +68,12 @@ node -e 'const l=require(process.argv[1]); l.concepts[0].explain="Retries with b
 if node "$skill/scripts/validate.mjs" "$v3" 2>"$work/err"; then fail "lesson without story, diagram or analogy passed"; fi
 if grep -q "opens with a definition" "$work/err" && grep -q "visual is required" "$work/err" && grep -q "story is required" "$work/err" && grep -q '"quantum flux" never appears' "$work/err"; then pass "every concept needs a story, an analogy-first explanation and a diagram; glossary terms must appear"; else fail "every concept needs a story, an analogy-first explanation and a diagram; glossary terms must appear"; fi
 if ! grep -q 'data-lens' "$skill/assets/app.js" && grep -q "function drawSketch" "$skill/assets/app.js" && grep -q "applyGlossary" "$skill/assets/app.js"; then pass "page has sketch diagrams and jargon tips, no focus switch"; else fail "page has sketch diagrams and jargon tips, no focus switch"; fi
+
+polish="$work/polish.json"
+node -e 'const l=require(process.argv[1]); l.meta.title="Why safe retries need idempotency"; l.concepts[0].code={text:"x()"}; l.concepts[0].real_world="Too short."; l.concepts[1].pitfalls=["Only one."]; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$polish"
+if node "$skill/scripts/validate.mjs" "$polish" 2>"$work/err"; then fail "jargon title, code or thin sections passed"; fi
+if grep -q "make the title an analogy" "$work/err" && grep -q "code is no longer used" "$work/err" && grep -q "elaborate it in 40-100 words" "$work/err" && grep -q "needs 2-3 common mistakes" "$work/err"; then pass "analogy titles, no code, full real-world sections and 2-3 mistakes are enforced"; else fail "analogy titles, no code, full real-world sections and 2-3 mistakes are enforced"; fi
+if ! grep -q "share-canvas\|Concept <span" "$skill/assets/app.js"; then pass "no share image and no Concept label"; else fail "no share image and no Concept label"; fi
 
 echo "build"
 export TEACH_HOME="$work/home with space"

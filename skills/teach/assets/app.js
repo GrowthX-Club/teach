@@ -124,21 +124,16 @@
   }
 
   function concept(c) {
-    var code = c.code
-      ? '<div class="code-wrap">' +
-        (c.code.caption ? '<span class="eyebrow">' + esc(c.code.caption) + "</span>" : "") +
-        '<pre class="code"><code>' + esc(c.code.text) + "</code></pre></div>"
-      : "";
+    var mistakes = (c.pitfalls || []).filter(Boolean);
     return (
       '<section class="block" id="c-' + esc(c.id) + '" data-nav="' + esc(plain(c.name)) + '">' +
       (c.story ? '<div class="story prose">' + paras(c.story) + "</div>" : "") +
-      '<div class="sec-head concept-head"><span class="concept-label">Concept <span aria-hidden="true">→</span></span><h2>' + rich(c.name) + "</h2></div>" +
+      '<div class="sec-head"><h2>' + rich(c.name) + "</h2></div>" +
       '<div class="analogy"><span class="eyebrow">Analogy</span><div class="prose">' + paras(c.explain) + "</div></div>" +
       visual(c.visual) +
-      (c.real_world ? '<div class="real-world"><span class="eyebrow">In the real world</span><p>' + rich(c.real_world) + "</p></div>" : "") +
-      (c.in_your_work && c.in_your_work.text ? '<div class="in-work"><span class="eyebrow">In your work</span><p>' + rich(c.in_your_work.text) + "</p></div>" : "") +
-      code +
-      (c.pitfall ? '<div class="callout"><span class="eyebrow">Common mistake</span><p>' + rich(c.pitfall) + "</p></div>" : "") +
+      (c.real_world ? '<div class="sub"><h3>In the real world</h3><div class="prose">' + paras(c.real_world) + "</div></div>" : "") +
+      (c.in_your_work && c.in_your_work.text ? '<div class="sub"><h3>In your work</h3><div class="prose">' + paras(c.in_your_work.text) + "</div></div>" : "") +
+      (mistakes.length ? '<div class="sub"><h3>Common mistakes</h3><ul class="mistakes">' + mistakes.map(function (m) { return "<li>" + rich(m) + "</li>"; }).join("") + "</ul></div>" : "") +
       "</section>"
     );
   }
@@ -187,8 +182,7 @@
       '<span class="count" id="x-count"></span>' +
       '<div class="btn-row"><button type="button" class="btn" data-copy="share-x">Copy</button><a class="btn" id="open-x" target="_blank" rel="noopener">Post on X</a></div></div>' +
       "</div>" +
-      '<div class="share-image"><span class="eyebrow">Share image · 1200 × 630</span><canvas id="share-canvas" width="1200" height="630" role="img" aria-label="Share image for this lesson"></canvas>' +
-      '<div class="btn-row"><button type="button" class="btn primary" id="download-image">Download image</button></div></div>' +
+
       "</section>"
     );
   }
@@ -263,7 +257,6 @@
     var next = current === "dark" ? "light" : "dark";
     root.setAttribute("data-theme", next);
     save("theme", next);
-    drawShareImage();
     drawAllSketches();
   });
 
@@ -341,87 +334,6 @@
   if (xBox) xBox.addEventListener("input", updateShareLinks);
   if (liBox) liBox.addEventListener("input", updateShareLinks);
   updateShareLinks();
-
-  // ---------- share image ----------
-  function cssVar(name) {
-    return getComputedStyle(root).getPropertyValue(name).trim();
-  }
-  function wrapLines(ctx, text, maxWidth) {
-    var words = text.split(/\s+/);
-    var lines = [];
-    var line = "";
-    words.forEach(function (w) {
-      var test = line ? line + " " + w : w;
-      if (ctx.measureText(test).width > maxWidth && line) {
-        lines.push(line);
-        line = w;
-      } else line = test;
-    });
-    if (line) lines.push(line);
-    return lines;
-  }
-  function drawShareImage() {
-    var canvas = document.getElementById("share-canvas");
-    if (!canvas) return;
-    var ctx = canvas.getContext("2d");
-    var W = canvas.width, H = canvas.height, pad = 72;
-    // The share image is always the dark brand look, whatever theme the page is in.
-    var bg = "#050505", fg = "#fafafa", muted = "#a3a3a3";
-    var sans = cssVar("--sans") || "sans-serif", mono = cssVar("--mono") || "monospace", serif = cssVar("--serif") || "serif";
-
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-    var glow = ctx.createRadialGradient(W * 0.15, -60, 10, W * 0.15, -60, 760);
-    glow.addColorStop(0, "rgba(86, 30, 255, 0.35)");
-    glow.addColorStop(1, "rgba(86, 30, 255, 0)");
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, W, H);
-    var glow2 = ctx.createRadialGradient(W * 0.92, 0, 10, W * 0.92, 0, 600);
-    glow2.addColorStop(0, "rgba(0, 100, 255, 0.25)");
-    glow2.addColorStop(1, "rgba(0, 100, 255, 0)");
-    ctx.fillStyle = glow2;
-    ctx.fillRect(0, 0, W, H);
-
-    ctx.fillStyle = muted;
-    ctx.font = "500 22px " + mono;
-    ctx.fillText("I JUST LEARNED", pad, pad + 10);
-
-    ctx.fillStyle = fg;
-    ctx.font = "700 64px " + sans;
-    var lines = wrapLines(ctx, plain(meta.title || ""), W - pad * 2).slice(0, 3);
-    lines.forEach(function (l, i) { ctx.fillText(l, pad, pad + 100 + i * 74); });
-
-    var y = pad + 100 + lines.length * 74 + 20;
-    ctx.font = "italic 34px " + serif;
-    var grad = ctx.createLinearGradient(pad, 0, W - pad, 0);
-    grad.addColorStop(0, fg);
-    grad.addColorStop(0.55, "#561eff");
-    grad.addColorStop(1, "#0064ff");
-    ctx.fillStyle = grad;
-    var names = concepts.map(function (c) { return plain(c.name); }).join("  ·  ");
-    wrapLines(ctx, names, W - pad * 2).slice(0, 2).forEach(function (l, i) { ctx.fillText(l, pad, y + i * 44); });
-
-    ctx.fillStyle = muted;
-    ctx.font = "500 22px " + mono;
-    ctx.fillText("Built using GrowthX teach", pad, H - pad + 10);
-    ctx.textAlign = "right";
-    ctx.fillText("github.com/GrowthX-Club/teach", W - pad, H - pad + 10);
-    ctx.textAlign = "left";
-  }
-  var downloadBtn = document.getElementById("download-image");
-  if (downloadBtn) {
-    downloadBtn.addEventListener("click", function () {
-      var canvas = document.getElementById("share-canvas");
-      var a = document.createElement("a");
-      a.download = (meta.slug || "lesson") + "-share.png";
-      a.href = canvas.toDataURL("image/png");
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    });
-  }
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawShareImage);
-  drawShareImage();
 
   // ---------- hand-drawn diagrams ----------
   // A tiny Excalidraw-like renderer: wobbly double strokes, hand-written labels,
@@ -654,7 +566,7 @@
       var walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, {
         acceptNode: function (n) {
           var p = n.parentElement;
-          if (!p || p.closest("h1, h2, h3, .eyebrow, .term, code, pre, button, figure, .concept-label")) return NodeFilter.FILTER_REJECT;
+          if (!p || p.closest("h1, h2, h3, .eyebrow, .term, code, pre, button, figure")) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         }
       });

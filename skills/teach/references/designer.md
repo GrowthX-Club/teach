@@ -8,16 +8,17 @@ Inputs: `brief.md`, `concept-map.json` if it exists, [teaching method](teaching-
 
 1. Take depth, focus (lens) and area (domain) from `brief.md`. Copy them into `meta.level` and `meta.domain`.
 2. Use the concept map's concepts (2–3). If there is no map, choose 2–3 tech or AI concepts for the topic from the [catalogue](catalogue.json). Keep catalogue ids and names exactly.
-3. Write the hook as a general question about the idea, not about the user's project.
+3. Write the title as an analogy in everyday words, with no concept names or jargon ("Why pressing the lift button five times still brings one lift"). Write the hook as a general question about the idea, not about the user's project.
 4. For each concept, ease in before naming anything:
    - **`story`** (at most 80 words): a concrete situation that raises the problem the concept solves. When the brief or map says where this concept showed up in the learner's work, tell that situation, in plain words, so it makes sense to someone who never saw the chat. Otherwise use an everyday situation. Each story can pick up where the previous concept's story left off, so the lesson reads as one thread.
    - **`explain`** (at most 100 words): start from an analogy or real-life example ("Think of a lift button…", "To find a word in a textbook you flip to the index…"), then name the concept and say exactly what it is. Never open with "X means…".
    - **`visual`** (required): the diagram for the idea. `flow` for steps that happen in order, `compare` for two approaches or before/after (use `tone` good/bad). Keep labels short; the page draws it by hand.
-   - **`real_world`** (optional): one sentence about a well-known company or product using the idea.
-5. Add `in_your_work` from the map's `in_your_work`, rewritten as one plain sentence of at most 30 words, and copy its `evidence_ids`. Together with the story, this ties each concept back to what the learner actually did.
-6. Add `code` only for depth 3–4 or the technical focus. Let the focus shape the wording: business focus talks about users, cost and risk; technical focus about how it works underneath.
+   - **`real_world`** (40–100 words): how a well-known company or product uses the idea, told as a small story with concrete details.
+   - **`pitfalls`** (2–3 items, each at most 35 words): the mistakes people actually make, written to the learner, saying what goes wrong and why.
+5. Add `in_your_work` from the map's `in_your_work`, elaborated to 40–100 words: where the idea shows up in the learner's work, what it does there and what it changed. Use only facts from the map and brief, and copy its `evidence_ids`. Together with the story, this ties each concept back to what the learner actually did.
+6. Never include code. Let the focus shape the wording: business focus talks about users, cost and risk; technical focus about how it works underneath.
 7. Write the `glossary`: every term a newcomer might not know (3–12), using the exact words that appear in the text, each with a tip of at most 30 words that explains with an analogy or everyday comparison.
-8. Count words. Each concept must stay **under 300 words**; aim for 150–250. Cut before you add.
+8. Count words. Each concept must stay **under 450 words**. Cut before you add.
 9. Write exactly 3 quiz questions that make the learner apply an idea to a new situation.
 10. Write `next` from the catalogue: take the `next` concepts listed for this lesson's concepts that aren't already in the lesson, and phrase each as `teach me <concept name>`. Then write the `share` posts about the concepts, never the private project. LinkedIn: 3–6 short lines ending with "Built using GrowthX teach". X: at most 260 characters, no hashtags.
 11. Set `meta.minutes` honestly (about 200 words per minute plus 30 seconds per quiz question).

@@ -2,7 +2,7 @@
   "version": 3,
   "meta": {
     "slug": "safe-retries",
-    "title": "Why safe retries need **idempotency**",
+    "title": "Why pressing the lift button five times still brings **one lift**",
     "subject": "Making payment webhooks safe to retry",
     "domain": "systems",
     "one_liner": "Retrying is easy. Retrying without doing things twice is the real trick.",
@@ -21,12 +21,11 @@
       "name": "Retries with backoff",
       "explain": "Think about calling a friend who doesn't pick up. You don't redial every second. You wait a minute, then five, then ten. Software does the same. **Retries with backoff** means trying a failed request again, and waiting a little longer before each new try, so a busy server gets room to recover instead of being buried under repeats.",
       "in_your_work": {
-        "text": "Your payment provider sent the same payment notice twice because your app took too long to reply.",
+        "text": "Your shop's payment provider sent the same \"payment received\" message twice. The first time, your app was slow to reply, so the provider assumed the message was lost and tried again. That second message wasn't a bug in the provider. It was a retry doing exactly its job, and it's the reason your app now has to be ready for the same message arriving more than once.",
         "evidence_ids": [
           "e1"
         ]
       },
-      "pitfall": "Assuming each message arrives exactly once. With retries, \"at least once\" is the honest promise.",
       "story": "You tap Pay on a shopping app just as the lift doors close and your signal drops. The app waits, hears nothing back, and has a choice to make: give up and tell you it failed, or quietly try again?",
       "visual": {
         "type": "flow",
@@ -50,7 +49,11 @@
           }
         ]
       },
-      "real_world": "Payment platforms resend failed payment notifications for hours or even days, leaving longer and longer gaps between tries."
+      "real_world": "Payment companies such as Razorpay and Stripe tell a shop about every payment by sending it a message. If the shop's app doesn't answer, they don't give up after one try. They send the same message again a few seconds later, then a minute later, then an hour later, and keep going for up to a few days. Because the gaps keep growing, a shop that was down for a while gets back on its feet before the messages pile up.",
+      "pitfalls": [
+        "Assuming each message arrives exactly once. With retries, the honest promise is \"at least once\", so plan for repeats.",
+        "Retrying instantly in a tight loop. A struggling server then gets hammered harder, so always wait longer between tries."
+      ]
     },
     {
       "id": "idempotency",
@@ -76,21 +79,19 @@
           ]
         }
       },
-      "code": {
-        "language": "ts",
-        "caption": "The idea, simplified",
-        "text": "if (await alreadyHandled(event.id)) return ok();\nawait chargeOrder(event.orderId);\nawait markHandled(event.id);"
-      },
       "in_your_work": {
-        "text": "Your payment handler now remembers every payment notice it has seen and ignores repeats.",
+        "text": "Your payment handler now keeps a list of every payment message it has already handled, using the ID that comes with each one. When a message shows up again, the handler checks the list, sees the ID, and simply skips it. So even if the payment provider resends a message five times, the customer's order is marked as paid once and nobody is charged twice.",
         "evidence_ids": [
           "e2",
           "e3"
         ]
       },
-      "pitfall": "Making a new ID for each retry. A repeat must carry the same ID as the original, or nobody can recognise it.",
       "story": "The retry worked, but there's a catch. The first payment had actually gone through; only the reply got lost. Now the same payment has arrived twice. Should you be charged ₹500 or ₹1,000?",
-      "real_world": "Payment companies like Stripe let a shop attach a unique key to each charge, so a resent charge never runs twice."
+      "real_world": "When a shop asks Stripe to charge a card, it can attach a unique key to that request, a bit like a token number. If the network hiccups and the shop sends the same charge again, Stripe sees the same key, recognises the repeat, and returns the result of the first charge instead of taking the money twice. Banks and UPI apps use the same trick, which is why a resent payment request doesn't empty your account.",
+      "pitfalls": [
+        "Giving every retry a brand new ID. The receiver then can't tell it's a repeat, so the protection does nothing.",
+        "Forgetting the IDs too soon. If the record is cleared before the sender stops retrying, a late repeat slips through."
+      ]
     },
     {
       "id": "transactions",
@@ -115,13 +116,17 @@
         ]
       },
       "in_your_work": {
-        "text": "Saving the notice's ID and updating the order now happen as one step in your database.",
+        "text": "In your app, saving a payment message's ID and updating the order now happen together in one database step. If two copies of the same message arrive at the very same moment, only one of them can save the ID. That one updates the order; the other is turned away. So the order can never be marked as paid twice, even when the copies race each other.",
         "evidence_ids": [
           "e4"
         ]
       },
       "story": "One more twist. What if both copies of the payment arrive at the very same moment? Each one checks \"have I seen this before?\", each one hears \"no\", and both go ahead.",
-      "real_world": "Airlines and cinemas lock a seat in the same step as selling it, so one seat can't be sold twice."
+      "real_world": "When you book a seat on an airline or cinema app, the seat is locked and sold in a single step inside the company's database. If two people tap the same seat at the same moment, the database lets exactly one of those bookings finish and turns the other away with a \"seat no longer available\" message. Without that single step, both people would get a confirmation and one of them would find someone in their seat.",
+      "pitfalls": [
+        "Checking \"have I seen this?\" first and doing the work in a separate step. The tiny gap between them is exactly where duplicates sneak in.",
+        "Treating a rare race as impossible. With enough traffic, two copies landing at the same moment will happen."
+      ]
     }
   ],
   "quiz": [
@@ -221,8 +226,8 @@
       "tip": "Where an app keeps its records so they're still there tomorrow, like a well-kept ledger."
     },
     {
-      "term": "payment notifications",
-      "tip": "Messages a payment company sends a shop to say \"this payment went through\", like an SMS from your bank."
+      "term": "payment provider",
+      "tip": "The company that moves the money for a shop, like Razorpay or Stripe, a bit like the cashier who handles every card swipe."
     }
   ]
 }
