@@ -44,8 +44,11 @@ strong { font-weight: 650; }
   border-bottom: 1px solid var(--hairline);
 }
 .topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 10px; flex-wrap: wrap; }
-.brand { display: flex; align-items: baseline; gap: 6px; text-decoration: none; font-weight: 700; letter-spacing: -0.01em; }
-.brand .grad { font-size: 1.15em; }
+.brand { display: flex; align-items: center; gap: 7px; text-decoration: none; font-weight: 700; letter-spacing: -0.01em; }
+.brand .grad { font-size: 1.15em; line-height: 1; }
+.brand-logo { display: block; height: 22px; width: auto; color: #000; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .brand-logo { color: #fff; } }
+:root[data-theme="dark"] .brand-logo { color: #fff; }
 .controls { display: flex; align-items: center; gap: 8px; }
 .seg { display: inline-flex; border: 1px solid var(--hairline-2); border-radius: var(--radius-pill); padding: 2px; background: var(--glass); }
 .seg button { border: 0; background: none; padding: 5px 12px; border-radius: var(--radius-pill); cursor: pointer; font-size: 13px; color: var(--muted); }
