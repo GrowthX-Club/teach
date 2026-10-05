@@ -76,3 +76,4 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
 - 2–3 `next` items.
 - `share.x` at most 260 characters. `share.linkedin` at most 1300 characters.
 - No references back to the chat ("as we discussed", "in our chat", "you just", "the bug we…"), no evidence IDs, file paths, secrets or personal data in visible text.
+- Reads like a person: no em or en dashes, no stock AI words (delve, crucial, pivotal, seamless, leverage, unlock…), no "not just X but Y", straight double quotes, and at most 2 bold phrases per concept. See [humanizer](humanizer.md).
