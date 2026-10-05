@@ -339,3 +339,8 @@ footer.site a { color: var(--fg); text-decoration-color: var(--hairline-2); text
 .anim.still .ab-fill { transition: none; }
 @media (max-width: 560px) { .ab li { grid-template-columns: 1fr; gap: 6px; } }
 @media (prefers-reduced-motion: reduce) { .ab-fill { transition: none; } }
+
+/* ===== Bespoke animations (sandboxed frame) ===== */
+.bespoke-frame { border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-2); }
+.bespoke-frame iframe { display: block; width: 100%; height: 100%; border: 0; background: transparent; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }

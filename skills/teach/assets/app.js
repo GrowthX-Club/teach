@@ -196,6 +196,23 @@
     );
   }
 
+  // A bespoke animation, designed for this one concept by the animator agent.
+  // It runs inside a sandboxed frame: scripts only, no network (CSP), no access
+  // to this page, its storage or cookies. The frame gets the lesson's colours.
+  var bespokes = [];
+  function bespoke(a) {
+    var idx = bespokes.push(a) - 1;
+    var h = Math.min(440, Math.max(180, Number(a.height) || 300));
+    return (
+      '<figure class="anim bespoke">' +
+      '<div class="anim-head"><strong>' + rich(a.title) + "</strong></div>" +
+      '<div class="bespoke-frame" style="height:' + h + 'px"><iframe data-bespoke="' + idx + '" sandbox="allow-scripts" title="' + esc(plain(a.title)) + '" aria-describedby="bespoke-alt-' + idx + '"></iframe></div>' +
+      '<p class="sr-only" id="bespoke-alt-' + idx + '">' + esc(a.alt) + "</p>" +
+      (a.caption ? "<figcaption>" + rich(a.caption) + "</figcaption>" : "") +
+      "</figure>"
+    );
+  }
+
   function concept(c) {
     var mistakes = (c.pitfalls || []).filter(Boolean);
     return (
@@ -203,7 +220,7 @@
       (c.story ? '<div class="story prose">' + paras(c.story) + "</div>" : "") +
       '<div class="sec-head"><h2>' + rich(c.name) + "</h2></div>" +
       '<div class="analogy"><span class="eyebrow">Analogy</span><div class="prose">' + paras(c.explain) + "</div></div>" +
-      visual(c.visual) +
+      (c.animation ? bespoke(c.animation) : visual(c.visual)) +
       (c.real_world ? '<div class="sub"><h3>In the real world</h3><div class="prose">' + paras(c.real_world) + "</div></div>" : "") +
       (c.in_your_work && c.in_your_work.text ? '<div class="sub"><h3>In your work</h3><div class="prose">' + paras(c.in_your_work.text) + "</div></div>" : "") +
       (c.fun_fact ? '<div class="sub did-you-know"><h3>Did you know?</h3><div class="prose">' + paras(c.fun_fact) + "</div></div>" : "") +
@@ -369,6 +386,7 @@
     var next = current === "dark" ? "light" : "dark";
     root.setAttribute("data-theme", next);
     save("theme", next);
+    loadBespokes();
   });
 
   // ---------- quiz ----------
@@ -445,6 +463,26 @@
   if (xBox) xBox.addEventListener("input", updateShareLinks);
   if (liBox) liBox.addEventListener("input", updateShareLinks);
   updateShareLinks();
+
+  // ---------- bespoke animations ----------
+  var THEME_VARS = ["--bg", "--bg-2", "--fg", "--muted", "--card", "--card-2", "--hairline", "--hairline-2", "--glass", "--glass-2", "--brand", "--brand-fg", "--green", "--green-bg", "--red", "--red-bg", "--amber", "--amber-bg", "--violet", "--sans", "--mono"];
+  function loadBespokes() {
+    var cs = getComputedStyle(root);
+    var vars = THEME_VARS.map(function (n) { return n + ":" + cs.getPropertyValue(n).trim(); }).join(";");
+    var dark = (root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")) === "dark";
+    var close = "<" + "/script>";
+    document.querySelectorAll("iframe[data-bespoke]").forEach(function (f) {
+      var a = bespokes[Number(f.getAttribute("data-bespoke"))] || {};
+      f.srcdoc =
+        '<!doctype html><html><head><meta charset="utf-8">' +
+        '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; script-src \'unsafe-inline\'; img-src data:">' +
+        "<style>:root{" + vars + ";color-scheme:" + (dark ? "dark" : "light") + "}" +
+        "html,body{margin:0;height:100%;overflow:hidden;background:transparent;color:var(--fg);font-family:var(--sans)}</style>" +
+        "<style>" + String(a.css || "") + "</style></head><body>" + String(a.html || "") +
+        "<script>" + String(a.js || "") + close + "</body></html>";
+    });
+  }
+  loadBespokes();
 
   // ---------- animated figures ----------
   // One player per figure. Beat 0 is the empty stage; beat k switches on every

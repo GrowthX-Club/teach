@@ -54,7 +54,20 @@ node <skill>/scripts/validate.mjs <lesson-dir>/lesson.json <lesson-dir>/concept-
 Reply with one line: the validator's result.
 ```
 
-## 4. Video finder
+## 4. Animator
+
+```text
+You are the animator for the teach skill. Read and follow exactly:
+- <skill>/references/animator.md
+
+<skill> = <skill>
+Lesson folder: <lesson-dir>
+Only add an "animation" object to each concept in lesson.json; change nothing else. Do not read the brief, the project or any chat.
+Check your JavaScript with `node --check` on a temp file, then validate.
+Reply with one line per concept: the scene you animated.
+```
+
+## 5. Video finder
 
 Needs web search and the ability to open web pages. Skip it where those aren't available.
 

@@ -33,7 +33,7 @@ const NOT_X_BUT_Y = /\b(not just|isn't just|is not just|not only|it's not about)
 const DASHES = /[\u2014\u2013]|\s--\s/;
 const CURLY_DOUBLE = /[\u201c\u201d]/;
 // Keys whose values are not shown as prose: identifiers, references, code and the prompts to copy.
-const NOT_PROSE = new Set(["videos", "evidence_ids", "code", "prompt", "slug", "id", "concept_id", "kind", "created", "domain", "lens", "correct", "depth", "minutes", "version", "language"]);
+const NOT_PROSE = new Set(["videos", "animation", "evidence_ids", "code", "prompt", "slug", "id", "concept_id", "kind", "created", "domain", "lens", "correct", "depth", "minutes", "version", "language"]);
 
 // teach only teaches tech and AI. The catalogue lists the areas and the standard concepts.
 const CATALOGUE_PATH = fileURLToPath(new URL("../references/catalogue.json", import.meta.url));
@@ -70,6 +70,35 @@ function isTextValue(v) {
 const isText = (v) => typeof v === "string" && v.trim().length > 0;
 const isList = (v) => Array.isArray(v);
 const words = (s) => (typeof s === "string" ? s.trim().split(/\s+/).filter(Boolean).length : 0);
+
+// Bespoke animations are code written by the animator agent and run in a
+// sandboxed frame. These checks keep them small, offline and self-contained.
+export const MAX_ANIMATION_CHARS = 25000;
+const ANIMATION_FORBIDDEN = [
+  [/https?:\/\//i, "must not reference any web address"],
+  [/\bfetch\s*\(|XMLHttpRequest|WebSocket|EventSource|sendBeacon/i, "must not make network requests"],
+  [/\bimport\s*\(|^\s*import\s/im, "must not import modules"],
+  [/<\s*\/?\s*(script|iframe|object|embed|form|link|meta|base)\b/i, "must not contain script, iframe, object, embed, form, link, meta or base tags"],
+  [/@import/i, "must not use @import"],
+  [/\b(parent|top|opener)\s*\.|window\.(parent|top|opener)/i, "must not reach outside its frame"],
+  [/localStorage|sessionStorage|indexedDB|document\.cookie/i, "must not use storage or cookies"],
+  [/\beval\s*\(|new\s+Function\b|\bsetTimeout\s*\(\s*["'`]|\bsetInterval\s*\(\s*["'`]/i, "must not evaluate strings as code"],
+  [/\bwindow\.open\b|\blocation\s*(\.href)?\s*=/i, "must not open or change pages"],
+];
+export function checkAnimation(a) {
+  const errors = [];
+  if (!a || typeof a !== "object") return ["must be an object"];
+  if (!isText(a.title) || words(a.title) > 10) errors.push("title is required, at most 10 words");
+  if (!isText(a.alt) || words(a.alt) > 60) errors.push("alt is required: a plain description of what happens, at most 60 words");
+  if (a.caption !== undefined && (!isText(a.caption) || words(a.caption) > 25)) errors.push("caption must be at most 25 words");
+  if (!isText(a.html)) errors.push("html is required");
+  for (const k of ["html", "css", "js"]) if (a[k] !== undefined && typeof a[k] !== "string") errors.push(`${k} must be a string`);
+  if (a.height !== undefined && !(Number.isInteger(a.height) && a.height >= 180 && a.height <= 440)) errors.push("height must be a whole number of pixels from 180 to 440");
+  const code = [a.html, a.css, a.js].filter((x) => typeof x === "string").join("\n");
+  if (code.length > MAX_ANIMATION_CHARS) errors.push(`is ${code.length} characters of code; keep it under ${MAX_ANIMATION_CHARS}`);
+  for (const [re, why] of ANIMATION_FORBIDDEN) if (re.test(code)) errors.push(why);
+  return errors;
+}
 
 export function validateConceptMap(map, cat = loadCatalogue()) {
   const errors = [];
@@ -173,6 +202,7 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
       }
     }
 
+    if (c.animation !== undefined) for (const e of checkAnimation(c.animation)) err(`${at}.animation ${e}`);
     const v = c.visual;
     if (!v) err(`${at}.visual is required: every concept gets an animation`);
     else {
