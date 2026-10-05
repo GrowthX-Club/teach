@@ -81,9 +81,9 @@ if node "$skill/scripts/validate.mjs" "$still" 2>"$work/err"; then fail "sequenc
 if grep -q "at least one message that travels" "$work/err" && grep -q "must be sequence, flow, compare or bars" "$work/err"; then pass "a sequence needs something to travel; unknown animation types are rejected"; else fail "a sequence needs something to travel; unknown animation types are rejected"; fi
 
 polish="$work/polish.json"
-node -e 'const l=require(process.argv[1]); l.meta.title="Why safe retries need idempotency"; l.concepts[0].code={text:"x()"}; l.concepts[0].real_world="Too short."; l.concepts[1].pitfalls=["Only one."]; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$polish"
+node -e 'const l=require(process.argv[1]); l.meta.title="Why safe retries need idempotency"; l.concepts[0].code={text:"x()"}; l.concepts[0].real_world="Too short."; l.concepts[1].pitfalls=["A common mistake."]; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$polish"
 if node "$skill/scripts/validate.mjs" "$polish" 2>"$work/err"; then fail "jargon title, code or thin sections passed"; fi
-if grep -q "make the title an analogy" "$work/err" && grep -q "code is no longer used" "$work/err" && grep -q "elaborate it in 40-100 words" "$work/err" && grep -q "needs 2-3 common mistakes" "$work/err"; then pass "analogy titles, no code, full real-world sections and 2-3 mistakes are enforced"; else fail "analogy titles, no code, full real-world sections and 2-3 mistakes are enforced"; fi
+if grep -q "make the title an analogy" "$work/err" && grep -q "code is no longer used" "$work/err" && grep -q "elaborate it in 40-100 words" "$work/err" && grep -q "pitfalls is no longer used" "$work/err"; then pass "analogy titles, no code, full real-world sections, no common-mistakes list"; else fail "analogy titles, no code, full real-world sections, no common-mistakes list"; fi
 vids="$work/vids.json"
 node -e 'const l=require(process.argv[1]); l.videos=[{concept_id:"retries",title:"T",channel:"C",url:"https://www.youtube.com/watch?v=abcdefghijk",start:"1:00",why:"w"},{concept_id:"retries",title:"T",channel:"C",url:"https://www.youtube.com/watch?v=abcdefghijk&t=95s",start:"1:30",why:"w"},{concept_id:"retries",title:"T",channel:"C",url:"https://www.youtube.com/watch?v=abcdefghijk&t=272s",start:"4:32",why:"Shows backoff in action."}]; l.concepts[0].fun_fact="word ".repeat(60); console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$vids"
 if node "$skill/scripts/validate.mjs" "$vids" "$skill/examples/sample.concept-map.json" 2>"$work/err"; then fail "bad videos passed"; fi
@@ -108,6 +108,19 @@ anim="$work/anim.json"
 node -e 'const l=require(process.argv[1]); l.concepts[0].animation={title:"Ok",alt:"A dot moves.",html:"<div class=\"d\"></div>",css:".d{width:20px;height:20px;background:var(--brand)}",js:"document.querySelector(\".d\").animate([{transform:\"none\"},{transform:\"translateX(100px)\"}],{duration:1000,iterations:Infinity})"}; l.concepts[1].animation={title:"Bad",alt:"x",html:"<img src=\"https://evil.example/x.png\"><script>parent.document.title=1</script>",js:"fetch(\"/x\"); localStorage.x=1; eval(\"1\")"}; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$anim"
 node "$skill/scripts/validate.mjs" "$anim" "$skill/examples/sample.concept-map.json" 2>"$work/err" >/dev/null || true
 if ! grep -q "concepts\[0\] (retries).animation" "$work/err" && grep -q "web address" "$work/err" && grep -q "network requests" "$work/err" && grep -q "storage or cookies" "$work/err" && grep -q "evaluate strings" "$work/err" && grep -q "script, iframe" "$work/err" && grep -q 'sandbox="allow-scripts"' "$skill/assets/app.js" && grep -q "default-src" "$skill/assets/app.js"; then pass "bespoke animations run sandboxed and unsafe code is rejected"; else fail "bespoke animations run sandboxed and unsafe code is rejected"; fi
+
+nofinal="$work/nofinal.json"
+node -e 'const l=require(process.argv[1]); delete l.concepts[2].animation; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$nofinal"
+node "$skill/scripts/validate.mjs" "$nofinal" "$skill/examples/sample.concept-map.json" >/dev/null 2>&1 && draft_ok=yes || draft_ok=no
+node "$skill/scripts/validate.mjs" --final "$nofinal" "$skill/examples/sample.concept-map.json" 2>"$work/err" >/dev/null || true
+if [ "$draft_ok" = yes ] && grep -q "animation is required" "$work/err"; then pass "the finished lesson needs an animation for every concept"; else fail "the finished lesson needs an animation for every concept"; fi
+
+easy="$work/easy.json"
+node -e 'const l=require(process.argv[1]); l.quiz.forEach(q=>{ const r=q.options.findIndex(o=>o.correct); [q.options[0],q.options[r]]=[q.options[r],q.options[0]]; }); l.quiz[0].options[0].text="Send the very same payment again after a short, deliberately growing pause, carrying the same ID"; l.quiz[1].options[1].text="It never matters what happens"; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$easy"
+node "$skill/scripts/validate.mjs" "$easy" "$skill/examples/sample.concept-map.json" 2>"$work/err" >/dev/null || true
+if grep -q "correct option is much longer" "$work/err" && grep -q "easy-to-rule-out extreme" "$work/err" && grep -q "same position in every quiz question" "$work/err"; then pass "quizzes can't be guessed from length, extremes or position"; else fail "quizzes can't be guessed from length, extremes or position"; fi
+
+if grep -q "Ask about this" "$skill/assets/app.js" && grep -q "Question about my GrowthX teach lesson" "$skill/assets/app.js" && grep -q "Question about my GrowthX teach lesson" "$skill/SKILL.md" && grep -q 'showCoach("terms"' "$skill/assets/app.js" && grep -q 'showCoach("ask"' "$skill/assets/app.js" && grep -q 'class="fact"' "$skill/assets/app.js"; then pass "select-to-ask, one-time hints and the did-you-know card are on the page"; else fail "select-to-ask, one-time hints and the did-you-know card are on the page"; fi
 
 guess="$work/guess-map.json"
 node -e 'const m=require(process.argv[1]); m.evidence=m.evidence.filter(e=>e.kind!=="chat"); m.concepts.forEach(c=>{ if(c.in_your_work) c.in_your_work.evidence_ids=c.in_your_work.evidence_ids.filter(id=>m.evidence.some(e=>e.id===id)); }); console.log(JSON.stringify(m))' "$skill/examples/sample.concept-map.json" > "$guess"

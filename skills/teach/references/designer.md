@@ -20,12 +20,16 @@ Inputs: `brief.md`, `concept-map.json` if it exists, [teaching method](teaching-
      Every beat should change what the reader understands; cut a beat that only restates the last one. Keep the words short and concrete, with real numbers or names where you can ("Charged ₹500", not "Processes request"). Add a `caption` that says, in one sentence, what the reader should have noticed.
    - **`real_world`** (40–100 words): how a well-known company or product uses the idea, told as a small story with concrete details.
    - **`fun_fact`** (optional, at most 50 words): a "Did you know?" fact that makes the idea stick: a surprising origin, a famous failure, a striking number. Only well-known, verifiable facts you're sure of; never force one, and leave it out if nothing genuinely interesting comes to mind.
-   - **`pitfalls`** (2–3 items, each at most 35 words): the mistakes people actually make, written to the learner, saying what goes wrong and why.
 5. Add `in_your_work` only for concepts whose map entry has `in_your_work` (no concept map means no `in_your_work` at all), elaborated to 40–100 words: where the idea shows up in what the learner did in this session, what it does there and what it changed. Use only facts from the map and brief, and copy its `evidence_ids`. Never fill the gap by guessing about the project. Together with the story, this ties each concept back to what the learner actually did.
 6. Never include code. Let the focus shape the wording: business focus talks about users, cost and risk; technical focus about how it works underneath.
 7. Write the `glossary`: every term a newcomer might not know (3–12), using the exact words that appear in the text, each with a tip of at most 30 words that explains with an analogy or everyday comparison.
 8. Count words. Each concept must stay **under 450 words**. Cut before you add.
-9. Write exactly 3 quiz questions that make the learner apply an idea to a new situation.
+9. Write exactly 3 quiz questions that make the learner apply an idea to a new situation. They must be hard to guess:
+   - Every wrong option is something a newcomer could genuinely believe: a real misconception, a half-right idea, or the right idea applied in the wrong place. Never a silly, off-topic or obviously wrong option.
+   - All options are about the same length, written with the same care and in the same form. The correct one must not be the longest, the most detailed or the only one that sounds technical.
+   - No giveaway words in wrong options ("always", "never", "nothing", "completely"), no "all of the above".
+   - Vary where the correct answer sits across the three questions.
+   - Each `why` explains the misunderstanding behind that option, not just "this is wrong".
 10. Write `next` from the catalogue: take the `next` concepts listed for this lesson's concepts that aren't already in the lesson, and phrase each as `teach me <concept name>`. Then write the `share` posts about the concepts, never the private project. LinkedIn: 3–6 short lines ending with "Built using GrowthX teach". X: at most 260 characters, no hashtags.
 11. Set `meta.minutes` honestly (about 200 words per minute plus 30 seconds per quiz question).
 

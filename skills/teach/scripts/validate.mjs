@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Validates lesson.json (and optionally concept-map.json) against the teach formats.
-// Usage: node validate.mjs <lesson.json> [concept-map.json]
+// Usage: node validate.mjs [--final] <lesson.json> [concept-map.json]
+//   --final  the finished lesson: every concept must also have its animation
 import { readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -132,7 +133,7 @@ export function validateConceptMap(map, cat = loadCatalogue()) {
 }
 
 function conceptWords(c) {
-  let n = words(c.story) + words(c.explain) + words(c.real_world) + words(c.fun_fact) + (c.pitfalls || []).reduce((t, p) => t + words(p), 0);
+  let n = words(c.story) + words(c.explain) + words(c.real_world) + words(c.fun_fact);
   if (c.in_your_work) n += words(c.in_your_work.text);
   const v = c.visual;
   if (v) {
@@ -146,7 +147,7 @@ function conceptWords(c) {
   return n;
 }
 
-export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []) {
+export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = [], final = false) {
   const errors = [];
   const err = (msg) => errors.push(`lesson: ${msg}`);
   const evidence = map ? validateConceptMap(map, cat).evidence : null;
@@ -172,7 +173,7 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     if (conceptIds.has(c.id)) err(`duplicate concept id "${c.id}"`);
     conceptIds.add(c.id);
     for (const k of ["name", "story", "explain"]) if (!isText(c[k])) err(`${at}.${k} is required`);
-    for (const k of ["tagline", "product", "tech", "examples", "code", "pitfall"]) if (c[k] !== undefined) err(`${at}.${k} is no longer used; remove it (see lesson-format.md)`);
+    for (const k of ["tagline", "product", "tech", "examples", "code", "pitfall", "pitfalls"]) if (c[k] !== undefined) err(`${at}.${k} is no longer used; remove it (see lesson-format.md)`);
     if (isText(c.story) && words(c.story) > MAX_STORY_WORDS) err(`${at}.story has ${words(c.story)} words; keep it to ${MAX_STORY_WORDS}`);
     if (isText(c.explain)) {
       if (words(c.explain) > MAX_DEFINITION_WORDS) err(`${at}.explain has ${words(c.explain)} words; keep it to ${MAX_DEFINITION_WORDS}`);
@@ -182,9 +183,6 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     if (!isText(c.real_world)) err(`${at}.real_world is required: how a well-known company or product uses the idea`);
     else if (words(c.real_world) < 40 || words(c.real_world) > 100) err(`${at}.real_world has ${words(c.real_world)} words; elaborate it in 40-100 words`);
     if (c.fun_fact !== undefined && (!isText(c.fun_fact) || words(c.fun_fact) > 50)) err(`${at}.fun_fact must be at most 50 words (or left out)`);
-    const pitfalls = isList(c.pitfalls) ? c.pitfalls : [];
-    if (pitfalls.length < 2 || pitfalls.length > 3) err(`${at}.pitfalls needs 2-3 common mistakes`);
-    for (const [j, p] of pitfalls.entries()) if (!isText(p) || words(p) > 35) err(`${at}.pitfalls[${j}] must be a sentence or two of at most 35 words`);
     if (isText(m.title) && mentionsName(c, m.title)) err(`meta.title names the concept "${c.name}"; make the title an analogy with no jargon`);
     if (c.id && cat.concepts.has(c.id) && isText(c.name) && c.name !== cat.concepts.get(c.id).name) err(`${at}.name must be the catalogue name "${cat.concepts.get(c.id).name}" so concepts are named the same in every lesson`);
     if (c.id && !cat.concepts.has(c.id)) warnings.push(`${at} is not in the catalogue; use a catalogue id if one fits, or add the concept to references/catalogue.json`);
@@ -203,6 +201,7 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     }
 
     if (c.animation !== undefined) for (const e of checkAnimation(c.animation)) err(`${at}.animation ${e}`);
+    else if (final) err(`${at}.animation is required: every concept gets its own animation (run the animator for it)`);
     const v = c.visual;
     if (!v) err(`${at}.visual is required: every concept gets an animation`);
     else {
@@ -308,7 +307,18 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     if (options.length < 3 || options.length > 4) err(`quiz[${i}] needs 3-4 options`);
     if (options.filter((o) => o.correct === true).length !== 1) err(`quiz[${i}] needs exactly one correct option`);
     for (const [j, o] of options.entries()) if (!isText(o.text) || !isText(o.why)) err(`quiz[${i}].options[${j}] needs text and why`);
+    // Wrong options must be believable: the right one shouldn't stand out by being the long, careful one.
+    const right = options.find((o) => o.correct === true);
+    const wrong = options.filter((o) => o.correct !== true && isText(o.text));
+    if (right && isText(right.text) && wrong.length) {
+      const avg = wrong.reduce((t, o) => t + o.text.length, 0) / wrong.length;
+      if (right.text.length > avg * 1.35 + 8) err(`quiz[${i}]: the correct option is much longer than the wrong ones, which gives it away; make every option a similar, equally careful length`);
+      for (const o of wrong) if (/\b(always|never|nothing|everything|only because|completely|magically)\b/i.test(o.text)) err(`quiz[${i}]: "${o.text}" is an easy-to-rule-out extreme; write a wrong answer a newcomer could genuinely believe`);
+    }
   }
+
+  const rightAt = quiz.map((q) => (isList(q.options) ? q.options.findIndex((o) => o.correct === true) : -1));
+  if (quiz.length === 3 && rightAt.every((x) => x === rightAt[0])) err("the correct answer is in the same position in every quiz question; vary it");
 
   const next = isList(lesson.next) ? lesson.next : [];
   if (next.length < 2 || next.length > 3) err("needs 2-3 next items");
@@ -332,7 +342,7 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
   if (DASHES.test(text)) err("contains em or en dashes; use a period, comma, colon or parentheses instead (humanizer section 8)");
   if (CURLY_DOUBLE.test(text)) err("contains curly double quotes; use straight quotes");
   for (const c of concepts) {
-    const bold = [c.story, c.explain, c.real_world, c.fun_fact].concat(c.pitfalls || []).join(" ").match(/\*\*[^*]+\*\*/g) || [];
+    const bold = [c.story, c.explain, c.real_world, c.fun_fact].join(" ").match(/\*\*[^*]+\*\*/g) || [];
     if (bold.length > 2) err(`concept "${c.id}" bolds ${bold.length} phrases; bold only the concept's own term (humanizer section 19)`);
   }
   // Only IDs containing a digit (e1, code-2) are distinctive enough to detect without false positives.
@@ -351,16 +361,18 @@ function readJson(path) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const [lessonPath, mapPath] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const final = args.includes("--final");
+  const [lessonPath, mapPath] = args.filter((a) => a !== "--final");
   if (!lessonPath) {
-    console.error("Usage: node validate.mjs <lesson.json> [concept-map.json]");
+    console.error("Usage: node validate.mjs [--final] <lesson.json> [concept-map.json]");
     process.exit(2);
   }
   const lesson = readJson(lessonPath);
   const map = mapPath ? readJson(mapPath) : null;
   const cat = loadCatalogue();
   const warnings = [];
-  const errors = [...(map ? validateConceptMap(map, cat).errors : []), ...validateLesson(lesson, map, cat, warnings)];
+  const errors = [...(map ? validateConceptMap(map, cat).errors : []), ...validateLesson(lesson, map, cat, warnings, final)];
   for (const w of warnings) console.error(`warning: ${w}`);
   if (errors.length) {
     console.error(`${errors.length} problem(s):\n- ${errors.join("\n- ")}`);

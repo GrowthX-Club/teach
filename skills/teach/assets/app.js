@@ -214,7 +214,6 @@
   }
 
   function concept(c) {
-    var mistakes = (c.pitfalls || []).filter(Boolean);
     return (
       '<section class="block" id="c-' + esc(c.id) + '" data-nav="' + esc(plain(c.name)) + '">' +
       (c.story ? '<div class="story prose">' + paras(c.story) + "</div>" : "") +
@@ -223,8 +222,11 @@
       (c.animation ? bespoke(c.animation) : visual(c.visual)) +
       (c.real_world ? '<div class="sub"><h3>In the real world</h3><div class="prose">' + paras(c.real_world) + "</div></div>" : "") +
       (c.in_your_work && c.in_your_work.text ? '<div class="sub"><h3>In your work</h3><div class="prose">' + paras(c.in_your_work.text) + "</div></div>" : "") +
-      (c.fun_fact ? '<div class="sub did-you-know"><h3>Did you know?</h3><div class="prose">' + paras(c.fun_fact) + "</div></div>" : "") +
-      (mistakes.length ? '<div class="sub"><h3>Common mistakes</h3><ul class="mistakes">' + mistakes.map(function (m) { return "<li>" + rich(m) + "</li>"; }).join("") + "</ul></div>" : "") +
+      (c.fun_fact
+        ? '<aside class="fact" aria-label="Did you know?">' +
+          '<svg class="fact-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+          '<div><span class="fact-label">Did you know?</span><div class="prose">' + paras(c.fun_fact) + "</div></div></aside>"
+        : "") +
       "</section>"
     );
   }
@@ -633,10 +635,149 @@
       el.addEventListener("focus", function () { show(el); });
       el.addEventListener("blur", hide);
       el.addEventListener("click", function (e) { e.stopPropagation(); current === el ? hide() : show(el); });
+      el.addEventListener("mouseenter", function () { seenHint("terms"); });
+      el.addEventListener("click", function () { seenHint("terms"); });
     });
     document.addEventListener("click", hide);
     addEventListener("scroll", function () { if (current) show(current); }, { passive: true });
   })();
+
+  // ---------- one-time hints ----------
+  // Each hint shows once per browser (remembered when storage is available).
+  function hintSeen(name) {
+    try { return localStorage.getItem("teach:hint:" + name) === "1"; } catch (e) { return !!hintSeen.mem[name]; }
+  }
+  hintSeen.mem = {};
+  function seenHint(name) {
+    hintSeen.mem[name] = true;
+    try { localStorage.setItem("teach:hint:" + name, "1"); } catch (e) {}
+    var open = document.querySelector('.coach[data-hint="' + name + '"]');
+    if (open) open.remove();
+  }
+  function showCoach(name, html, anchor) {
+    if (hintSeen(name) || document.querySelector(".coach")) return false;
+    var c = document.createElement("div");
+    c.className = "coach";
+    c.setAttribute("role", "status");
+    c.setAttribute("data-hint", name);
+    c.innerHTML = "<div>" + html + '</div><button type="button">Got it</button>';
+    c.querySelector("button").addEventListener("click", function () { seenHint(name); maybeAskHint(); });
+    document.body.appendChild(c);
+    function place() {
+      if (!c.isConnected) return;
+      if (!anchor) { c.classList.add("corner"); c.style.right = "16px"; c.style.bottom = "16px"; return; }
+      var r = anchor.getBoundingClientRect(), w = c.offsetWidth, h = c.offsetHeight;
+      var left = Math.min(Math.max(12, r.left + r.width / 2 - 24), innerWidth - w - 12);
+      var below = r.bottom + h + 14 < innerHeight;
+      c.classList.toggle("below", below);
+      c.classList.toggle("above", !below);
+      c.style.left = left + "px";
+      c.style.top = (below ? r.bottom + 10 : r.top - h - 10) + "px";
+      c.style.setProperty("--arrow-x", Math.max(12, Math.min(w - 24, r.left + r.width / 2 - left - 6)) + "px");
+    }
+    place();
+    addEventListener("scroll", place, { passive: true });
+    addEventListener("resize", place);
+    return true;
+  }
+
+  // Hint 1: the highlighted words. Shown when the first one scrolls into view.
+  var firstTerm = document.querySelector(".content .term");
+  if (firstTerm && !hintSeen("terms") && "IntersectionObserver" in window) {
+    var termWatch = new IntersectionObserver(function (items) {
+      if (items[0].isIntersecting) {
+        termWatch.disconnect();
+        showCoach("terms", "<b>Highlighted words</b> have a quick, plain explanation. Hover or tap one to see it.", firstTerm);
+      }
+    }, { threshold: 1, rootMargin: "0px 0px -30% 0px" });
+    termWatch.observe(firstTerm);
+  }
+  // Hint 2: select-to-ask. Shown once the reader is into the first concept and the first hint is done.
+  function maybeAskHint() {
+    if (hintSeen("ask") || (firstTerm && !hintSeen("terms"))) return;
+    var firstConcept = document.querySelector("section.block[id^='c-']");
+    if (firstConcept && firstConcept.getBoundingClientRect().top < innerHeight * 0.5) {
+      showCoach("ask", "Stuck on something? <b>Select any text</b> in the lesson to ask a question about it.", null);
+    }
+  }
+  addEventListener("scroll", maybeAskHint, { passive: true });
+
+  // ---------- select text, ask a question ----------
+  // The page can't talk to the chat, so the question is copied with the lesson
+  // and the exact passage, ready to paste into the chat where teach answers it.
+  var askBtn = document.createElement("button");
+  askBtn.type = "button";
+  askBtn.className = "ask-btn";
+  askBtn.textContent = "Ask about this";
+  askBtn.hidden = true;
+  document.body.appendChild(askBtn);
+  var picked = null;
+  function selectionInLesson() {
+    var sel = window.getSelection && window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
+    var text = sel.toString().replace(/\s+/g, " ").trim();
+    if (text.length < 3) return null;
+    var node = sel.getRangeAt(0).commonAncestorContainer;
+    var el = node.nodeType === 1 ? node : node.parentElement;
+    if (!el || !el.closest(".content") || el.closest("textarea, input, button, .ask-panel, .options")) return null;
+    var section = el.closest("[data-nav]");
+    return { text: text.length > 600 ? text.slice(0, 600) + "…" : text, section: section ? section.getAttribute("data-nav") : "", rect: sel.getRangeAt(0).getBoundingClientRect() };
+  }
+  function updateAskButton() {
+    picked = selectionInLesson();
+    if (!picked) { askBtn.hidden = true; return; }
+    askBtn.hidden = false;
+    var left = Math.min(Math.max(8, picked.rect.left + picked.rect.width / 2 - askBtn.offsetWidth / 2), innerWidth - askBtn.offsetWidth - 8);
+    var top = picked.rect.top - askBtn.offsetHeight - 10;
+    if (top < 60) top = picked.rect.bottom + 10;
+    askBtn.style.left = left + scrollX + "px";
+    askBtn.style.top = top + scrollY + "px";
+  }
+  document.addEventListener("mouseup", function () { setTimeout(updateAskButton, 0); });
+  document.addEventListener("keyup", function (e) { if (e.shiftKey) updateAskButton(); });
+  document.addEventListener("selectionchange", function () {
+    clearTimeout(updateAskButton.t);
+    updateAskButton.t = setTimeout(updateAskButton, 400);
+  });
+  askBtn.addEventListener("mousedown", function (e) { e.preventDefault(); });
+  askBtn.addEventListener("click", function () {
+    if (!picked) return;
+    seenHint("ask");
+    openAsk(picked);
+    askBtn.hidden = true;
+  });
+  function openAsk(p) {
+    var old = document.querySelector(".ask-panel");
+    if (old) old.remove();
+    var panel = document.createElement("div");
+    panel.className = "ask-panel";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-label", "Ask about this part");
+    panel.innerHTML =
+      '<span class="eyebrow">Ask about this</span><blockquote></blockquote>' +
+      '<label class="sr-only" for="ask-q">Your question</label>' +
+      '<textarea id="ask-q" placeholder="What would you like explained? e.g. Why does the second copy get skipped?"></textarea>' +
+      '<p class="ask-help">Your question is copied with this passage. Paste it into your Claude chat and teach will explain it.</p>' +
+      '<div class="btn-row"><button type="button" class="btn" data-act="cancel">Cancel</button><button type="button" class="btn primary" data-act="copy">Copy question</button></div>';
+    panel.querySelector("blockquote").textContent = p.text;
+    document.body.appendChild(panel);
+    var box = panel.querySelector("textarea");
+    box.focus();
+    function close() { panel.remove(); }
+    panel.querySelector('[data-act="cancel"]').addEventListener("click", close);
+    panel.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+    panel.querySelector('[data-act="copy"]').addEventListener("click", function () {
+      var q = box.value.trim() || "Can you explain this part more simply?";
+      var prompt =
+        'Question about my GrowthX teach lesson "' + plain(meta.title || "") + '"' +
+        (p.section ? " (section: " + p.section + ")" : "") + "\n\n" +
+        "About this part:\n> " + p.text + "\n\nMy question: " + q;
+      var done = function () { toast("Copied. Paste it into your Claude chat."); close(); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(prompt).then(done, function () { box.value = prompt; box.select(); toast("Selected. Press Cmd+C or Ctrl+C, then paste it into your chat."); });
+      } else { box.value = prompt; box.select(); toast("Selected. Press Cmd+C or Ctrl+C, then paste it into your chat."); }
+    });
+  }
 
   // ---------- reading progress ----------
   var bar = document.getElementById("progress");

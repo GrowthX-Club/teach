@@ -91,11 +91,12 @@ Needs Node.js and the Claude Code command line (`claude`), logged in; it uses yo
 
 - A short hook and a clear goal
 - An analogy for a title, with no jargon
-- 2–4 concepts, taught story first: a short situation (from your own work when there is one), then the concept with an analogy-led explanation, a short animation that acts the idea out, "In the real world" and "In your work" (about 100 words each) and a short list of common mistakes. No code
-- Jargon is underlined; hover or tap it for a plain, analogy-style explanation
+- 2–4 concepts, taught story first: a short situation (from your own work when there is one), then the concept with an analogy-led explanation, a short animation that acts the idea out, "In the real world" and "In your work" (about 100 words each). No code
+- Jargon is highlighted; hover or tap it for a plain, analogy-style explanation (a one-time hint points this out)
 - A sidebar with every section, ticking them off as you read
 - Light and dark themes (the focus you pick shapes the writing)
-- An optional "Did you know?" fact per concept, only when there's a genuinely interesting one
+- An optional "Did you know?" side note per concept, only when there's a genuinely interesting fact
+- Select any text to ask a question about it: the question is copied with the passage, ready to paste into your chat, where teach answers it
 - A 3-question multiple-choice quiz with an explanation for every option
 - "Prefer watching?": up to 4 YouTube videos that open at the exact moment that explains a concept, found and checked by a separate agent (left out when nothing reliable turns up)
 - Follow-up prompts to keep learning
