@@ -73,6 +73,22 @@ if grep -q "2026-01-01-sample/library-entry.js" "$TEACH_HOME/index.html"; then p
 if grep -q '"Reliability and speed"' "$TEACH_HOME/index.html" && grep -q '"Reliability and speed"' "$lesson/index.html"; then pass "catalogue inlined for area names"; else fail "catalogue inlined for area names"; fi
 if [ -f "$TEACH_HOME/theme.css" ]; then pass "theme.css created on first build"; else fail "theme.css created on first build"; fi
 
+echo "playground"
+pg_home="$work/pg home"
+PGPORT=8759
+TEACH_HOME="$pg_home" node "$skill/playground/server.mjs" --port $PGPORT --home "$pg_home" > "$work/pg.log" 2>&1 &
+pg_pid=$!
+i=0; while [ $i -lt 30 ] && ! grep -q PLAYGROUND_URL "$work/pg.log"; do sleep 0.2; i=$((i+1)); done
+pg_url=$(sed -n 's/^PLAYGROUND_URL=//p' "$work/pg.log")
+pg_token=$(printf '%s' "$pg_url" | sed 's/.*t=//')
+if curl -s "http://localhost:$PGPORT/" | grep -q "Turn any AI chat into a"; then pass "playground page loads"; else fail "playground page loads"; fi
+code_none=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Content-Type: application/json" -d '{}' "http://localhost:$PGPORT/api/jobs")
+code_origin=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "Origin: https://evil.example" -H "X-Teach-Token: $pg_token" -H "Content-Type: application/json" -d '{}' "http://localhost:$PGPORT/api/jobs")
+code_short=$(curl -s -o /dev/null -w "%{http_code}" -X POST -H "X-Teach-Token: $pg_token" -H "Content-Type: application/json" -d '{"transcript":"hi"}' "http://localhost:$PGPORT/api/jobs")
+if [ "$code_none" = 403 ] && [ "$code_origin" = 403 ] && [ "$code_short" = 400 ]; then pass "playground refuses requests without its key, from other sites, or with no real transcript"; else fail "playground refuses requests without its key, from other sites, or with no real transcript ($code_none $code_origin $code_short)"; fi
+if [ "$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$PGPORT/lessons/x/brief.md")" = 404 ] && [ "$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:$PGPORT/profile.json")" = 404 ]; then pass "playground never serves briefs or the profile"; else fail "playground never serves briefs or the profile"; fi
+kill $pg_pid 2>/dev/null || true
+
 echo "first-run setup"
 fresh="$work/fresh"
 TEACH_HOME="$fresh" sh "$skill/scripts/setup.sh" >/dev/null
