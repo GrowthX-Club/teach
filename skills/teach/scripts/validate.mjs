@@ -7,7 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const LENSES = ["product", "balanced", "tech"];
 const EVIDENCE_KINDS = ["chat", "code", "docs", "test", "runtime"];
-export const MAX_CONCEPT_WORDS = 300;
+export const MAX_CONCEPT_WORDS = 450;
 export const MAX_DEFINITION_WORDS = 100;
 export const MAX_STORY_WORDS = 80;
 
@@ -102,7 +102,7 @@ export function validateConceptMap(map, cat = loadCatalogue()) {
 }
 
 function conceptWords(c) {
-  let n = words(c.story) + words(c.explain) + words(c.real_world) + words(c.pitfall);
+  let n = words(c.story) + words(c.explain) + words(c.real_world) + (c.pitfalls || []).reduce((t, p) => t + words(p), 0);
   if (c.in_your_work) n += words(c.in_your_work.text);
   const v = c.visual;
   if (v) {
@@ -139,21 +139,26 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     if (conceptIds.has(c.id)) err(`duplicate concept id "${c.id}"`);
     conceptIds.add(c.id);
     for (const k of ["name", "story", "explain"]) if (!isText(c[k])) err(`${at}.${k} is required`);
-    for (const k of ["tagline", "product", "tech", "examples"]) if (c[k] !== undefined) err(`${at}.${k} is no longer used; remove it (see lesson-format.md)`);
+    for (const k of ["tagline", "product", "tech", "examples", "code", "pitfall"]) if (c[k] !== undefined) err(`${at}.${k} is no longer used; remove it (see lesson-format.md)`);
     if (isText(c.story) && words(c.story) > MAX_STORY_WORDS) err(`${at}.story has ${words(c.story)} words; keep it to ${MAX_STORY_WORDS}`);
     if (isText(c.explain)) {
       if (words(c.explain) > MAX_DEFINITION_WORDS) err(`${at}.explain has ${words(c.explain)} words; keep it to ${MAX_DEFINITION_WORDS}`);
       if (opensAsDefinition(c)) err(`${at}.explain opens with a definition; start from an analogy or real-life example, then name the concept`);
       if (!mentionsName(c, c.explain)) err(`${at}.explain must name the concept ("${c.name}") after the analogy`);
     }
-    if (c.real_world !== undefined && (!isText(c.real_world) || words(c.real_world) > 35)) err(`${at}.real_world must be one sentence of at most 35 words`);
+    if (!isText(c.real_world)) err(`${at}.real_world is required: how a well-known company or product uses the idea`);
+    else if (words(c.real_world) < 40 || words(c.real_world) > 100) err(`${at}.real_world has ${words(c.real_world)} words; elaborate it in 40-100 words`);
+    const pitfalls = isList(c.pitfalls) ? c.pitfalls : [];
+    if (pitfalls.length < 2 || pitfalls.length > 3) err(`${at}.pitfalls needs 2-3 common mistakes`);
+    for (const [j, p] of pitfalls.entries()) if (!isText(p) || words(p) > 35) err(`${at}.pitfalls[${j}] must be a sentence or two of at most 35 words`);
+    if (isText(m.title) && mentionsName(c, m.title)) err(`meta.title names the concept "${c.name}"; make the title an analogy with no jargon`);
     if (c.id && cat.concepts.has(c.id) && isText(c.name) && c.name !== cat.concepts.get(c.id).name) err(`${at}.name must be the catalogue name "${cat.concepts.get(c.id).name}" so concepts are named the same in every lesson`);
     if (c.id && !cat.concepts.has(c.id)) warnings.push(`${at} is not in the catalogue; use a catalogue id if one fits, or add the concept to references/catalogue.json`);
 
     const w = c.in_your_work;
     if (w) {
       if (!isText(w.text)) err(`${at}.in_your_work.text is required`);
-      else if (words(w.text) > 30 || /[.!?]\s+\S/.test(w.text.trim())) err(`${at}.in_your_work must be one sentence of at most 30 words`);
+      else if (words(w.text) < 40 || words(w.text) > 100) err(`${at}.in_your_work has ${words(w.text)} words; elaborate it in 40-100 words`);
       if (!isList(w.evidence_ids) || w.evidence_ids.length === 0) err(`${at}.in_your_work needs evidence_ids`);
       else if (evidence) for (const id of w.evidence_ids) if (!evidence.has(id)) err(`${at}.in_your_work cites evidence "${id}" missing from the concept map`);
     }
@@ -177,14 +182,9 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
         }
       } else err(`${at}.visual.type must be flow or compare`);
     }
-    if (c.code) {
-      if (!isText(c.code.text)) err(`${at}.code.text is required`);
-      else if (c.code.text.split("\n").length > 10) err(`${at}.code is longer than 10 lines`);
-    }
-    if (c.pitfall && words(c.pitfall) > 30) err(`${at}.pitfall must be at most 30 words`);
 
     const n = conceptWords(c);
-    if (n > MAX_CONCEPT_WORDS) err(`${at} has ${n} words; the limit is ${MAX_CONCEPT_WORDS} (code samples don't count)`);
+    if (n > MAX_CONCEPT_WORDS) err(`${at} has ${n} words; the limit is ${MAX_CONCEPT_WORDS}`);
   }
 
   const glossary = isList(lesson.glossary) ? lesson.glossary : [];
@@ -198,6 +198,7 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     terms.add(t);
     if (!bodyText.includes(t)) err(`glossary term "${g.term}" never appears in the lesson; use the exact words from the text`);
     if (words(g.tip) > 30) err(`glossary tip for "${g.term}" is over 30 words`);
+    if (isText(m.title) && m.title.toLowerCase().replace(/\*\*/g, "").includes(t)) err(`meta.title uses the jargon "${g.term}"; make the title an analogy with no jargon`);
   }
 
   const quiz = isList(lesson.quiz) ? lesson.quiz : [];
@@ -233,7 +234,7 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
   if (DASHES.test(text)) err("contains em or en dashes; use a period, comma, colon or parentheses instead (humanizer section 8)");
   if (CURLY_DOUBLE.test(text)) err("contains curly double quotes; use straight quotes");
   for (const c of concepts) {
-    const bold = [c.story, c.explain, c.real_world, c.pitfall].join(" ").match(/\*\*[^*]+\*\*/g) || [];
+    const bold = [c.story, c.explain, c.real_world].concat(c.pitfalls || []).join(" ").match(/\*\*[^*]+\*\*/g) || [];
     if (bold.length > 2) err(`concept "${c.id}" bolds ${bold.length} phrases; bold only the concept's own term (humanizer section 19)`);
   }
   // Only IDs containing a digit (e1, code-2) are distinctive enough to detect without false positives.

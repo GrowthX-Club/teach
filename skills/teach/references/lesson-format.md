@@ -7,7 +7,7 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
   "version": 3,
   "meta": {
     "slug": "safe-retries",
-    "title": "Why safe retries need **idempotency**",
+    "title": "Why pressing the lift button five times still brings **one lift**",
     "subject": "Making payment webhooks safe to retry",
     "domain": "systems",
     "one_liner": "Retrying is easy. Retrying without doing things twice is the real trick.",
@@ -29,10 +29,12 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
         "left": { "title": "Not idempotent", "tone": "bad", "points": ["First copy: charged", "Second copy: charged again"] },
         "right": { "title": "Idempotent", "tone": "good", "points": ["First copy: charged", "Second copy: seen, skipped"] }
       },
-      "real_world": "Payment companies like Stripe let a shop attach a unique key to each charge, so a resent charge never runs twice.",
-      "code": { "language": "ts", "caption": "The idea, simplified", "text": "if (await alreadyHandled(event.id)) return ok();" },
-      "in_your_work": { "text": "Your payment handler now remembers every payment notice and ignores repeats.", "evidence_ids": ["e2"] },
-      "pitfall": "Making a new ID for each retry, so nobody can recognise the repeat."
+      "real_world": "When a shop asks Stripe to charge a card, it can attach a unique key to the request, a bit like a token number. If the shop sends the same charge again, Stripe sees the same key and returns the first result instead of taking the money twice...",
+      "in_your_work": { "text": "Your payment handler now keeps a list of every payment message it has already handled. When one shows up again, it sees the ID and skips it, so the customer is never charged twice...", "evidence_ids": ["e2"] },
+      "pitfalls": [
+        "Giving every retry a brand new ID. The receiver can't tell it's a repeat, so the protection does nothing.",
+        "Forgetting the IDs too soon, so a late repeat slips through."
+      ]
     }
   ],
   "glossary": [
@@ -63,9 +65,11 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
 ## How a concept reads on the page
 
 1. **Story**: a short, concrete situation that sets up the problem before the idea has a name.
-2. **Concept → name**, then the explanation in an "Analogy" card: start from an analogy or a real-life example, then name the concept and say exactly what it is.
+2. **The concept's name** as the heading, then the explanation in an "Analogy" card: start from an analogy or a real-life example, then name the concept and say exactly what it is.
 3. **Diagram**: drawn by the page in a hand-sketched notebook style.
-4. **In the real world** (optional), **In your work** (optional), code (optional), **Common mistake** (optional).
+4. **In the real world**, **In your work** (when there is one) and **Common mistakes**, each as a plain subheading with text or a bullet list underneath.
+
+There is no code anywhere in a lesson and no share image.
 
 Jargon anywhere in the lesson is underlined; hovering or tapping it shows its glossary tip.
 
@@ -74,16 +78,16 @@ Jargon anywhere in the lesson is underlined; hovering or tapping it shows its gl
 - `meta.domain` is a [catalogue](catalogue.json) area id. teach only covers tech and AI.
 - A concept whose `id` is in the catalogue must use the catalogue `name`. Concepts outside the catalogue are allowed but produce a warning.
 - `meta.slug`: lowercase words joined by hyphens. `meta.minutes`: 2–8. `meta.level.depth`: 1–4. `meta.level.lens`: `product`, `balanced` or `tech`. The focus shapes the writing; the page has no focus switch.
-- `goal`, `hook`, and every concept's `name`, `story`, `explain` and `visual` are required. There is no tagline, no `product`/`tech` split and no `examples` list.
+- `meta.title` is an analogy in everyday words. It must not contain any concept name or glossary term ("Why pressing the lift button five times still brings one lift", not "Why safe retries need idempotency").
+- `goal`, `hook`, and every concept's `name`, `story`, `explain`, `visual`, `real_world` and `pitfalls` are required. There is no tagline, no `product`/`tech` split, no `examples` list and no `code`.
 - `story`: at most 80 words. When the brief says where the concept showed up in the learner's work, build the story around that situation, told so it makes sense to someone who never saw the chat.
 - `explain`: at most 100 words. It opens with an analogy or a real-life example (never "X means…"), then names the concept and says what it is.
 - **2–3 concepts**, unique `id`s (lowercase, hyphens).
-- **Each concept is at most 300 words**, counting story, explain, visual text, `real_world`, `in_your_work` and pitfall. Code does not count.
+- **Each concept is at most 450 words**, counting story, explain, visual text, `real_world`, `in_your_work` and pitfalls.
 - `visual` is required: `{ "type": "flow", "title", "steps": 3–4 × { label, detail } }` or `{ "type": "compare", "title", "left": { "title", "tone"?, "points": 1–3 }, "right": { … } }`. `tone` is `good`, `bad` or `neutral`. Labels at most 6 words, details and points at most 10.
-- `real_world` is optional: one sentence, at most 35 words, about a well-known company or product.
-- `in_your_work` is optional: **one sentence, at most 30 words**, with `evidence_ids` from the concept map. It must make sense to someone who never read the chat.
-- `code` is optional, at most 10 lines; include it only for depth 3–4 or the technical focus.
-- `pitfall` is optional, at most 30 words.
+- `real_world`: **40–100 words** on how a well-known company or product uses the idea, told as a small story with concrete details.
+- `in_your_work` (when the concept map has one): **40–100 words** on where the idea shows up in the learner's own work and what it changed, with `evidence_ids` from the concept map. It must make sense to someone who never read the chat.
+- `pitfalls`: 2–3 common mistakes, each at most 35 words, written to the learner: what people get wrong and why it bites.
 - `glossary`: 3–12 entries covering every piece of jargon a newcomer might not know. Each `term` appears in the lesson's visible text; each `tip` is at most 30 words and explains with an analogy or everyday comparison.
 - Exactly **3 quiz** questions, each with 3–4 options, exactly one `correct: true`, and a `why` on every option.
 - 2–3 `next` items.

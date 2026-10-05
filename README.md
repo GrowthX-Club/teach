@@ -90,13 +90,14 @@ Needs Node.js and the Claude Code command line (`claude`), logged in; it uses yo
 ## What a lesson has
 
 - A short hook and a clear goal
-- 2–3 concepts, each under 300 words, taught story first: a short situation (from your own work when there is one), then "Concept → <name>" with an analogy-led explanation, a hand-drawn diagram, a real-world example, where it shows up in your work, and the common mistake
+- An analogy for a title, with no jargon
+- 2–3 concepts, taught story first: a short situation (from your own work when there is one), then the concept with an analogy-led explanation, a hand-drawn diagram, "In the real world" and "In your work" (about 100 words each) and a short list of common mistakes. No code
 - Jargon is underlined; hover or tap it for a plain, analogy-style explanation
 - A sidebar with every section, ticking them off as you read
 - Light and dark themes (the focus you pick shapes the writing)
 - A 3-question multiple-choice quiz with an explanation for every option
 - Follow-up prompts to keep learning
-- Ready-to-post LinkedIn and X text and a downloadable share image
+- Ready-to-post LinkedIn and X text
 - A "Built using GrowthX teach" footer
 
 Lessons teach ideas, not a recap of the chat: most learners never read the chat, so every lesson stands on its own.
@@ -129,7 +130,7 @@ The theme lives in your teach folder so the agent never has to write CSS, which 
 3. **Concept finder** (a separate agent): confirms which concepts were really used, with evidence from code, tests or the chat.
 4. **Lesson designer** (another separate agent): sees only the brief and the concept map and writes `lesson.json`.
 5. **Lesson editor** (a third agent): rewrites the wording so it reads like a person wrote it, using the [humanizer](https://github.com/blader/humanizer) rules, without changing facts, structure or quiz answers.
-6. **Check and build**: `validate.mjs` enforces the rules (including 300 words per concept, no references back to the chat, and no obvious AI-writing tells); `build.sh` inlines your theme, the layout, the lesson and the renderer into one HTML file and refreshes the library.
+6. **Check and build**: `validate.mjs` enforces the rules (including 450 words per concept, an analogy title with no jargon, no code, no references back to the chat, and no obvious AI-writing tells); `build.sh` inlines your theme, the layout, the lesson and the renderer into one HTML file and refreshes the library.
 7. **Hand-off**: the lesson opens (built-in browser in the desktop app via `serve.sh`, your browser in a terminal) and teach replies with a link.
 
 Steps 3 to 6 run in the background where the agent supports it (Claude Code): the main chat starts each agent in the background and starts the next one when it reports back, so every pass still gets its own fresh agent. Ready-made prompts for each pass are in `skills/teach/references/agent-prompts.md`. Where background agents aren't available, the same steps run one after another.
