@@ -9,6 +9,16 @@ const LENSES = ["product", "balanced", "tech"];
 const EXAMPLE_KINDS = ["everyday", "industry"];
 const EVIDENCE_KINDS = ["chat", "code", "docs", "test", "runtime"];
 export const MAX_CONCEPT_WORDS = 300;
+export const MAX_DEFINITION_WORDS = 100;
+
+// The definition starts with the concept itself: "Idempotency means…", "RAG is…".
+function opensWithName(c) {
+  const first = c.explain.split(/(?<=[.!?])\s/)[0].toLowerCase().replace(/\*\*/g, "");
+  const name = String(c.name || "").toLowerCase();
+  const variants = [name, name.replace(/\s*\(.*\)\s*/, ""), (name.match(/\(([^)]+)\)/) || [])[1]].filter(Boolean);
+  // Accept the name or its singular/plural stem ("optimistic update" for "Optimistic updates").
+  return variants.some((v) => first.includes(v) || first.includes(v.replace(/s$/, "")));
+}
 // Learners rarely read the chat, so the lesson must never point back at it.
 const CHAT_REFERENCE = /\b(earlier (in|today)|as (we|you) (discussed|saw|did)|we just|you just|in (our|this|the) (chat|conversation|session)|the bug we|our discussion|mentioned above)\b/i;
 
@@ -127,6 +137,10 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     conceptIds.add(c.id);
     for (const k of ["name", "explain", "product", "tech"]) if (!isText(c[k])) err(`${at}.${k} is required`);
     if (c.tagline !== undefined) err(`${at}.tagline is no longer used; remove it`);
+    if (isText(c.explain)) {
+      if (words(c.explain) > MAX_DEFINITION_WORDS) err(`${at}.explain has ${words(c.explain)} words; the concept definition must be at most ${MAX_DEFINITION_WORDS}`);
+      if (!opensWithName(c)) err(`${at}.explain must open by naming the concept, e.g. "${c.name} means…"`);
+    }
     if (c.id && cat.concepts.has(c.id) && isText(c.name) && c.name !== cat.concepts.get(c.id).name) err(`${at}.name must be the catalogue name "${cat.concepts.get(c.id).name}" so concepts are named the same in every lesson`);
     if (c.id && !cat.concepts.has(c.id)) warnings.push(`${at} is not in the catalogue; use a catalogue id if one fits, or add the concept to references/catalogue.json`);
 

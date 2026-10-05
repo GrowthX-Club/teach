@@ -21,7 +21,7 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
     {
       "id": "idempotency",
       "name": "Idempotency",
-      "explain": "An action is **idempotent** when repeating it changes nothing after the first time...",
+      "explain": "**Idempotency** means doing something twice has the same effect as doing it once...",
       "product": "Customers never see double charges or duplicate emails, even when the network misbehaves.",
       "tech": "Store a record keyed by the request ID and check it before acting.",
       "examples": [
@@ -67,6 +67,7 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
 - `meta.slug`: lowercase words joined by hyphens. `meta.minutes`: 2–8. `meta.level.depth`: 1–4. `meta.level.lens`: `product`, `balanced` or `tech`.
 - `goal`, `hook`, and every concept's `name`, `explain`, `product` and `tech` are required. There is no tagline.
 - **2–3 concepts**, unique `id`s (lowercase, hyphens).
+- `explain` is the concept's **definition: at most 100 words, opening with the concept's name** ("Idempotency means…", "A context window is…"). The page shows it under "Concept → <name>".
 - **Each concept is at most 300 words**, counting explain, product, tech, examples, visual text, `in_your_work` and pitfall. Code does not count.
 - Exactly **2 examples** per concept, `kind` `everyday` or `industry`.
 - `in_your_work` is optional: **one sentence, at most 30 words**, with `evidence_ids` from the concept map. It must make sense to someone who never read the chat.
