@@ -93,7 +93,6 @@ section.block { padding-block: 40px; border-top: 1px solid var(--hairline); disp
 /* ===== Concept: story → analogy → sketch ===== */
 :root { --hand: "Caveat", "Kalam", "Marker Felt", "Comic Sans MS", cursive; }
 .story { font-size: 18px; line-height: 1.7; color: var(--fg); }
-.story p:first-child::first-letter { font-weight: 700; }
 .analogy {
   border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
   background: color-mix(in srgb, var(--amber) 9%, var(--card));
