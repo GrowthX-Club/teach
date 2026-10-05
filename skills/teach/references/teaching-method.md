@@ -14,11 +14,12 @@ Teach the ideas behind the work so the learner can spot them anywhere. Never ret
 
 1. **Hook**: a question or situation anyone recognises. One or two sentences.
 2. **Goal**: what they will be able to explain, with a concrete verb (explain, spot, choose).
-3. **Concepts** (2–3), each under 300 words:
-   - a definition at their depth, at most 100 words, that opens with the concept's name ("Optimistic updates means…"); the page labels it "Concept → <name>"
-   - "why it matters" (`product`) and "how it works" (`tech`), 1–2 sentences each; the page shows them by focus
-   - 2 examples: everyday, then industry
-   - optionally: one visual, a short code sample, the common mistake, and one line on where it shows up in their work
+3. **Concepts** (2–3), each under 300 words, taught story first:
+   - **story**: a short situation that makes the learner feel the problem before the idea has a name, ideally from their own work, told so it stands on its own
+   - **Concept → name** with an **analogy-led explanation**: an analogy or real-life example first, then the name and what it is (at most 100 words)
+   - **a hand-drawn diagram** of how it works or what changes
+   - optionally: one real-world company example, one line on where it shows up in their work, a short code sample, the common mistake
+   - jargon is underlined on the page with an analogy-style tip (the glossary)
 4. **Quiz**: 3 multiple-choice questions that apply an idea to a new situation.
 5. **Next**: 2–3 follow-up topics, phrased as the `teach …` prompt to type.
 

@@ -4,13 +4,6 @@
 
   var REPO_URL = "https://github.com/GrowthX-Club/teach";
   var DEPTH_LABELS = { 1: "I'm new to this", 2: "I know the basics", 3: "I use it at work", 4: "I know it well" };
-  var KIND_LABELS = { everyday: "Everyday", industry: "In the industry" };
-  // Short forms of the focus question's answers (references/level-check.md); the full answer is the tooltip.
-  var LENSES = [
-    ["product", "Business", "What it means for the business"],
-    ["balanced", "Both", "A bit of both"],
-    ["tech", "Under the hood", "How it works under the hood"]
-  ];
 
   var lesson;
   try {
@@ -91,14 +84,10 @@
 
   // ---------- sections ----------
   function topbar() {
-    var lensButtons = LENSES.map(function (l) {
-      return '<button type="button" data-lens="' + l[0] + '" title="' + l[2] + '">' + l[1] + "</button>";
-    }).join("");
     return (
       '<header class="topbar"><div class="wrap">' +
       '<a class="brand" href="' + REPO_URL + '" target="_blank" rel="noopener">GrowthX <span class="grad">teach</span></a>' +
       '<div class="controls">' +
-      '<div class="seg" role="group" aria-label="Lesson focus">' + lensButtons + "</div>" +
       '<button type="button" class="icon-btn" id="theme-toggle" aria-label="Switch light or dark theme">◐</button>' +
       "</div></div></header>"
     );
@@ -118,49 +107,37 @@
     );
   }
 
+  // Diagrams are drawn on a canvas in a hand-sketched notebook style (see drawSketch).
+  // The text version stays in the page for screen readers and copy-paste.
+  var visuals = [];
   function visual(v) {
     if (!v) return "";
-    var body = "";
-    if (v.type === "flow") {
-      body = '<ol class="flow">' + (v.steps || []).map(function (s) {
-        return "<li><b>" + rich(s.label) + "</b><span>" + rich(s.detail) + "</span></li>";
-      }).join("") + "</ol>";
-    } else if (v.type === "compare") {
-      body = '<div class="compare">' + ["left", "right"].map(function (side) {
-        var s = v[side] || {};
-        return "<div><b>" + rich(s.title) + "</b><ul>" + (s.points || []).map(function (p) {
-          return "<li>" + rich(p) + "</li>";
-        }).join("") + "</ul></div>";
-      }).join("") + "</div>";
-    }
-    return '<div class="visual">' + (v.title ? '<span class="eyebrow">' + esc(v.title) + "</span>" : "") + body + "</div>";
+    var idx = visuals.push(v) - 1;
+    var alt = v.type === "flow"
+      ? (v.steps || []).map(function (s, i) { return (i + 1) + ". " + plain(s.label) + ": " + plain(s.detail); }).join(" ")
+      : ["left", "right"].map(function (k) { var x = v[k] || {}; return plain(x.title) + ": " + (x.points || []).map(plain).join("; "); }).join(". ");
+    return (
+      '<figure class="sketch">' +
+      '<canvas data-visual="' + idx + '" role="img" aria-label="' + esc(plain(v.title) + ". " + alt) + '"></canvas>' +
+      "</figure>"
+    );
   }
 
-  function concept(c, i) {
-    var examples = (c.examples || []).map(function (e) {
-      return (
-        '<article class="example">' +
-        '<span class="chip">' + esc(KIND_LABELS[e.kind] || e.kind) + "</span>" +
-        "<h4>" + rich(e.title) + "</h4><p>" + rich(e.text) + "</p></article>"
-      );
-    }).join("");
+  function concept(c) {
     var code = c.code
-      ? '<div class="code-wrap" data-hide-lens="product">' +
+      ? '<div class="code-wrap">' +
         (c.code.caption ? '<span class="eyebrow">' + esc(c.code.caption) + "</span>" : "") +
         '<pre class="code"><code>' + esc(c.code.text) + "</code></pre></div>"
       : "";
     return (
       '<section class="block" id="c-' + esc(c.id) + '" data-nav="' + esc(plain(c.name)) + '">' +
+      (c.story ? '<div class="story prose">' + paras(c.story) + "</div>" : "") +
       '<div class="sec-head concept-head"><span class="concept-label">Concept <span aria-hidden="true">→</span></span><h2>' + rich(c.name) + "</h2></div>" +
-      '<div class="prose definition">' + paras(c.explain) + "</div>" +
-      '<div class="lens-blocks">' +
-      '<div class="lens-card" data-lens-block="product"><span class="eyebrow">Why it matters</span>' + paras(c.product) + "</div>" +
-      '<div class="lens-card" data-lens-block="tech"><span class="eyebrow">How it works</span>' + paras(c.tech) + "</div>" +
-      "</div>" +
+      '<div class="analogy"><span class="eyebrow">Analogy</span><div class="prose">' + paras(c.explain) + "</div></div>" +
       visual(c.visual) +
-      '<div class="examples">' + examples + "</div>" +
-      code +
+      (c.real_world ? '<div class="real-world"><span class="eyebrow">In the real world</span><p>' + rich(c.real_world) + "</p></div>" : "") +
       (c.in_your_work && c.in_your_work.text ? '<div class="in-work"><span class="eyebrow">In your work</span><p>' + rich(c.in_your_work.text) + "</p></div>" : "") +
+      code +
       (c.pitfall ? '<div class="callout"><span class="eyebrow">Common mistake</span><p>' + rich(c.pitfall) + "</p></div>" : "") +
       "</section>"
     );
@@ -287,31 +264,8 @@
     root.setAttribute("data-theme", next);
     save("theme", next);
     drawShareImage();
+    drawAllSketches();
   });
-
-  // ---------- lens ----------
-  function setLens(lens) {
-    document.querySelectorAll("[data-lens]").forEach(function (b) {
-      b.setAttribute("aria-pressed", String(b.getAttribute("data-lens") === lens));
-    });
-    document.querySelectorAll(".lens-blocks").forEach(function (box) {
-      var shown = 0;
-      box.querySelectorAll("[data-lens-block]").forEach(function (el) {
-        var on = lens === "balanced" || el.getAttribute("data-lens-block") === lens;
-        el.hidden = !on;
-        if (on) shown++;
-      });
-      box.setAttribute("data-count", String(shown));
-    });
-    document.querySelectorAll("[data-hide-lens]").forEach(function (el) {
-      el.hidden = el.getAttribute("data-hide-lens") === lens;
-    });
-    save("lens", lens);
-  }
-  document.querySelectorAll("[data-lens]").forEach(function (b) {
-    b.addEventListener("click", function () { setLens(b.getAttribute("data-lens")); });
-  });
-  setLens(load("lens", (meta.level && meta.level.lens) || "balanced"));
 
   // ---------- quiz ----------
   var answers = {};
@@ -468,6 +422,293 @@
   }
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawShareImage);
   drawShareImage();
+
+  // ---------- hand-drawn diagrams ----------
+  // A tiny Excalidraw-like renderer: wobbly double strokes, hand-written labels,
+  // seeded randomness so a diagram looks the same every time it is drawn.
+  function seedFrom(str) {
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function makeRng(seed) {
+    return function () {
+      seed = (seed + 0x6d2b79f5) | 0;
+      var t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function cssVar(name, fallback) {
+    return getComputedStyle(root).getPropertyValue(name).trim() || fallback;
+  }
+  function roughLine(ctx, r, x1, y1, x2, y2, wobble) {
+    var w = wobble == null ? 1.4 : wobble;
+    for (var pass = 0; pass < 2; pass++) {
+      var j = function () { return (r() - 0.5) * 2 * w; };
+      ctx.beginPath();
+      ctx.moveTo(x1 + j(), y1 + j());
+      ctx.quadraticCurveTo((x1 + x2) / 2 + j(), (y1 + y2) / 2 + j(), x2 + j(), y2 + j());
+      ctx.stroke();
+    }
+  }
+  function roughRect(ctx, r, x, y, w, h, fill) {
+    if (fill) {
+      ctx.save();
+      ctx.fillStyle = fill;
+      ctx.beginPath();
+      ctx.moveTo(x + 3, y + 1);
+      ctx.lineTo(x + w - 2, y + 2);
+      ctx.lineTo(x + w - 1, y + h - 3);
+      ctx.lineTo(x + 2, y + h - 1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    roughLine(ctx, r, x, y, x + w, y);
+    roughLine(ctx, r, x + w, y, x + w, y + h);
+    roughLine(ctx, r, x + w, y + h, x, y + h);
+    roughLine(ctx, r, x, y + h, x, y);
+  }
+  function roughArrow(ctx, r, x1, y1, x2, y2) {
+    roughLine(ctx, r, x1, y1, x2, y2, 1);
+    var a = Math.atan2(y2 - y1, x2 - x1), len = 11;
+    roughLine(ctx, r, x2, y2, x2 - len * Math.cos(a - 0.45), y2 - len * Math.sin(a - 0.45), 0.6);
+    roughLine(ctx, r, x2, y2, x2 - len * Math.cos(a + 0.45), y2 - len * Math.sin(a + 0.45), 0.6);
+  }
+  function wrapText(ctx, text, maxWidth) {
+    var out = [], line = "";
+    String(text).split(/\s+/).forEach(function (w) {
+      var test = line ? line + " " + w : w;
+      if (ctx.measureText(test).width > maxWidth && line) { out.push(line); line = w; } else line = test;
+    });
+    if (line) out.push(line);
+    return out;
+  }
+
+  function drawSketch(canvas) {
+    var v = visuals[Number(canvas.getAttribute("data-visual"))];
+    if (!v) return;
+    var W = canvas.parentNode.clientWidth;
+    if (!W) return;
+    var dpr = window.devicePixelRatio || 1;
+    var ctx = canvas.getContext("2d");
+    var hand = cssVar("--hand", "cursive");
+    var ink = cssVar("--fg", "#111"), muted = cssVar("--muted", "#777"), brand = cssVar("--brand", "#0064ff");
+    var paper = cssVar("--card", "#fff"), good = cssVar("--green", "#16a34a"), bad = cssVar("--red", "#dc2626");
+    var pad = 18, labelFont = "700 21px " + hand, detailFont = "500 18px " + hand, titleFont = "600 19px " + hand;
+    var lineH = 22, titleH = 34;
+    var boxes = [];
+
+    // Lay out first (measuring needs the fonts set), then size the canvas, then draw.
+    ctx.font = titleFont;
+    if (v.type === "flow") {
+      var steps = v.steps || [];
+      var row = W >= 560;
+      var gap = row ? 40 : 34;
+      var boxW = row ? (W - pad * 2 - gap * (steps.length - 1)) / steps.length : W - pad * 2;
+      var maxH = 0;
+      steps.forEach(function (s) {
+        ctx.font = labelFont;
+        var l = wrapText(ctx, plain(s.label), boxW - 28);
+        ctx.font = detailFont;
+        var d = wrapText(ctx, plain(s.detail), boxW - 28);
+        var h = 20 + (l.length + d.length) * lineH + 14;
+        boxes.push({ l: l, d: d, h: h });
+        maxH = Math.max(maxH, h);
+      });
+      var y = pad + titleH;
+      boxes.forEach(function (b, i) {
+        b.w = boxW;
+        if (row) { b.x = pad + i * (boxW + gap); b.y = y; b.h = maxH; }
+        else { b.x = pad; b.y = y; y += b.h + gap; }
+      });
+      var H = row ? pad + titleH + maxH + pad : y - gap + pad;
+    } else {
+      var sides = ["left", "right"].map(function (k) { return v[k] || {}; });
+      var cols = W >= 520;
+      var gapC = 44;
+      var colW = cols ? (W - pad * 2 - gapC) / 2 : W - pad * 2;
+      sides.forEach(function (s) {
+        ctx.font = labelFont;
+        var t = wrapText(ctx, plain(s.title), colW - 56);
+        ctx.font = detailFont;
+        var pts = (s.points || []).map(function (p) { return wrapText(ctx, plain(p), colW - 50); });
+        var lines = pts.reduce(function (n, p) { return n + p.length; }, 0);
+        boxes.push({ s: s, t: t, pts: pts, w: colW, h: 22 + t.length * lineH + 10 + lines * lineH + pts.length * 6 + 14 });
+      });
+      var hMax = Math.max(boxes[0].h, boxes[1].h);
+      if (cols) {
+        boxes[0].x = pad; boxes[1].x = pad + colW + gapC;
+        boxes[0].y = boxes[1].y = pad + titleH;
+        boxes[0].h = boxes[1].h = hMax;
+        var H = pad + titleH + hMax + pad;
+      } else {
+        boxes[0].x = boxes[1].x = pad;
+        boxes[0].y = pad + titleH;
+        boxes[1].y = boxes[0].y + boxes[0].h + 40;
+        var H = boxes[1].y + boxes[1].h + pad;
+      }
+    }
+
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.textBaseline = "top";
+    var r = makeRng(seedFrom(JSON.stringify(v)));
+
+    ctx.fillStyle = muted;
+    ctx.font = titleFont;
+    ctx.fillText(plain(v.title || ""), pad, pad);
+
+    if (v.type === "flow") {
+      boxes.forEach(function (b, i) {
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = 1.6;
+        roughRect(ctx, r, b.x, b.y, b.w, b.h, paper);
+        // numbered marker
+        ctx.strokeStyle = brand;
+        ctx.fillStyle = brand;
+        ctx.beginPath();
+        ctx.arc(b.x + 4, b.y + 4, 11, 0, Math.PI * 2);
+        ctx.fillStyle = paper;
+        ctx.fill();
+        ctx.lineWidth = 1.4;
+        ctx.stroke();
+        ctx.fillStyle = brand;
+        ctx.font = "700 15px " + hand;
+        ctx.textAlign = "center";
+        ctx.fillText(String(i + 1), b.x + 4, b.y - 4);
+        ctx.textAlign = "left";
+        var ty = b.y + 18;
+        ctx.fillStyle = ink;
+        ctx.font = labelFont;
+        b.l.forEach(function (line) { ctx.fillText(line, b.x + 14, ty); ty += lineH; });
+        ctx.fillStyle = muted;
+        ctx.font = detailFont;
+        b.d.forEach(function (line) { ctx.fillText(line, b.x + 14, ty); ty += lineH; });
+        var next = boxes[i + 1];
+        if (next) {
+          ctx.strokeStyle = muted;
+          ctx.lineWidth = 1.5;
+          if (next.y === b.y) roughArrow(ctx, r, b.x + b.w + 6, b.y + b.h / 2, next.x - 6, next.y + next.h / 2);
+          else roughArrow(ctx, r, b.x + 40, b.y + b.h + 5, b.x + 40, next.y - 5);
+        }
+      });
+    } else {
+      boxes.forEach(function (b, i) {
+        var tone = b.s.tone === "good" ? good : b.s.tone === "bad" ? bad : ink;
+        ctx.strokeStyle = tone;
+        ctx.lineWidth = 1.7;
+        roughRect(ctx, r, b.x, b.y, b.w, b.h, paper);
+        var ty = b.y + 16;
+        if (b.s.tone === "good" || b.s.tone === "bad") {
+          ctx.fillStyle = tone;
+          ctx.font = "700 24px " + hand;
+          ctx.fillText(b.s.tone === "good" ? "✓" : "✗", b.x + 14, ty - 3);
+        }
+        ctx.fillStyle = tone;
+        ctx.font = labelFont;
+        b.t.forEach(function (line) { ctx.fillText(line, b.x + (b.s.tone && b.s.tone !== "neutral" ? 40 : 14), ty); ty += lineH; });
+        ty += 10;
+        ctx.font = detailFont;
+        b.pts.forEach(function (lines) {
+          ctx.fillStyle = muted;
+          ctx.fillText("•", b.x + 16, ty);
+          ctx.fillStyle = ink;
+          lines.forEach(function (line) { ctx.fillText(line, b.x + 32, ty); ty += lineH; });
+          ty += 6;
+        });
+      });
+      ctx.fillStyle = muted;
+      ctx.font = "700 20px " + hand;
+      ctx.textAlign = "center";
+      if (boxes[1].x > boxes[0].x) ctx.fillText("vs", (boxes[0].x + boxes[0].w + boxes[1].x) / 2, boxes[0].y + boxes[0].h / 2 - 10);
+      else ctx.fillText("vs", W / 2, boxes[0].y + boxes[0].h + 10);
+      ctx.textAlign = "left";
+    }
+  }
+  function drawAllSketches() {
+    document.querySelectorAll("canvas[data-visual]").forEach(drawSketch);
+  }
+  var resizeTimer;
+  addEventListener("resize", function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(drawAllSketches, 120); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawAllSketches);
+  drawAllSketches();
+
+  // ---------- jargon tooltips ----------
+  // Underline the first use of each glossary term per section; hover, focus or tap shows the tip.
+  (function applyGlossary() {
+    var glossary = (lesson.glossary || []).filter(function (g) { return g && g.term && g.tip; })
+      .sort(function (a, b) { return b.term.length - a.term.length; });
+    if (!glossary.length) return;
+    var reEsc = function (t) { return t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); };
+    var scopes = document.querySelectorAll(".hero, section.block[id^='c-']");
+    scopes.forEach(function (scope) {
+      var used = {};
+      var walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, {
+        acceptNode: function (n) {
+          var p = n.parentElement;
+          if (!p || p.closest("h1, h2, h3, .eyebrow, .term, code, pre, button, figure, .concept-label")) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      var nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(function (node) {
+        glossary.forEach(function (g) {
+          var key = g.term.toLowerCase();
+          if (used[key] || !node.parentNode) return;
+          var m = new RegExp("\\b" + reEsc(g.term) + "\\b", "i").exec(node.nodeValue);
+          if (!m) return;
+          used[key] = true;
+          var after = node.splitText(m.index);
+          var rest = after.splitText(m[0].length);
+          var span = document.createElement("span");
+          span.className = "term";
+          span.tabIndex = 0;
+          span.setAttribute("data-tip", g.tip);
+          span.setAttribute("aria-label", m[0] + ": " + g.tip);
+          span.textContent = m[0];
+          after.parentNode.replaceChild(span, after);
+          node = rest;
+        });
+      });
+    });
+
+    var tip = document.createElement("div");
+    tip.className = "term-tip";
+    tip.setAttribute("role", "tooltip");
+    tip.hidden = true;
+    document.body.appendChild(tip);
+    var current = null;
+    function show(el) {
+      current = el;
+      tip.textContent = el.getAttribute("data-tip");
+      tip.hidden = false;
+      var r = el.getBoundingClientRect();
+      var w = tip.offsetWidth, h = tip.offsetHeight;
+      var left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8);
+      var top = r.top - h - 10 < 8 ? r.bottom + 10 : r.top - h - 10;
+      tip.style.left = left + "px";
+      tip.style.top = top + "px";
+    }
+    function hide() { current = null; tip.hidden = true; }
+    document.querySelectorAll(".term").forEach(function (el) {
+      el.addEventListener("mouseenter", function () { show(el); });
+      el.addEventListener("mouseleave", hide);
+      el.addEventListener("focus", function () { show(el); });
+      el.addEventListener("blur", hide);
+      el.addEventListener("click", function (e) { e.stopPropagation(); current === el ? hide() : show(el); });
+    });
+    document.addEventListener("click", hide);
+    addEventListener("scroll", function () { if (current) show(current); }, { passive: true });
+  })();
 
   // ---------- reading progress ----------
   var bar = document.getElementById("progress");

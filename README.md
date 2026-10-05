@@ -90,9 +90,10 @@ Needs Node.js and the Claude Code command line (`claude`), logged in; it uses yo
 ## What a lesson has
 
 - A short hook and a clear goal
-- 2–3 concepts, each under 300 words, each opening with "Concept → <name>" and a definition of at most 100 words, then "why it matters" and "how it works", an everyday and an industry example, an optional diagram or code sample, the common mistake, and one line on where the idea shows up in your own work
+- 2–3 concepts, each under 300 words, taught story first: a short situation (from your own work when there is one), then "Concept → <name>" with an analogy-led explanation, a hand-drawn diagram, a real-world example, where it shows up in your work, and the common mistake
+- Jargon is underlined; hover or tap it for a plain, analogy-style explanation
 - A sidebar with every section, ticking them off as you read
-- A switch between business, balanced and technical focus, plus light and dark themes
+- Light and dark themes (the focus you pick shapes the writing)
 - A 3-question multiple-choice quiz with an explanation for every option
 - Follow-up prompts to keep learning
 - Ready-to-post LinkedIn and X text and a downloadable share image

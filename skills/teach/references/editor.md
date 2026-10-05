@@ -8,7 +8,7 @@ Output: first copy the designer's file to `lesson.draft.json`, then overwrite `l
 
 ## What to edit
 
-Rewrite every piece of visible text: `meta.title`, `meta.one_liner`, `goal`, `hook`, and in each concept `explain`, `product`, `tech`, example titles and texts, visual titles, labels, details and points, `in_your_work.text`, `pitfall`; quiz questions, options and `why`s; `next` titles; both `share` posts.
+Rewrite every piece of visible text: `meta.title`, `meta.one_liner`, `goal`, `hook`, and in each concept `story`, `explain`, visual titles, labels, details and points, `real_world`, `in_your_work.text`, `pitfall`; every glossary `tip` (keep each `term` exactly as it appears in the text); quiz questions, options and `why`s; `next` titles; both `share` posts.
 
 Leave everything else exactly as it is: the JSON shape, every `id`, `concept_id`, `kind`, `correct`, `evidence_ids`, `meta.slug`, `meta.created`, `meta.level`, `meta.domain`, `next[].prompt`, `code`, and the line "Built using GrowthX teach".
 
@@ -27,7 +27,7 @@ Apply [humanizer](humanizer.md) in embedded mode to each text field: mark the te
 
 - Do not add facts, numbers, names, companies, or claims that are not already in the lesson. You may cut.
 - Keep the quiz answers correct: the right option stays right and every `why` still matches its option.
-- Keep every rule in [lesson format](lesson-format.md), including the 300-word limit per concept, the 100-word definition that opens with the concept's name, and one sentence for `in_your_work`.
+- Keep every rule in [lesson format](lesson-format.md), including the 300-word limit per concept, the 80-word story, the 100-word explanation that starts from an analogy (never "X means…"), and one sentence for `in_your_work`. If you reword a sentence that contains a glossary term, keep the term's exact words.
 - No em dashes (—), en dashes (–) or double hyphens used as dashes anywhere in visible text.
 - No references back to the chat.
 

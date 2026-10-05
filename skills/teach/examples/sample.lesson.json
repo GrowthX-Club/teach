@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "meta": {
     "slug": "safe-retries",
     "title": "Why safe retries need **idempotency**",
@@ -19,62 +19,60 @@
     {
       "id": "retries",
       "name": "Retries with backoff",
-      "explain": "**Retries with backoff** means trying a failed request again, and waiting a little longer before each new try. Messages between computers get lost or delayed all the time. When a sender hears nothing back, it can't tell \"it failed\" from \"it worked but the reply got lost\", so it plays safe and sends again.\n\nGood senders wait 1 second, then 2, then 4. That growing pause is the backoff, and it stops a struggling server from being buried under repeats.",
-      "product": "Retries are why payments, emails and alerts still arrive when the internet has a bad moment. The cost: the same message can arrive more than once.",
-      "tech": "Senders retry on timeouts and server errors, adding random jitter so thousands of clients don't retry in lockstep. Delivery is \"at least once\", never \"exactly once\".",
-      "examples": [
-        {
-          "kind": "everyday",
-          "title": "Calling a friend",
-          "text": "No answer? You call again in a few minutes, not every second. That pause is backoff."
-        },
-        {
-          "kind": "industry",
-          "title": "Payment providers",
-          "text": "Payment platforms resend failed notifications for hours or days, with growing gaps between tries."
-        }
-      ],
+      "explain": "Think about calling a friend who doesn't pick up. You don't redial every second. You wait a minute, then five, then ten. Software does the same. **Retries with backoff** means trying a failed request again, and waiting a little longer before each new try, so a busy server gets room to recover instead of being buried under repeats.",
       "in_your_work": {
         "text": "Your payment provider sent the same payment notice twice because your app took too long to reply.",
         "evidence_ids": [
           "e1"
         ]
       },
-      "pitfall": "Assuming each message arrives exactly once. With retries, \"at least once\" is the honest promise."
+      "pitfall": "Assuming each message arrives exactly once. With retries, \"at least once\" is the honest promise.",
+      "story": "You tap Pay on a shopping app just as the lift doors close and your signal drops. The app waits, hears nothing back, and has a choice to make: give up and tell you it failed, or quietly try again?",
+      "visual": {
+        "type": "flow",
+        "title": "What the app does when nothing comes back",
+        "steps": [
+          {
+            "label": "Sends the payment",
+            "detail": "Waits for an answer"
+          },
+          {
+            "label": "Hears nothing",
+            "detail": "Can't tell lost from slow"
+          },
+          {
+            "label": "Waits longer",
+            "detail": "1s, then 2s, then 4s"
+          },
+          {
+            "label": "Sends it again",
+            "detail": "Same payment, same ID"
+          }
+        ]
+      },
+      "real_world": "Payment platforms resend failed payment notifications for hours or even days, leaving longer and longer gaps between tries."
     },
     {
       "id": "idempotency",
       "name": "Idempotency",
-      "explain": "**Idempotency** means doing something twice has the same effect as doing it once. \"Mark the order as paid\" is idempotent. \"Add ₹500 to the balance\" is not.\n\nThe usual trick: every request carries a unique ID. The receiver remembers the IDs it has handled, and when one shows up again it simply skips the work.",
-      "product": "Customers never see double charges, duplicate emails or two identical orders, even when the network misbehaves. A good question for any engineer: \"what happens if this arrives twice?\"",
-      "tech": "Store a record keyed by the request or event ID. Look the key up before acting; if it exists, return the saved result instead of redoing the work.",
-      "examples": [
-        {
-          "kind": "everyday",
-          "title": "The lift button",
-          "text": "Pressing it five times still calls one lift."
-        },
-        {
-          "kind": "industry",
-          "title": "Payment APIs",
-          "text": "Major payment APIs accept an idempotency key, so a retried charge never runs twice."
-        }
-      ],
+      "explain": "Think of a lift button. Press it once, or five times because you're late, and one lift comes. Extra presses change nothing. **Idempotency** is that property for software: doing an action twice has the same effect as doing it once. The usual trick is a unique ID on every request, so a repeat can be spotted and skipped.",
       "visual": {
         "type": "compare",
-        "title": "Same repeat, two outcomes",
+        "title": "Same payment arrives twice",
         "left": {
-          "title": "Without it",
+          "title": "Not idempotent",
+          "tone": "bad",
           "points": [
-            "Message arrives twice",
-            "Customer charged twice"
+            "First copy: charged ₹500",
+            "Second copy: charged again"
           ]
         },
         "right": {
-          "title": "With it",
+          "title": "Idempotent",
+          "tone": "good",
           "points": [
-            "Message arrives twice",
-            "Repeat recognised and skipped"
+            "First copy: charged ₹500",
+            "Second copy: seen, skipped"
           ]
         }
       },
@@ -90,26 +88,14 @@
           "e3"
         ]
       },
-      "pitfall": "Making a new ID for each retry. A repeat must carry the same ID as the original, or nobody can recognise it."
+      "pitfall": "Making a new ID for each retry. A repeat must carry the same ID as the original, or nobody can recognise it.",
+      "story": "The retry worked, but there's a catch. The first payment had actually gone through; only the reply got lost. Now the same payment has arrived twice. Should you be charged ₹500 or ₹1,000?",
+      "real_world": "Payment companies like Stripe let a shop attach a unique key to each charge, so a resent charge never runs twice."
     },
     {
       "id": "transactions",
       "name": "Transactions",
-      "explain": "A **transaction** means a group of changes that either all happen or none happen, as one step. That matters when two copies of the same message arrive at the same moment: both can ask \"seen this before?\", both hear \"no\", and both act.\n\nDatabases fix this with a rule that a given ID can only be saved once, checked in the same step as the work.",
-      "product": "This is the difference between \"usually no duplicates\" and \"never duplicates\". It matters most for money, stock levels and anything customers see.",
-      "tech": "Insert the ID into a table with a unique index inside the same transaction as the business write. The second insert fails, and its transaction rolls back.",
-      "examples": [
-        {
-          "kind": "everyday",
-          "title": "The last concert ticket",
-          "text": "Two fans click Buy at the same instant. Exactly one of them can get it, never both."
-        },
-        {
-          "kind": "industry",
-          "title": "Seat booking",
-          "text": "Airlines and cinemas lock a seat in the same step as selling it, so it can't be sold twice."
-        }
-      ],
+      "explain": "Picture the last ticket for a concert. Two fans click Buy at the same instant. The box office has to check the seat and hand it over in one move, or both fans walk away with the same seat. A **transaction** works like that box office: a group of changes that all happen together or not at all.",
       "visual": {
         "type": "flow",
         "title": "Two copies arrive together",
@@ -120,7 +106,7 @@
           },
           {
             "label": "Both try to save the ID",
-            "detail": "The database allows one"
+            "detail": "The database allows only one"
           },
           {
             "label": "One wins",
@@ -133,7 +119,9 @@
         "evidence_ids": [
           "e4"
         ]
-      }
+      },
+      "story": "One more twist. What if both copies of the payment arrive at the very same moment? Each one checks \"have I seen this before?\", each one hears \"no\", and both go ahead.",
+      "real_world": "Airlines and cinemas lock a seat in the same step as selling it, so one seat can't be sold twice."
     }
   ],
   "quiz": [
@@ -214,5 +202,27 @@
   "share": {
     "linkedin": "Learned something today that explains a lot of \"charged twice\" bugs.\n\nApps resend messages whenever the internet hiccups, so the same message can arrive more than once. The fix is idempotency: design actions so doing them twice has the same effect as once.\n\nAnd the check has to happen in the same step as the work, or two simultaneous repeats can still slip through.\n\nBuilt using GrowthX teach",
     "x": "Retries make apps reliable. Idempotency makes retries safe. Doing the check and the work in one step makes it bulletproof. Learned this today with GrowthX teach."
-  }
+  },
+  "glossary": [
+    {
+      "term": "server",
+      "tip": "A computer somewhere else that does the work for an app, like a restaurant kitchen cooking what the waiter ordered."
+    },
+    {
+      "term": "request",
+      "tip": "A message one computer sends another asking it to do something, like handing a waiter your order."
+    },
+    {
+      "term": "unique ID",
+      "tip": "A one-off label stuck on something, like the token number you get at a bank counter."
+    },
+    {
+      "term": "database",
+      "tip": "Where an app keeps its records so they're still there tomorrow, like a well-kept ledger."
+    },
+    {
+      "term": "payment notifications",
+      "tip": "Messages a payment company sends a shop to say \"this payment went through\", like an SMS from your bank."
+    }
+  ]
 }
