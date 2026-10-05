@@ -31,10 +31,6 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
       },
       "real_world": "When a shop asks Stripe to charge a card, it can attach a unique key to the request, a bit like a token number. If the shop sends the same charge again, Stripe sees the same key and returns the first result instead of taking the money twice...",
       "in_your_work": { "text": "Your payment handler now keeps a list of every payment message it has already handled. When one shows up again, it sees the ID and skips it, so the customer is never charged twice...", "evidence_ids": ["e2"] },
-      "pitfalls": [
-        "Giving every retry a brand new ID. The receiver can't tell it's a repeat, so the protection does nothing.",
-        "Forgetting the IDs too soon, so a late repeat slips through."
-      ]
     }
   ],
   "glossary": [
@@ -67,7 +63,7 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
 1. **Story**: a short, concrete situation that sets up the problem before the idea has a name.
 2. **The concept's name** as the heading, then the explanation in an "Analogy" card: start from an analogy or a real-life example, then name the concept and say exactly what it is.
 3. **Animation**: when the animator has added a bespoke `animation`, the page plays it in a sandboxed frame: the idea shown as it really looks, made for this one concept (see [animator](animator.md)). Otherwise the `visual` below is animated by the page: It starts when it scrolls into view, loops, and can be paused. With motion turned off in the reader's system settings, the finished picture is shown still.
-4. **In the real world**, **In your work** (only when this session shows it), **Did you know?** (optional) and **Common mistakes**, each as a plain subheading with text or a bullet list underneath.
+4. **In the real world** and **In your work** (only when this session shows it), each as a plain subheading with text, then **Did you know?** (optional) as a separate side-note card.
 
 There is no code anywhere in a lesson and no share image.
 
@@ -123,11 +119,11 @@ On the page the actors sit side by side. A message slides from its sender to its
 - A concept whose `id` is in the catalogue must use the catalogue `name`. Concepts outside the catalogue are allowed but produce a warning.
 - `meta.slug`: lowercase words joined by hyphens. `meta.minutes`: 2–8. `meta.level.depth`: 1–4. `meta.level.lens`: `product`, `balanced` or `tech`. The focus shapes the writing; the page has no focus switch.
 - `meta.title` is an analogy in everyday words. It must not contain any concept name or glossary term ("Why pressing the lift button five times still brings one lift", not "Why safe retries need idempotency").
-- `goal`, `hook`, and every concept's `name`, `story`, `explain`, `visual`, `real_world` and `pitfalls` are required. There is no tagline, no `product`/`tech` split, no `examples` list and no `code`.
+- `goal`, `hook`, and every concept's `name`, `story`, `explain`, `visual`, and `real_world` are required. There is no tagline, no `product`/`tech` split, no `examples` list and no `code`.
 - `story`: at most 80 words. When the brief says where the concept showed up in the learner's work, build the story around that situation, told so it makes sense to someone who never saw the chat.
 - `explain`: at most 100 words. It opens with an analogy or a real-life example (never "X means…"), then names the concept and says what it is.
 - **2–4 concepts**, unique `id`s (lowercase, hyphens).
-- **Each concept is at most 450 words**, counting story, explain, visual text, `real_world`, `in_your_work` and pitfalls.
+- **Each concept is at most 450 words**, counting story, explain, visual text, `real_world`, and `in_your_work`.
 - `visual` is required and is animated by the page. One of three types, each with a `title` and an optional `caption` (at most 25 words, the one-line takeaway under the animation):
   - `{ "type": "sequence", "actors": 2–3 × { id, name, role? }, "steps": 3–6 }`: things talking to each other. Each step is either a **message** `{ from, to, label }` that travels from one actor to another, or a **moment** `{ at, says }` where one actor does or shows something. At least one message. `id` is lowercase with hyphens, `name` at most 3 words, `role` at most 5, `label` and `says` at most 8.
   - `{ "type": "flow", "steps": 3–4 × { label, detail } }`: stages of one thing, lit up in order. Labels at most 6 words, details at most 10.
@@ -136,9 +132,8 @@ On the page the actors sit side by side. A message slides from its sender to its
 - `real_world`: **40–100 words** on how a well-known company or product uses the idea, told as a small story with concrete details.
 - `in_your_work` (only when the concept map has one): **40–100 words** on where the idea shows up in what the learner did in this session and what it changed. Its `evidence_ids` come from the concept map and include at least one `chat` evidence. It must make sense to someone who never read the chat. No concept map, no `in_your_work`.
 - `fun_fact` is optional: at most 50 words, a genuinely interesting, verifiable fact. Leave it out rather than force one.
-- `pitfalls`: 2–3 common mistakes, each at most 35 words, written to the learner: what people get wrong and why it bites.
 - `glossary`: 3–12 entries covering every piece of jargon a newcomer might not know. Each `term` appears in the lesson's visible text; each `tip` is at most 30 words and explains with an analogy or everyday comparison.
-- `animation` is optional, added by the animator: `{ title, alt, caption?, height?, html, css?, js? }`. At most 25,000 characters of code, no web addresses, network, imports, storage, string evaluation, or reaching outside its frame. `visual` stays required as the fallback.
+- `animation` is optional, added by the animator: `{ title, alt, caption?, height?, html, css?, js? }`. At most 25,000 characters of code, no web addresses, network, imports, storage, string evaluation, or reaching outside its frame. It is **required in the finished lesson** (`validate.mjs --final`): every concept gets one. `visual` stays required too, as the safety net the page uses only if an animation can't load.
 - `videos` is optional, added by the video finder: at most 4 items of `{ concept_id, title, channel, url, start, why }`. `url` is a YouTube link with `t=<seconds>`, `start` shows the same moment as `m:ss` or `h:mm:ss`, `why` is at most 25 words. Only videos and timestamps checked in this run.
 - Exactly **3 quiz** questions, each with 3–4 options, exactly one `correct: true`, and a `why` on every option.
 - 2–3 `next` items.

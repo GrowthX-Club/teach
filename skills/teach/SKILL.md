@@ -67,7 +67,7 @@ Each pass is its own agent with a fresh context, started by **you**, the main ch
 1. **Concept finder** (skip for a pure topic with no chat or project material). Give it `brief.md`, read access to the project, [investigator](references/investigator.md) and [concept-map format](references/concept-map-format.md). It writes `concept-map.json` in the lesson folder.
 2. **Lesson designer**. Give it `brief.md`, `concept-map.json` if it exists, [designer](references/designer.md), [teaching method](references/teaching-method.md) and [lesson format](references/lesson-format.md). It writes `lesson.json`. It must not read the project or the chat.
 3. **Lesson editor**. Give it the lesson folder, the `<skill>` path, [editor](references/editor.md), [humanizer](references/humanizer.md) and [lesson format](references/lesson-format.md). It rewrites the lesson's wording so it reads like a person, keeping the facts. It must not read the project, the chat or the brief.
-4. **Animator**. Runs after the editor. It designs one small looping animation per concept that shows the idea as it really looks (a payment screen, a ticket counter), following [animator](references/animator.md). Each runs in a sandboxed frame; if one is missing or fails the checks, the page shows the concept's `visual` instead.
+4. **Animator**. Runs after the editor. It designs one small looping animation per concept that shows the idea as it really looks (a payment screen, a ticket counter), following [animator](references/animator.md). Each runs in a sandboxed frame. **Every concept must get one**: the final check (`--final`) rejects a lesson with a concept missing its animation, and if that happens, run the animator again for just those concepts before building.
 5. **Video finder** (only where agents can search the web). Runs after the animator. It adds up to 4 YouTube links that open at the exact moment that explains a concept, keeping only videos and timestamps it has checked. If it finds nothing reliable, the lesson simply has no video annex.
 
 If no delegation tool exists at all, do the passes yourself one after the other. Never merge them into one pass.
@@ -77,7 +77,7 @@ If no delegation tool exists at all, do the passes yourself one after the other.
 If `node` is available, run:
 
 ```sh
-node <skill>/scripts/validate.mjs <lesson-dir>/lesson.json <lesson-dir>/concept-map.json
+node <skill>/scripts/validate.mjs --final <lesson-dir>/lesson.json <lesson-dir>/concept-map.json
 ```
 
 (leave out the map if there is none). If the lesson has videos, first run `node <skill>/scripts/check-videos.mjs <lesson-dir>/lesson.json`, which drops any video YouTube doesn't confirm. The editor already runs the validator, so it normally passes. If it doesn't, fix small problems yourself, or start the editor again (in the background, in background mode) with the problems listed, until it passes. Without `node`, check `lesson.json` against [lesson format](references/lesson-format.md) yourself, especially the 300-word limit per concept. Say nothing to the user about this step.
@@ -102,6 +102,8 @@ This step is required, also in background mode, where it arrives as its own mess
 - Then one short line: "Want it simpler, deeper, more about the business, or more technical? Just say so."
 
 ## Follow-ups
+
+- **A pasted lesson question** (it starts with "Question about my GrowthX teach lesson", quotes a passage and asks something): answer it right here in the chat, in plain words at the learner's depth, starting from an analogy or everyday example, in at most about 150 words. Refer to the quoted passage, don't repeat the whole lesson, and don't rebuild anything. End with one line offering to go deeper.
 
 - "simpler" / "easier", "deeper" / "harder", "more business", "more technical" (or `teach easier`, `teach harder`, `teach more product`, `teach more tech`): change the dial in `profile.json` as [level-check](references/level-check.md) describes, update the depth or focus in `brief.md`, then rerun the designer and the editor (in the background, in background mode) with the same brief and concept map, into the same folder, and hand it over again.
 - New subject: start again from step 1.

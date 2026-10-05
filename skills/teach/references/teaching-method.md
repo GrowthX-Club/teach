@@ -19,10 +19,10 @@ Teach the ideas behind the work so the learner can spot them anywhere. Never ret
    - **story**: a short situation that makes the learner feel the problem before the idea has a name, ideally from their own work, told so it stands on its own
    - the concept's **name** as the heading, with an **analogy-led explanation**: an analogy or real-life example first, then the name and what it is (at most 100 words)
    - **a short animation** that acts out how it works or what changes, one beat at a time
-   - **In the real world** (40–100 words), **In your work** (40–100 words, only when this session shows it), an optional **Did you know?** and **Common mistakes** (2–3 bullets)
+   - **In the real world** (40–100 words), **In your work** (40–100 words, only when this session shows it) and an optional **Did you know?** side note
    - no code, ever
    - jargon is underlined on the page with an analogy-style tip (the glossary)
-4. **Quiz**: 3 multiple-choice questions that apply an idea to a new situation.
+4. **Quiz**: 3 multiple-choice questions that apply an idea to a new situation, with wrong options a newcomer could genuinely believe (see the designer's quiz rules).
 5. **Next**: 2–3 follow-up topics, phrased as the `teach …` prompt to type.
 6. **Prefer watching?**: an annex of up to 4 YouTube videos that open at the exact moment that explains a concept, added by the video finder when it can verify them.
 
@@ -37,7 +37,7 @@ Teach the ideas behind the work so the learner can spot them anywhere. Never ret
 
 - Short sentences, concrete nouns, real-world examples.
 - One surprise per concept: a counter-intuitive fact or a famous failure.
-- Quiz options are all plausible; each wrong option's `why` names the misunderstanding.
+- Quiz options are all plausible and the same length and care; a learner who skimmed must not be able to guess. Each wrong option's `why` names the misunderstanding.
 - No praise, no sales tone, no baby talk, no emoji.
 
 ## Editing test

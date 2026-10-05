@@ -49,4 +49,4 @@ The short version of the transactions example: two phones tap Buy on the last co
 - `alt` (at most 60 words) describes what happens, for people who can't see it.
 - `caption` (optional, at most 25 words) is the one-line takeaway under the animation.
 
-When done, validate if `node` is available: `node <skill>/scripts/validate.mjs <lesson-dir>/lesson.json <lesson-dir>/concept-map.json` (leave out the map if there is none). If an animation keeps failing the checks, remove that concept's `animation` rather than weakening it; the page will show the `visual` instead.
+When done, validate if `node` is available: `node <skill>/scripts/validate.mjs <lesson-dir>/lesson.json <lesson-dir>/concept-map.json` (leave out the map if there is none). **Every concept must end up with an animation; never skip one.** If an animation fails the checks, fix the code (simplify it if you must) until it passes. The finished lesson is checked with `--final`, which rejects any concept without one.

@@ -10,7 +10,7 @@ Areas are the [catalogue](catalogue.json) areas: `ai-basics` (How AI works), `ai
 |---|---|---|
 | 1 | I'm new to this | defines every term, leans on everyday examples |
 | 2 | I know the basics | explains the "why", introduces terms gently |
-| 3 | I use it at work | skips basics, covers trade-offs and common mistakes |
+| 3 | I use it at work | skips basics, covers trade-offs and where things go wrong |
 | 4 | I know it well | covers edge cases and what experts disagree on |
 
 ## Focus (one setting for the learner)
