@@ -222,6 +222,20 @@
     );
   }
 
+  // External links always open in a new tab, even in browsers that ignore target="_blank".
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a[href]");
+    if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    var url;
+    try { url = new URL(a.getAttribute("href"), location.href); } catch (err) { return; }
+    if (!/^https?:$/.test(url.protocol) || url.origin === location.origin) return;
+    var win = window.open(url.href, "_blank");
+    if (win) {
+      win.opener = null;
+      e.preventDefault();
+    }
+  });
+
   // ---------- render ----------
   document.title = plain(meta.title || "Lesson") + " · GrowthX teach";
   var body = hero() + concepts.map(concept).join("") + quizSection() + nextSection() + videosSection() + shareSection();
