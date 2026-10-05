@@ -11,12 +11,31 @@ Type `teach` in Claude Code or Codex and get a short, interactive lesson on the 
 Paste this into Claude Code or Codex:
 
 ```text
-Install the GrowthX teach skill: clone github.com/GrowthX-Club/teach and follow its INSTALL.md
+Install the GrowthX teach skill by following INSTALL.md in the GitHub repo GrowthX-Club/teach
 ```
 
-Your agent downloads teach, installs it, sets up your teach folder and checks it worked. Start a new chat afterwards. The same prompt updates teach later.
+Your agent picks the right install method, runs it and checks it worked. Start a new chat afterwards.
 
-### With the terminal
+### Claude Code plugin
+
+Inside Claude Code:
+
+```text
+/plugin marketplace add GrowthX-Club/teach
+/plugin install teach@growthx
+```
+
+Plugins update automatically. The skill shows up as `teach:teach`; typing `teach` still works.
+
+### Any agent, with the skills CLI
+
+Needs Node.js. Installs for Codex, Claude Code and other agents that read skills folders:
+
+```sh
+npx skills add GrowthX-Club/teach -g
+```
+
+### From a clone
 
 ```sh
 git clone git@github.com:GrowthX-Club/teach.git
@@ -24,22 +43,13 @@ cd teach
 sh install.sh
 ```
 
-Once the repo is public, this one-liner works too:
+The installer copies the skill to `~/.claude/skills/teach` and/or `~/.agents/skills/teach` for each agent it finds.
 
-```sh
-curl -fsSL https://raw.githubusercontent.com/GrowthX-Club/teach/main/install.sh | sh
-```
+### Notes
 
-The installer finds Claude Code and Codex and installs the skill for each:
-
-| Agent | Skill location |
-|---|---|
-| Claude Code | `~/.claude/skills/teach` |
-| Codex | `~/.agents/skills/teach` |
-
-It also creates your teach folder, `~/growthx-teach/` (override with `TEACH_HOME`). Restart your agent afterwards. Run the same command again to update.
-
-Requirements: macOS, Linux or WSL with `sh`, `sed` and `awk`. Node.js is optional; when present it validates every lesson before it is built.
+- While the repo is private, every method needs your GitHub access (SSH key or `gh auth login`). [INSTALL.md](INSTALL.md) has the SSH variants.
+- Your teach folder, `~/growthx-teach/` (override with `TEACH_HOME`), is created the first time you type `teach`, whichever way you installed.
+- Requirements: macOS, Linux or WSL (Git Bash on Windows) with `sh`, `sed` and `awk`. Node.js is optional; when present it validates every lesson before it is built.
 
 ## Use
 
@@ -94,13 +104,16 @@ Keeping fact-finding and teaching in separate agents stops the lesson from inven
 ## Develop
 
 ```
+.claude-plugin/          # Claude Code plugin + marketplace manifests
 skills/teach/
 ├── SKILL.md            # the orchestrator instructions
 ├── references/         # prompts and formats for each step
 ├── assets/             # theme.css, lesson and library templates, renderer
-├── scripts/            # build.sh, validate.mjs
+├── scripts/            # setup.sh, build.sh, validate.mjs
 └── examples/           # a sample lesson and concept map
 ```
+
+Releasing: bump `version` in `.claude-plugin/plugin.json` so plugin users get the update. Validate the manifests with `claude plugin validate .`.
 
 Run the tests:
 
@@ -119,8 +132,10 @@ open /tmp/teach-demo/lessons/2026-10-05-safe-retries/index.html
 
 ## Uninstall
 
-```sh
-sh uninstall.sh
-```
+| Installed with | Remove with |
+|---|---|
+| Claude Code plugin | `/plugin uninstall teach@growthx` |
+| skills CLI | `npx skills remove teach -g` |
+| clone | `sh uninstall.sh` |
 
-This removes the skill and keeps your lessons in `~/growthx-teach/`.
+Your lessons in `~/growthx-teach/` are kept.

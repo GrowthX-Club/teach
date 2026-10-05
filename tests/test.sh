@@ -31,6 +31,22 @@ if grep -q "Built using GrowthX" "$lesson/index.html"; then pass "watermark pres
 if grep -q "2026-01-01-sample/library-entry.js" "$TEACH_HOME/index.html"; then pass "library lists the lesson"; else fail "library lists the lesson"; fi
 if [ -f "$TEACH_HOME/theme.css" ]; then pass "theme.css created on first build"; else fail "theme.css created on first build"; fi
 
+echo "first-run setup"
+fresh="$work/fresh"
+TEACH_HOME="$fresh" sh "$skill/scripts/setup.sh" >/dev/null
+if [ -f "$fresh/theme.css" ] && [ -f "$fresh/profile.json" ] && [ -d "$fresh/lessons" ]; then pass "setup creates the teach folder"; else fail "setup creates the teach folder"; fi
+echo "/* mine */" >> "$fresh/theme.css"
+printf '{"version":1,"lens":"tech"}\n' > "$fresh/profile.json"
+TEACH_HOME="$fresh" sh "$skill/scripts/setup.sh" >/dev/null
+if grep -q "mine" "$fresh/theme.css" && grep -q '"tech"' "$fresh/profile.json"; then pass "setup never overwrites theme or profile"; else fail "setup never overwrites theme or profile"; fi
+
+echo "plugin"
+if command -v claude >/dev/null 2>&1; then
+  if claude plugin validate "$root" >/dev/null 2>&1 && claude plugin validate "$root/.claude-plugin/plugin.json" >/dev/null 2>&1; then pass "plugin and marketplace manifests are valid"; else fail "plugin and marketplace manifests are valid"; fi
+else
+  printf '  · skipped: claude CLI not found\n'
+fi
+
 echo "install"
 fake_home="$work/fake-home"
 mkdir -p "$fake_home/.claude" "$fake_home/.codex"

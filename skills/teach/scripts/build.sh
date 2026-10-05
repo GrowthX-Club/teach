@@ -21,11 +21,8 @@ if [ ! -f "$lesson_json" ]; then
   exit 1
 fi
 
-mkdir -p "$teach_home/lessons"
+sh "$skill_dir/scripts/setup.sh" >/dev/null
 theme="$teach_home/theme.css"
-if [ ! -f "$theme" ]; then
-  cp "$assets/theme.css" "$theme"
-fi
 
 tmp=$(mktemp -d "${TMPDIR:-/tmp}/teach-build.XXXXXX")
 trap 'rm -rf "$tmp"' EXIT

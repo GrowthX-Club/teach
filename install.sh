@@ -80,14 +80,13 @@ say "Installing GrowthX teach"
 [ "$codex" = true ] && install_to "$HOME/.agents/skills/teach"
 
 # ---- local teach folder: theme, profile, lessons ----
-mkdir -p "$teach_home/lessons"
-if [ ! -f "$teach_home/theme.css" ]; then
-  cp "$source_dir/assets/theme.css" "$teach_home/theme.css"
-elif ! cmp -s "$source_dir/assets/theme.css" "$teach_home/theme.css"; then
+# The skill also does this on its first run, so installs that only copy the
+# skill folder (plugins, npx skills) still work.
+if [ -f "$teach_home/theme.css" ] && ! cmp -s "$source_dir/assets/theme.css" "$teach_home/theme.css"; then
   cp "$source_dir/assets/theme.css" "$teach_home/theme.default.css"
   say "  · kept your theme.css; the latest default is in theme.default.css"
 fi
-[ -f "$teach_home/profile.json" ] || printf '{\n  "version": 1,\n  "lens": "balanced",\n  "domains": {},\n  "notes": [],\n  "history": []\n}\n' > "$teach_home/profile.json"
+TEACH_HOME="$teach_home" sh "$source_dir/scripts/setup.sh" >/dev/null
 say "  ✓ $teach_home"
 
 command -v node >/dev/null 2>&1 || say "  · node not found: lessons still build, but validation is skipped"

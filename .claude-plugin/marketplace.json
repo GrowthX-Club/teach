@@ -1,0 +1,14 @@
+{
+  "name": "growthx",
+  "description": "Plugins from GrowthX",
+  "owner": {
+    "name": "GrowthX"
+  },
+  "plugins": [
+    {
+      "name": "teach",
+      "source": "./",
+      "description": "Turn any chat, project or topic into a short interactive lesson at your level."
+    }
+  ]
+}
