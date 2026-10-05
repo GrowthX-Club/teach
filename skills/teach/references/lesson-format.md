@@ -137,6 +137,6 @@ On the page the actors sit side by side. A message slides from its sender to its
 - `videos` is optional, added by the video finder: at most 4 items of `{ concept_id, title, channel, url, start, why }`. `url` is a YouTube link with `t=<seconds>`, `start` shows the same moment as `m:ss` or `h:mm:ss`, `why` is at most 25 words. Only videos and timestamps checked in this run.
 - Exactly **3 quiz** questions, each with 3–4 options, exactly one `correct: true`, and a `why` on every option.
 - 2–3 `next` items.
-- `share.x` at most 260 characters. `share.linkedin` at most 1300 characters.
+- `share.x` at most 250 characters. `share.linkedin` at most 1300 characters. Leave out links: the page adds the teach link (github.com/GrowthX-Club/teach) to the end of both posts.
 - No references back to the chat ("as we discussed", "in our chat", "you just", "the bug we…"), no evidence IDs, file paths, secrets or personal data in visible text.
 - Reads like a person: no em or en dashes, no stock AI words (delve, crucial, pivotal, seamless, leverage, unlock…), no "not just X but Y", straight double quotes, and at most 2 bold phrases per concept. See [humanizer](humanizer.md).

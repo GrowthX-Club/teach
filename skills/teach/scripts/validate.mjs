@@ -325,7 +325,7 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
   for (const [i, n] of next.entries()) if (!isText(n.title) || !isText(n.prompt)) err(`next[${i}] needs title and prompt`);
 
   const share = lesson.share || {};
-  if (!isText(share.x) || share.x.length > 260) err("share.x is required and must be at most 260 characters");
+  if (!isText(share.x) || share.x.length > 250) err("share.x is required and must be at most 250 characters (the page adds the teach link)");
   if (!isText(share.linkedin) || share.linkedin.length > 1300) err("share.linkedin is required and must be at most 1300 characters");
 
   // Visible prose only: no identifiers, evidence, code or copyable prompts.

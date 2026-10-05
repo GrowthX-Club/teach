@@ -16,7 +16,7 @@ if node "$skill/scripts/validate.mjs" "$skill/examples/sample.lesson.json" "$ski
 bad="$work/bad.json"
 node -e 'const l=require(process.argv[1]); l.quiz[0].options.forEach(o=>o.correct=true); l.share.x="x".repeat(300); console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$bad"
 if node "$skill/scripts/validate.mjs" "$bad" 2>"$work/err"; then fail "broken lesson passed"; fi
-if grep -q "exactly one correct" "$work/err" && grep -q "260 characters" "$work/err"; then pass "broken lesson is rejected with reasons"; else fail "broken lesson is rejected with reasons"; fi
+if grep -q "exactly one correct" "$work/err" && grep -q "250 characters" "$work/err"; then pass "broken lesson is rejected with reasons"; else fail "broken lesson is rejected with reasons"; fi
 
 long="$work/long.json"
 node -e 'const l=require(process.argv[1]); l.concepts[0].explain += " word".repeat(400); console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$long"
@@ -129,6 +129,7 @@ if node "$skill/scripts/validate.mjs" "$skill/examples/sample.lesson.json" 2>"$w
 if grep -q 'must cite at least one "chat" evidence' "$work/err" && grep -q "needs a concept map" "$work/err2"; then pass "in-your-work only comes from this session's chat, never guessed"; else fail "in-your-work only comes from this session's chat, never guessed"; fi
 
 if ! grep -q "share-canvas\|Concept <span" "$skill/assets/app.js"; then pass "no share image and no Concept label"; else fail "no share image and no Concept label"; fi
+if grep -q "withRepoLink" "$skill/assets/app.js" && grep -q "share-repo" "$skill/assets/app.js" && grep -q "LOGO_LI" "$skill/assets/app.js"; then pass "share posts carry the teach link and network logos"; else fail "share posts carry the teach link and network logos"; fi
 
 echo "build"
 export TEACH_HOME="$work/home with space"

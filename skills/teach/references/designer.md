@@ -30,7 +30,7 @@ Inputs: `brief.md`, `concept-map.json` if it exists, [teaching method](teaching-
    - No giveaway words in wrong options ("always", "never", "nothing", "completely"), no "all of the above".
    - Vary where the correct answer sits across the three questions.
    - Each `why` explains the misunderstanding behind that option, not just "this is wrong".
-10. Write `next` from the catalogue: take the `next` concepts listed for this lesson's concepts that aren't already in the lesson, and phrase each as `teach me <concept name>`. Then write the `share` posts about the concepts, never the private project. LinkedIn: 3–6 short lines ending with "Built using GrowthX teach". X: at most 260 characters, no hashtags.
+10. Write `next` from the catalogue: take the `next` concepts listed for this lesson's concepts that aren't already in the lesson, and phrase each as `teach me <concept name>`. Then write the `share` posts about the concepts, never the private project. LinkedIn: 3–6 short lines ending with "Built using GrowthX teach". X: at most 250 characters, no hashtags. No links in either; the page adds the link to teach.
 11. Set `meta.minutes` honestly (about 200 words per minute plus 30 seconds per quiz question).
 
 ## Voice
