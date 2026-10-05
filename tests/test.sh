@@ -56,6 +56,8 @@ node -e 'const l=require(process.argv[1]); l.concepts[0].tagline="A catchy line.
 if node "$skill/scripts/validate.mjs" "$tag" 2>"$work/err"; then fail "lesson with a tagline passed"; fi
 if grep -q "tagline is no longer used" "$work/err" && ! grep -q 'class="tagline"' "$skill/assets/app.js"; then pass "concepts have no tagline"; else fail "concepts have no tagline"; fi
 
+if grep -q "Always ask both questions" "$skill/references/level-check.md" && grep -q "Always ask both questions" "$skill/SKILL.md" && ! grep -q "use them without asking" "$skill/references/level-check.md"; then pass "level questions are always asked"; else fail "level questions are always asked"; fi
+
 echo "build"
 export TEACH_HOME="$work/home with space"
 lesson="$TEACH_HOME/lessons/2026-01-01-sample"

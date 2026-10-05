@@ -1,6 +1,6 @@
 # Agent prompts
 
-Copy these when you start each pass (step 4 in `SKILL.md`). Replace `<skill>`, `<lesson-dir>` and `<project-root>` with absolute paths. Each prompt is complete on its own because the agent cannot see the chat. Start one agent per pass, in order, and only start the next one after the previous one has reported back.
+Copy these when you start each pass (step 4 in `SKILL.md`), only after the user has answered the two level questions. Replace `<skill>`, `<lesson-dir>` and `<project-root>` with absolute paths. Each prompt is complete on its own because the agent cannot see the chat. Start one agent per pass, in order, and only start the next one after the previous one has reported back.
 
 ## 1. Concept finder
 

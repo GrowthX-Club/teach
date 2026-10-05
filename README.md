@@ -71,7 +71,7 @@ The installer copies the skill to `~/.claude/skills/teach` and/or `~/.agents/ski
 | `teach harder` / `teach easier` | Rebuild the last lesson one level deeper or simpler |
 | `teach more product` / `teach more tech` | Shift the focus between product thinking and how it works |
 
-The first time you learn about an area, teach asks two quick questions: how much you already know, and whether you want a product, balanced or tech focus. Your answers are saved in `~/growthx-teach/profile.json` and reused next time.
+Every time, teach first asks two quick questions: how much you already know about the area, and whether you want a business, balanced or technical focus. Your last answers are saved in `~/growthx-teach/profile.json` and pre-selected, so answering is usually one click.
 
 ## Playground
 
@@ -123,7 +123,7 @@ The theme lives in your teach folder so the agent never has to write CSS, which 
 
 ## How it works
 
-1. **Level check**: reads your profile and what your agent already knows about you, then asks at most one question in everyday words.
+1. **Level check**: reads your profile and what your agent already knows about you, then always asks its two questions in one prompt, with your last answers pre-selected.
 2. **Brief**: the agent picks 2–3 concepts and writes a short brief, without secrets or personal data.
 3. **Concept finder** (a separate agent): confirms which concepts were really used, with evidence from code, tests or the chat.
 4. **Lesson designer** (another separate agent): sees only the brief and the concept map and writes `lesson.json`.

@@ -18,7 +18,7 @@ Paths used below (never show these to the user):
 
 ## Don't block the user
 
-Steps 1–3 need this chat (and maybe one answer from the user), so do them right away; they take well under a minute. Steps 4–5 do not need the chat, so run them in the **background** and let the user keep working:
+Steps 1–3 need this chat and the user's answers to the two level questions, so do them right away; they take well under a minute. Always ask the two questions and wait for the answers before starting any agent. Steps 4–5 do not need the chat, so run them in the **background** and let the user keep working:
 
 - If you can start agents in the background and get told when each one finishes (Claude Code: the Agent tool with `run_in_background: true`), use **background mode**.
 - Otherwise use **foreground mode**: run the same steps one after another, as normal.
@@ -27,7 +27,7 @@ Before anything else, run `sh <skill>/scripts/setup.sh` (it creates `<home>` on 
 
 What the user sees:
 
-1. "Looking at what we worked on…" while you do steps 1–3 (plus the level question, if it's needed).
+1. "Looking at what we worked on…" while you do steps 1–3, then the two level questions.
 2. In background mode, once the brief is written: "Writing your lesson in the background. Keep working; I'll drop the link here when it's ready." In foreground mode: "Writing your lesson…"
 3. Nothing between the background steps. When an agent finishes, start the next one without a message; if the user is in the middle of something, keep helping them.
 4. The hand-off in step 6.
@@ -47,7 +47,7 @@ What the user sees:
 
 ## 2. Set the learner's level
 
-Follow [level-check](references/level-check.md). It sets **depth** (how much they know) and **focus** (business, both, or technical), asking at most one question in everyday words, and saves the answer.
+Follow [level-check](references/level-check.md). It sets **depth** (how much they know) and **focus** (business, both, or technical). **Always ask both questions, in one prompt, every time**, with saved or guessed answers pre-selected as recommended. Wait for the answer; never assume it.
 
 ## 3. Write the brief
 
