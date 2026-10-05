@@ -89,6 +89,41 @@ section.block { padding-block: 40px; border-top: 1px solid var(--hairline); disp
 .concept-head { flex-wrap: wrap; row-gap: 4px; }
 .concept-label { font: 500 13px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand); white-space: nowrap; }
 .definition { font-size: 17.5px; line-height: 1.7; }
+
+/* ===== Concept: story → analogy → sketch ===== */
+:root { --hand: "Caveat", "Kalam", "Marker Felt", "Comic Sans MS", cursive; }
+.story { font-size: 18px; line-height: 1.7; color: var(--fg); }
+.story p:first-child::first-letter { font-weight: 700; }
+.analogy {
+  border: 1px solid color-mix(in srgb, var(--amber) 35%, transparent);
+  background: color-mix(in srgb, var(--amber) 9%, var(--card));
+  border-radius: var(--radius); padding: 16px 20px; display: grid; gap: 6px;
+}
+.analogy .eyebrow { color: var(--amber); }
+.analogy .prose { font-size: 17px; line-height: 1.7; }
+.sketch {
+  margin: 0; border: 1px solid var(--hairline); border-radius: var(--radius);
+  background-color: var(--bg-2);
+  background-image: radial-gradient(color-mix(in srgb, var(--fg) 14%, transparent) 1px, transparent 1.2px);
+  background-size: 18px 18px; overflow: hidden;
+}
+.sketch canvas { display: block; width: 100%; }
+.real-world { border-left: 3px solid var(--brand); padding: 4px 0 4px 14px; display: grid; gap: 4px; }
+.real-world .eyebrow { color: var(--brand); }
+.callout { border-left-color: var(--red); background: var(--red-bg); }
+.callout .eyebrow { color: var(--red); }
+
+/* ===== Jargon ===== */
+.term {
+  color: var(--violet); cursor: help; text-decoration: underline dotted; text-decoration-thickness: 2px;
+  text-underline-offset: 4px; border-radius: 3px;
+}
+.term:hover, .term:focus-visible { background: color-mix(in srgb, var(--violet) 12%, transparent); outline: none; }
+.term-tip {
+  position: fixed; z-index: 50; max-width: min(300px, calc(100vw - 16px)); padding: 10px 12px;
+  background: var(--fg); color: var(--bg); border-radius: var(--radius-sm); font-size: 14px; line-height: 1.5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); pointer-events: none;
+}
 .sec-head h2 { font-size: clamp(26px, 4vw, 34px); font-weight: 700; letter-spacing: -0.02em; }
 .prose { display: grid; gap: 12px; max-width: 68ch; }
 .lens-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }

@@ -106,7 +106,8 @@ This step is required, also in background mode, where it arrives as its own mess
 
 ## Rules
 
-- Teach tech and AI concepts only, named as in the catalogue. Never retell what happened in the chat. The user's own work appears at most as one self-contained sentence per concept.
+- Teach tech and AI concepts only, named as in the catalogue. Each concept is eased in with a short story, explained through an analogy, and drawn as a diagram.
+- Connect every concept to the user's own work where there is one: the story is built on their situation and `in_your_work` says where it shows up. Both must make sense to someone who never read the chat; never retell the chat step by step.
 - Each concept stays under 300 words; 2–3 concepts per lesson.
 - Every claim about the user's own work needs evidence in `concept-map.json`. General knowledge needs none, but must be correct.
 - The finished page never calls a model, a server on the internet, or analytics. It is a local file.

@@ -6,19 +6,23 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const LENSES = ["product", "balanced", "tech"];
-const EXAMPLE_KINDS = ["everyday", "industry"];
 const EVIDENCE_KINDS = ["chat", "code", "docs", "test", "runtime"];
 export const MAX_CONCEPT_WORDS = 300;
 export const MAX_DEFINITION_WORDS = 100;
+export const MAX_STORY_WORDS = 80;
 
-// The definition starts with the concept itself: "Idempotency means…", "RAG is…".
-function opensWithName(c) {
-  const first = c.explain.split(/(?<=[.!?])\s/)[0].toLowerCase().replace(/\*\*/g, "");
-  const name = String(c.name || "").toLowerCase();
-  const variants = [name, name.replace(/\s*\(.*\)\s*/, ""), (name.match(/\(([^)]+)\)/) || [])[1]].filter(Boolean);
-  // Accept the name or its singular/plural stem ("optimistic update" for "Optimistic updates").
-  return variants.some((v) => first.includes(v) || first.includes(v.replace(/s$/, "")));
+// Ways a concept can be named: "Retrieval-augmented generation (RAG)" → full, "retrieval-augmented generation", "rag"; plus singular forms.
+function nameVariants(name) {
+  const n = String(name || "").toLowerCase();
+  const base = [n, n.replace(/\s*\(.*\)\s*/, ""), (n.match(/\(([^)]+)\)/) || [])[1]].filter(Boolean);
+  return [...new Set(base.flatMap((v) => [v, v.replace(/s$/, ""), v.split(" and ")[0]]))].filter((v) => v.length > 2);
 }
+const mentionsName = (c, text) => nameVariants(c.name).some((v) => text.toLowerCase().replace(/\*\*/g, "").includes(v));
+// The explanation leads with an analogy or example, so it must not open with a definition of the name.
+const opensAsDefinition = (c) => {
+  const start = c.explain.toLowerCase().replace(/\*\*/g, "").slice(0, 80);
+  return nameVariants(c.name).some((v) => new RegExp(`^(an? |the )?${v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}s? (means|is|are|refers)\\b`).test(start));
+};
 // Learners rarely read the chat, so the lesson must never point back at it.
 const CHAT_REFERENCE = /\b(earlier (in|today)|as (we|you) (discussed|saw|did)|we just|you just|in (our|this|the) (chat|conversation|session)|the bug we|our discussion|mentioned above)\b/i;
 
@@ -98,8 +102,7 @@ export function validateConceptMap(map, cat = loadCatalogue()) {
 }
 
 function conceptWords(c) {
-  let n = words(c.explain) + words(c.product) + words(c.tech) + words(c.pitfall);
-  for (const e of c.examples || []) n += words(e.title) + words(e.text);
+  let n = words(c.story) + words(c.explain) + words(c.real_world) + words(c.pitfall);
   if (c.in_your_work) n += words(c.in_your_work.text);
   const v = c.visual;
   if (v) {
@@ -135,21 +138,17 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     if (!ID.test(c.id || "")) err(`${at}.id must be lowercase-hyphenated`);
     if (conceptIds.has(c.id)) err(`duplicate concept id "${c.id}"`);
     conceptIds.add(c.id);
-    for (const k of ["name", "explain", "product", "tech"]) if (!isText(c[k])) err(`${at}.${k} is required`);
-    if (c.tagline !== undefined) err(`${at}.tagline is no longer used; remove it`);
+    for (const k of ["name", "story", "explain"]) if (!isText(c[k])) err(`${at}.${k} is required`);
+    for (const k of ["tagline", "product", "tech", "examples"]) if (c[k] !== undefined) err(`${at}.${k} is no longer used; remove it (see lesson-format.md)`);
+    if (isText(c.story) && words(c.story) > MAX_STORY_WORDS) err(`${at}.story has ${words(c.story)} words; keep it to ${MAX_STORY_WORDS}`);
     if (isText(c.explain)) {
-      if (words(c.explain) > MAX_DEFINITION_WORDS) err(`${at}.explain has ${words(c.explain)} words; the concept definition must be at most ${MAX_DEFINITION_WORDS}`);
-      if (!opensWithName(c)) err(`${at}.explain must open by naming the concept, e.g. "${c.name} means…"`);
+      if (words(c.explain) > MAX_DEFINITION_WORDS) err(`${at}.explain has ${words(c.explain)} words; keep it to ${MAX_DEFINITION_WORDS}`);
+      if (opensAsDefinition(c)) err(`${at}.explain opens with a definition; start from an analogy or real-life example, then name the concept`);
+      if (!mentionsName(c, c.explain)) err(`${at}.explain must name the concept ("${c.name}") after the analogy`);
     }
+    if (c.real_world !== undefined && (!isText(c.real_world) || words(c.real_world) > 35)) err(`${at}.real_world must be one sentence of at most 35 words`);
     if (c.id && cat.concepts.has(c.id) && isText(c.name) && c.name !== cat.concepts.get(c.id).name) err(`${at}.name must be the catalogue name "${cat.concepts.get(c.id).name}" so concepts are named the same in every lesson`);
     if (c.id && !cat.concepts.has(c.id)) warnings.push(`${at} is not in the catalogue; use a catalogue id if one fits, or add the concept to references/catalogue.json`);
-
-    const examples = isList(c.examples) ? c.examples : [];
-    if (examples.length !== 2) err(`${at} needs exactly 2 examples`);
-    for (const [j, e] of examples.entries()) {
-      if (!EXAMPLE_KINDS.includes(e.kind)) err(`${at}.examples[${j}].kind must be everyday or industry (the learner's own work goes in in_your_work)`);
-      if (!isText(e.title) || !isText(e.text)) err(`${at}.examples[${j}] needs title and text`);
-    }
 
     const w = c.in_your_work;
     if (w) {
@@ -160,14 +159,21 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
     }
 
     const v = c.visual;
-    if (v) {
+    if (!v) err(`${at}.visual is required: every concept gets a diagram`);
+    else {
+      if (!isText(v.title)) err(`${at}.visual.title is required`);
       if (v.type === "flow") {
         if (!isList(v.steps) || v.steps.length < 3 || v.steps.length > 4) err(`${at}.visual flow needs 3-4 steps`);
-        for (const [j, s] of (v.steps || []).entries()) if (!isText(s.label) || !isText(s.detail)) err(`${at}.visual.steps[${j}] needs label and detail`);
+        for (const [j, s] of (v.steps || []).entries()) {
+          if (!isText(s.label) || !isText(s.detail)) err(`${at}.visual.steps[${j}] needs label and detail`);
+          else if (words(s.label) > 6 || words(s.detail) > 10) err(`${at}.visual.steps[${j}] is too long for a diagram (label 6 words, detail 10)`);
+        }
       } else if (v.type === "compare") {
         for (const side of ["left", "right"]) {
           const s = v[side] || {};
           if (!isText(s.title) || !isList(s.points) || s.points.length === 0 || s.points.length > 3) err(`${at}.visual.${side} needs a title and 1-3 points`);
+          if (s.tone !== undefined && !["good", "bad", "neutral"].includes(s.tone)) err(`${at}.visual.${side}.tone must be good, bad or neutral`);
+          if ((s.points || []).some((p) => words(p) > 10)) err(`${at}.visual.${side} has a point over 10 words`);
         }
       } else err(`${at}.visual.type must be flow or compare`);
     }
@@ -179,6 +185,19 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
 
     const n = conceptWords(c);
     if (n > MAX_CONCEPT_WORDS) err(`${at} has ${n} words; the limit is ${MAX_CONCEPT_WORDS} (code samples don't count)`);
+  }
+
+  const glossary = isList(lesson.glossary) ? lesson.glossary : [];
+  if (glossary.length < 3 || glossary.length > 12) err("glossary needs 3-12 terms: every piece of jargon a newcomer might not know");
+  const terms = new Set();
+  const bodyText = JSON.stringify([lesson.hook, lesson.goal, concepts.map((c) => [c.story, c.explain, c.real_world, c.in_your_work && c.in_your_work.text, c.pitfall, c.visual])]).toLowerCase();
+  for (const [i, g] of glossary.entries()) {
+    if (!isText(g.term) || !isText(g.tip)) { err(`glossary[${i}] needs term and tip`); continue; }
+    const t = g.term.toLowerCase();
+    if (terms.has(t)) err(`glossary has "${g.term}" twice`);
+    terms.add(t);
+    if (!bodyText.includes(t)) err(`glossary term "${g.term}" never appears in the lesson; use the exact words from the text`);
+    if (words(g.tip) > 30) err(`glossary tip for "${g.term}" is over 30 words`);
   }
 
   const quiz = isList(lesson.quiz) ? lesson.quiz : [];
@@ -214,7 +233,7 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
   if (DASHES.test(text)) err("contains em or en dashes; use a period, comma, colon or parentheses instead (humanizer section 8)");
   if (CURLY_DOUBLE.test(text)) err("contains curly double quotes; use straight quotes");
   for (const c of concepts) {
-    const bold = [c.explain, c.product, c.tech, c.pitfall].join(" ").match(/\*\*[^*]+\*\*/g) || [];
+    const bold = [c.story, c.explain, c.real_world, c.pitfall].join(" ").match(/\*\*[^*]+\*\*/g) || [];
     if (bold.length > 2) err(`concept "${c.id}" bolds ${bold.length} phrases; bold only the concept's own term (humanizer section 19)`);
   }
   // Only IDs containing a digit (e1, code-2) are distinctive enough to detect without false positives.

@@ -24,9 +24,9 @@ if node "$skill/scripts/validate.mjs" "$long" 2>"$work/err"; then fail "over-lon
 if grep -q "the limit is 300" "$work/err"; then pass "concepts over 300 words are rejected"; else fail "concepts over 300 words are rejected"; fi
 
 recap="$work/recap.json"
-node -e 'const l=require(process.argv[1]); l.concepts[0].examples[1].kind="your-work"; l.hook="As we discussed in our chat, the bug we fixed was a retry."; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$recap"
+node -e 'const l=require(process.argv[1]); l.concepts[0].examples=[{kind:"your-work",title:"x",text:"y"}]; l.hook="As we discussed in our chat, the bug we fixed was a retry."; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$recap"
 if node "$skill/scripts/validate.mjs" "$recap" 2>"$work/err"; then fail "recap lesson passed"; fi
-if grep -q "everyday or industry" "$work/err" && grep -q "refers back to the chat" "$work/err"; then pass "recaps and chat references are rejected"; else fail "recaps and chat references are rejected"; fi
+if grep -q "examples is no longer used" "$work/err" && grep -q "refers back to the chat" "$work/err"; then pass "recaps and chat references are rejected"; else fail "recaps and chat references are rejected"; fi
 
 ai="$work/ai.json"
 node -e 'const l=require(process.argv[1]); l.concepts[0].explain += " This is a crucial idea \u2014 not just for engineers but for everyone."; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$ai"
@@ -61,7 +61,13 @@ if grep -q "Always ask both questions" "$skill/references/level-check.md" && gre
 defn="$work/defn.json"
 node -e 'const l=require(process.argv[1]); l.concepts[0].explain="Messages get lost all the time." + " word".repeat(110); console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$defn"
 if node "$skill/scripts/validate.mjs" "$defn" 2>"$work/err"; then fail "bad definition passed"; fi
-if grep -q "at most 100" "$work/err" && grep -q "must open by naming the concept" "$work/err"; then pass "definitions open with the concept and stay under 100 words"; else fail "definitions open with the concept and stay under 100 words"; fi
+if grep -q "keep it to 100" "$work/err" && grep -q "must name the concept" "$work/err"; then pass "explanations stay under 100 words and name the concept"; else fail "explanations stay under 100 words and name the concept"; fi
+
+v3="$work/v3.json"
+node -e 'const l=require(process.argv[1]); l.concepts[0].explain="Retries with backoff means trying again later."; delete l.concepts[1].visual; delete l.concepts[2].story; l.glossary.push({term:"quantum flux",tip:"Not in the text."}); console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$v3"
+if node "$skill/scripts/validate.mjs" "$v3" 2>"$work/err"; then fail "lesson without story, diagram or analogy passed"; fi
+if grep -q "opens with a definition" "$work/err" && grep -q "visual is required" "$work/err" && grep -q "story is required" "$work/err" && grep -q '"quantum flux" never appears' "$work/err"; then pass "every concept needs a story, an analogy-first explanation and a diagram; glossary terms must appear"; else fail "every concept needs a story, an analogy-first explanation and a diagram; glossary terms must appear"; fi
+if ! grep -q 'data-lens' "$skill/assets/app.js" && grep -q "function drawSketch" "$skill/assets/app.js" && grep -q "applyGlossary" "$skill/assets/app.js"; then pass "page has sketch diagrams and jargon tips, no focus switch"; else fail "page has sketch diagrams and jargon tips, no focus switch"; fi
 
 echo "build"
 export TEACH_HOME="$work/home with space"
