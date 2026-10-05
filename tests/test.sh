@@ -58,6 +58,11 @@ if grep -q "tagline is no longer used" "$work/err" && ! grep -q 'class="tagline"
 
 if grep -q "Always ask both questions" "$skill/references/level-check.md" && grep -q "Always ask both questions" "$skill/SKILL.md" && ! grep -q "use them without asking" "$skill/references/level-check.md"; then pass "level questions are always asked"; else fail "level questions are always asked"; fi
 
+defn="$work/defn.json"
+node -e 'const l=require(process.argv[1]); l.concepts[0].explain="Messages get lost all the time." + " word".repeat(110); console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$defn"
+if node "$skill/scripts/validate.mjs" "$defn" 2>"$work/err"; then fail "bad definition passed"; fi
+if grep -q "at most 100" "$work/err" && grep -q "must open by naming the concept" "$work/err"; then pass "definitions open with the concept and stay under 100 words"; else fail "definitions open with the concept and stay under 100 words"; fi
+
 echo "build"
 export TEACH_HOME="$work/home with space"
 lesson="$TEACH_HOME/lessons/2026-01-01-sample"

@@ -27,7 +27,7 @@ Apply [humanizer](humanizer.md) in embedded mode to each text field: mark the te
 
 - Do not add facts, numbers, names, companies, or claims that are not already in the lesson. You may cut.
 - Keep the quiz answers correct: the right option stays right and every `why` still matches its option.
-- Keep every rule in [lesson format](lesson-format.md), including the 300-word limit per concept and one sentence for `in_your_work`.
+- Keep every rule in [lesson format](lesson-format.md), including the 300-word limit per concept, the 100-word definition that opens with the concept's name, and one sentence for `in_your_work`.
 - No em dashes (—), en dashes (–) or double hyphens used as dashes anywhere in visible text.
 - No references back to the chat.
 

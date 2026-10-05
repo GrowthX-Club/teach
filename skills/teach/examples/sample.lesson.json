@@ -19,7 +19,7 @@
     {
       "id": "retries",
       "name": "Retries with backoff",
-      "explain": "Messages between computers get lost or delayed all the time. When a sender hears nothing back, it can't tell \"it failed\" from \"it worked but the reply got lost\", so it plays safe and **sends again**.\n\nGood senders wait longer after each failure: 1 second, then 2, then 4. This is called **backoff**, and it stops a struggling server from being buried under repeats.",
+      "explain": "**Retries with backoff** means trying a failed request again, and waiting a little longer before each new try. Messages between computers get lost or delayed all the time. When a sender hears nothing back, it can't tell \"it failed\" from \"it worked but the reply got lost\", so it plays safe and sends again.\n\nGood senders wait 1 second, then 2, then 4. That growing pause is the backoff, and it stops a struggling server from being buried under repeats.",
       "product": "Retries are why payments, emails and alerts still arrive when the internet has a bad moment. The cost: the same message can arrive more than once.",
       "tech": "Senders retry on timeouts and server errors, adding random jitter so thousands of clients don't retry in lockstep. Delivery is \"at least once\", never \"exactly once\".",
       "examples": [
@@ -45,7 +45,7 @@
     {
       "id": "idempotency",
       "name": "Idempotency",
-      "explain": "An action is **idempotent** when repeating it changes nothing after the first time. \"Mark the order as paid\" is idempotent. \"Add ₹500 to the balance\" is not.\n\nThe usual trick: every request carries a **unique ID**. The receiver remembers IDs it has handled, and when one shows up again it simply skips the work.",
+      "explain": "**Idempotency** means doing something twice has the same effect as doing it once. \"Mark the order as paid\" is idempotent. \"Add ₹500 to the balance\" is not.\n\nThe usual trick: every request carries a unique ID. The receiver remembers the IDs it has handled, and when one shows up again it simply skips the work.",
       "product": "Customers never see double charges, duplicate emails or two identical orders, even when the network misbehaves. A good question for any engineer: \"what happens if this arrives twice?\"",
       "tech": "Store a record keyed by the request or event ID. Look the key up before acting; if it exists, return the saved result instead of redoing the work.",
       "examples": [
@@ -95,7 +95,7 @@
     {
       "id": "transactions",
       "name": "Transactions",
-      "explain": "If two copies of the same message arrive at the **same moment**, both can ask \"seen this before?\", both hear \"no\", and both act.\n\nThe fix is to make the check and the action one **indivisible step**. Databases offer this: a rule that a given ID can only be saved once, checked in the same step as the work.",
+      "explain": "A **transaction** means a group of changes that either all happen or none happen, as one step. That matters when two copies of the same message arrive at the same moment: both can ask \"seen this before?\", both hear \"no\", and both act.\n\nDatabases fix this with a rule that a given ID can only be saved once, checked in the same step as the work.",
       "product": "This is the difference between \"usually no duplicates\" and \"never duplicates\". It matters most for money, stock levels and anything customers see.",
       "tech": "Insert the ID into a table with a unique index inside the same transaction as the business write. The second insert fails, and its transaction rolls back.",
       "examples": [
