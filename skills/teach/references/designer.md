@@ -7,7 +7,7 @@ Inputs: `brief.md`, `concept-map.json` if it exists, [teaching method](teaching-
 ## Steps
 
 1. Take depth, focus (lens) and area (domain) from `brief.md`. Copy them into `meta.level` and `meta.domain`.
-2. Use the concept map's concepts (2–3). If there is no map, choose 2–3 tech or AI concepts for the topic from the [catalogue](catalogue.json). Keep catalogue ids and names exactly.
+2. Use the concept map's concepts (2–4). If there is no map, choose 2–4 tech or AI concepts for the topic from the [catalogue](catalogue.json). Keep catalogue ids and names exactly.
 3. Write the title as an analogy in everyday words, with no concept names or jargon ("Why pressing the lift button five times still brings one lift"). Write the hook as a general question about the idea, not about the user's project.
 4. For each concept, ease in before naming anything:
    - **`story`** (at most 80 words): a concrete situation that raises the problem the concept solves. When the brief or map says where this concept showed up in the learner's work, tell that situation, in plain words, so it makes sense to someone who never saw the chat. Otherwise use an everyday situation. Each story can pick up where the previous concept's story left off, so the lesson reads as one thread.

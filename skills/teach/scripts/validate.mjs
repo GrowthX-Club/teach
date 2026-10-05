@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const LENSES = ["product", "balanced", "tech"];
 const EVIDENCE_KINDS = ["chat", "code", "docs", "test", "runtime"];
+export const MAX_CONCEPTS = 4;
 export const MAX_CONCEPT_WORDS = 450;
 export const MAX_DEFINITION_WORDS = 100;
 export const MAX_STORY_WORDS = 80;
@@ -84,7 +85,7 @@ export function validateConceptMap(map, cat = loadCatalogue()) {
     if (!isText(e.source) || !isText(e.supports)) err(`evidence "${e.id}" needs source and supports`);
   }
   const concepts = isList(map.concepts) ? map.concepts : [];
-  if (concepts.length < 2 || concepts.length > 3) err("needs 2-3 concepts");
+  if (concepts.length < 2 || concepts.length > MAX_CONCEPTS) err(`needs 2-${MAX_CONCEPTS} concepts`);
   const ids = new Set();
   for (const [i, c] of concepts.entries()) {
     if (!ID.test(c.id || "")) err(`concepts[${i}].id must be lowercase-hyphenated`);
@@ -131,7 +132,7 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
   if (lesson.connect) err("connect is no longer supported; keep the lesson to its concepts");
 
   const concepts = isList(lesson.concepts) ? lesson.concepts : [];
-  if (concepts.length < 2 || concepts.length > 3) err("needs 2-3 concepts");
+  if (concepts.length < 2 || concepts.length > MAX_CONCEPTS) err(`needs 2-${MAX_CONCEPTS} concepts`);
   const conceptIds = new Set();
   for (const [i, c] of concepts.entries()) {
     const at = `concepts[${i}]${c.id ? ` (${c.id})` : ""}`;
