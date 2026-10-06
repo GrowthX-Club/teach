@@ -73,7 +73,9 @@ lesson_name=$(basename "$lesson_dir")
 } > "$lesson_dir/library-entry.js"
 
 # Rebuild the library page from every built lesson under <home>/lessons.
+# lessons/library.js holds every entry too, so each lesson page can link to the others.
 : > "$tmp/entries.html"
+: > "$tmp/library.js"
 for entry in "$teach_home"/lessons/*/library-entry.js; do
   [ -f "$entry" ] || continue
   name=$(basename "$(dirname "$entry")")
@@ -81,7 +83,10 @@ for entry in "$teach_home"/lessons/*/library-entry.js; do
     *[!a-z0-9-]*) continue ;;
   esac
   printf '<script src="lessons/%s/library-entry.js"></script>\n' "$name" >> "$tmp/entries.html"
+  cat "$entry" >> "$tmp/library.js"
 done
+mkdir -p "$teach_home/lessons"
+mv "$tmp/library.js" "$teach_home/lessons/library.js"
 inline "$assets/library.html" "$tmp/library.html" \
   "/*@@THEME@@*/${sep}$theme${sep}/*@@BASE@@*/${sep}$assets/base.css${sep}/*@@CATALOGUE@@*/${sep}$tmp/catalogue.safe.json${sep}<!--@@ENTRIES@@-->${sep}$tmp/entries.html"
 mv "$tmp/library.html" "$teach_home/index.html"

@@ -22,6 +22,8 @@
   var concepts = lesson.concepts || [];
   var quiz = lesson.quiz || [];
   var storeKey = "teach:" + (meta.slug || "lesson");
+  // Lessons live at <teach home>/lessons/<dir>/index.html, next to the library page.
+  var thisDir = (location.pathname.match(/\/lessons\/([a-z0-9-]+)\/(index\.html)?$/) || [])[1] || "";
 
   function load(key, fallback) {
     try {
@@ -90,6 +92,7 @@
       '<header class="topbar"><div class="wrap">' +
       '<a class="brand" href="' + REPO_URL + '" target="_blank" rel="noopener">' + GX_LOGO + ' <span class="grad">teach</span></a>' +
       '<div class="controls">' +
+      (thisDir ? '<a class="btn" href="../../index.html">All lessons</a>' : "") +
       '<button type="button" class="icon-btn" id="theme-toggle" aria-label="Switch light or dark theme">◐</button>' +
       "</div></div></header>"
     );
@@ -321,6 +324,28 @@
     );
   }
 
+  function moreSection() {
+    if (!thisDir) return "";
+    var others = (window.LIBRARY || []).filter(function (it) { return it && it.dir && it.dir !== thisDir && it.lesson; })
+      .sort(function (a, b) { return a.dir < b.dir ? 1 : -1; });
+    if (!others.length) return "";
+    return (
+      '<section class="block" id="more" data-nav="More lessons">' +
+      '<div class="sec-head"><span class="sec-num">More</span><h2>Your other lessons</h2></div>' +
+      '<ol class="lib-list">' + others.slice(0, 6).map(function (it) {
+        var m = it.lesson.meta || {};
+        var tags = (areaNames[m.domain] ? '<span class="tag area">' + esc(areaNames[m.domain]) + "</span>" : "") +
+          (it.lesson.concepts || []).map(function (c) { return '<span class="tag">' + esc(plain(c.name)) + "</span>"; }).join("");
+        return '<li><a class="lib-row" href="../' + encodeURIComponent(it.dir) + '/index.html">' +
+          (m.created ? '<span class="lib-meta">' + esc(m.created) + "</span>" : "") +
+          "<h3>" + esc(plain(m.title)) + "</h3>" +
+          (tags ? '<span class="tags">' + tags + "</span>" : "") + "</a></li>";
+      }).join("") + "</ol>" +
+      (others.length > 6 ? '<a class="btn" href="../../index.html" style="margin-top:12px">See all ' + (others.length + 1) + " lessons</a>" : "") +
+      "</section>"
+    );
+  }
+
   function footer() {
     var created = meta.created ? "Made " + esc(meta.created) + " · " : "";
     return (
@@ -347,7 +372,7 @@
 
   // ---------- render ----------
   document.title = plain(meta.title || "Lesson") + " · GrowthX teach";
-  var body = hero() + concepts.map(concept).join("") + quizSection() + nextSection() + videosSection() + shareSection();
+  var body = hero() + concepts.map(concept).join("") + quizSection() + nextSection() + videosSection() + shareSection() + moreSection();
   document.getElementById("app").innerHTML =
     topbar() +
     '<div class="layout wrap"><nav class="sidebar" id="sidebar" aria-label="Lesson sections"></nav><main class="content">' + body + "</main></div>" +

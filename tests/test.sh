@@ -139,7 +139,8 @@ node -e 'const l=require(process.argv[1]); l.hook += " </script><b>not html</b>"
 sh "$skill/scripts/build.sh" "$lesson" > "$work/build.out"
 if [ -f "$lesson/index.html" ]; then pass "lesson page written"; else fail "lesson page written"; fi
 grep -q "@@" "$lesson/index.html" && fail "placeholder left in lesson page"
-if [ "$(grep -ci '</script' "$lesson/index.html")" -eq 3 ]; then pass "lesson data cannot close its script tag"; else fail "lesson data cannot close its script tag"; fi
+if [ "$(grep -ci '</script' "$lesson/index.html")" -eq 5 ]; then pass "lesson data cannot close its script tag"; else fail "lesson data cannot close its script tag"; fi
+if grep -q 'src="../library.js"' "$lesson/index.html" && grep -q '"dir":"2026-01-01-sample"' "$(dirname "$lesson")/library.js"; then pass "lessons can list the other lessons"; else fail "lessons can list the other lessons"; fi
 if grep -q "Built using GrowthX" "$lesson/index.html"; then pass "watermark present"; else fail "watermark present"; fi
 if grep -q 'id="sidebar"' "$lesson/index.html" && grep -q "^\.layout" "$lesson/index.html"; then pass "sidebar and layout styles inlined"; else fail "sidebar and layout styles inlined"; fi
 if grep -q "^LESSON_URL=file://.*home%20with%20space/lessons/2026-01-01-sample/index.html$" "$work/build.out" && grep -q "^OPENED=no$" "$work/build.out"; then pass "build prints a clickable link and only opens with --open"; else fail "build prints a clickable link and only opens with --open"; fi

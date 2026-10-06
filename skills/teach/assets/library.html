@@ -18,11 +18,10 @@
   <section class="hero wrap">
     <p class="eyebrow" id="count"></p>
     <h1>Your <span class="grad">lessons</span></h1>
-    <p class="lede">Every lesson teach has made for you, newest first. Type <code>teach</code> in Claude Code or Codex to add one.</p>
     <label for="search" class="eyebrow">Search</label>
     <input class="search" id="search" type="search" placeholder="Search by title, topic or concept">
   </section>
-  <section class="wrap" style="padding-bottom:48px"><div class="lib-groups" id="grid"></div></section>
+  <section class="wrap" style="padding-bottom:48px"><div id="grid"></div></section>
 </main>
 <footer class="site"><div class="wrap">
   <a class="watermark" href="https://github.com/GrowthX-Club/teach" target="_blank" rel="noopener">Built using GrowthX <span class="grad">teach</span></a>
@@ -63,28 +62,15 @@
       grid.innerHTML = '<div class="empty">No lessons match that search.</div>';
       return;
     }
-    function card(it) {
+    grid.innerHTML = '<ol class="lib-list">' + shown.map(function (it) {
       var l = it.lesson || {}, m = l.meta || {}, level = m.level || {};
-      var concepts = (l.concepts || []).map(function (c) { return esc(c.name); }).join(" · ");
-      return '<a class="lib-card" href="lessons/' + encodeURIComponent(it.dir) + '/index.html">' +
-        '<span class="eyebrow">' + esc([m.created, DEPTH[level.depth]].filter(Boolean).join(" · ")) + "</span>" +
+      var tags = (areaName[m.domain] ? '<span class="tag area">' + esc(areaName[m.domain]) + "</span>" : "") +
+        (l.concepts || []).map(function (c) { return '<span class="tag">' + esc(plain(c.name)) + "</span>"; }).join("");
+      return '<li><a class="lib-row" href="lessons/' + encodeURIComponent(it.dir) + '/index.html">' +
+        '<span class="lib-meta">' + esc([m.created, DEPTH[level.depth]].filter(Boolean).join(" · ")) + "</span>" +
         "<h3>" + esc(plain(m.title)) + "</h3>" +
-        '<p style="color:var(--muted);font-size:14.5px">' + concepts + "</p></a>";
-    }
-    // Group by catalogue area, in catalogue order; anything else goes last.
-    var order = areas.map(function (a) { return a.id; });
-    var groups = {};
-    shown.forEach(function (it) {
-      var d = (it.lesson && it.lesson.meta && it.lesson.meta.domain) || "other";
-      (groups[d] = groups[d] || []).push(it);
-    });
-    var keys = Object.keys(groups).sort(function (a, b) {
-      var ia = order.indexOf(a), ib = order.indexOf(b);
-      return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
-    });
-    grid.innerHTML = keys.map(function (k) {
-      return '<section class="lib-group"><h2 class="lib-area">' + esc(areaName[k] || "Other") + '</h2><div class="lib-grid">' + groups[k].map(card).join("") + "</div></section>";
-    }).join("");
+        (tags ? '<span class="tags">' + tags + "</span>" : "") + "</a></li>";
+    }).join("") + "</ol>";
   }
   // External links always open in a new tab, even in browsers that ignore target="_blank".
   document.addEventListener("click", function (e) {
