@@ -8,7 +8,7 @@ Output: first copy the designer's file to `lesson.draft.json`, then overwrite `l
 
 ## What to edit
 
-Rewrite every piece of visible text: `meta.title`, `meta.one_liner`, `goal`, `hook`, and in each concept `story`, `explain`, visual titles, captions, actor names and roles, labels, details, `says` lines and points, `real_world`, `in_your_work.text`, `fun_fact`; every glossary `tip` (keep each `term` exactly as it appears in the text); quiz questions, options and `why`s; `next` titles; both `share` posts.
+Rewrite every piece of visible text: `meta.title`, `meta.one_liner`, `goal`, `hook`, `session.about` and `session.did`, and in each concept `story`, `explain`, visual titles, captions, actor names and roles, labels, details, `says` lines and points, `real_world`, `in_your_work.text`, `fun_fact`; every glossary `tip` (keep each `term` exactly as it appears in the text); quiz questions, options and `why`s; `next` titles; both `share` posts.
 
 Leave everything else exactly as it is: the JSON shape, every `id`, `concept_id`, `kind`, `correct`, `evidence_ids`, `meta.slug`, `meta.created`, `meta.level`, `meta.domain`, `next[].prompt`, anything in `videos`, and the line "Built using GrowthX teach". Keep the title an analogy with no concept names or jargon.
 
@@ -29,7 +29,7 @@ Apply [humanizer](humanizer.md) in embedded mode to each text field: mark the te
 - Keep the quiz answers correct: the right option stays right and every `why` still matches its option. Keep all options a similar length and equally believable; never make the right one stand out.
 - Keep every rule in [lesson format](lesson-format.md), including the 450-word limit per concept, the 80-word story, 40–100 words for `real_world` and `in_your_work` the 100-word explanation that starts from an analogy (never "X means…"), and one sentence for `in_your_work`. If you reword a sentence that contains a glossary term, keep the term's exact words.
 - No em dashes (—), en dashes (–) or double hyphens used as dashes anywhere in visible text.
-- No references back to the chat.
+- No references back to the chat, except in `session`, which is there to remind the learner what the session was about.
 
 When done, run the validator if `node` exists and fix anything it reports:
 

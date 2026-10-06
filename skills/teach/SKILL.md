@@ -55,6 +55,7 @@ Create `<home>/lessons/<YYYY-MM-DD>-<slug>/` (`slug`: lowercase words joined by 
 
 - the subject, the area id, and the candidate concepts (catalogue ids and names)
 - the learner's depth and focus
+- for a bare `teach` or a transcript, a **session summary**: one sentence on what the chat was about, then 2–3 plain sentences on what the user was doing and what changed, written so the user remembers it after forgetting the chat. Leave it out for `teach <topic>`
 - for each concept, where it showed up **in this chat**: one plain sentence, written so it makes sense to someone who never saw the chat ("Your sale now switches on by itself at a set time"), never "the bug we fixed earlier". Only write it when this session actually shows the user working on it in the project open here. Don't guess from the project's files or from other projects; when in doubt, write "none"
 - the project root path, if a project is involved
 

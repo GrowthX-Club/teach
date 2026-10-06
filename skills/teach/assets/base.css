@@ -88,6 +88,11 @@ strong { font-weight: 650; }
 /* ===== Sections ===== */
 section.block { padding-block: 40px; border-top: 1px solid var(--hairline); display: grid; gap: 20px; }
 .sec-head { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.session-about { font-size: 19px; font-weight: 600; line-height: 1.45; }
+.session-learn { border: 1px solid var(--hairline-2); background: var(--glass); border-radius: var(--radius); padding: 14px 18px; display: grid; gap: 8px; }
+.session-learn ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.session-learn li::marker { color: var(--brand); }
+.session-learn a { color: var(--fg); text-decoration-color: color-mix(in srgb, var(--brand) 50%, transparent); text-underline-offset: 3px; }
 .sec-num { font: 500 12px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--brand); }
 .concept-head { flex-wrap: wrap; row-gap: 4px; }
 .concept-label { font: 500 13px var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand); white-space: nowrap; }

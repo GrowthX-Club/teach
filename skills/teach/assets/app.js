@@ -218,6 +218,21 @@
     );
   }
 
+  // What the session was about, for learners who have forgotten the chat by the time they open the lesson.
+  function sessionSection() {
+    var s = lesson.session;
+    if (!s || !s.about) return "";
+    return (
+      '<section class="block session" id="session" data-nav="Your session">' +
+      '<div class="sec-head"><span class="sec-num">Recap</span><h2>What you were working on</h2></div>' +
+      '<p class="session-about">' + rich(s.about) + "</p>" +
+      (s.did ? '<div class="prose">' + paras(s.did) + "</div>" : "") +
+      '<div class="session-learn"><span class="eyebrow">What you\'ll learn today</span><ul>' +
+      concepts.map(function (c) { return '<li><a href="#c-' + esc(c.id) + '">' + esc(plain(c.name)) + "</a></li>"; }).join("") +
+      "</ul></div></section>"
+    );
+  }
+
   function concept(c) {
     return (
       '<section class="block" id="c-' + esc(c.id) + '" data-nav="' + esc(plain(c.name)) + '">' +
@@ -372,7 +387,7 @@
 
   // ---------- render ----------
   document.title = plain(meta.title || "Lesson") + " · GrowthX teach";
-  var body = hero() + concepts.map(concept).join("") + quizSection() + nextSection() + videosSection() + shareSection() + moreSection();
+  var body = hero() + sessionSection() + concepts.map(concept).join("") + quizSection() + nextSection() + videosSection() + shareSection() + moreSection();
   document.getElementById("app").innerHTML =
     topbar() +
     '<div class="layout wrap"><nav class="sidebar" id="sidebar" aria-label="Lesson sections"></nav><main class="content">' + body + "</main></div>" +

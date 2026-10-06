@@ -82,7 +82,7 @@ function promptFor(lesson, q) {
   const history = (q.history || []).slice(-6).map((t) => `${t.role === "assistant" ? "Tutor" : "Learner"}: ${clip(t.text, 800)}`).join("\n");
   return [
     `The lesson (JSON, reference only):`,
-    JSON.stringify({ title: lesson.meta && lesson.meta.title, goal: lesson.goal, concepts, glossary: lesson.glossary }),
+    JSON.stringify({ title: lesson.meta && lesson.meta.title, goal: lesson.goal, session: lesson.session && { about: lesson.session.about, did: lesson.session.did }, concepts, glossary: lesson.glossary }),
     ``,
     history ? `Conversation so far:\n${history}\n` : "",
     q.section ? `Section: ${clip(q.section, 120)}` : "",

@@ -2,6 +2,11 @@
   "version": 2,
   "subject": "Making payment webhooks safe to retry",
   "domain": "systems",
+  "session": {
+    "about": "Making a shop's payment notifications safe when they arrive more than once",
+    "did": "Customers were charged twice after the payment company resent a slow notification. The handler now remembers every notification it has handled and skips repeats",
+    "evidence_ids": ["e1", "e2"]
+  },
   "concepts": [
     {
       "id": "retries",

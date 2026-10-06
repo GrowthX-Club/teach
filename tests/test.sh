@@ -23,6 +23,12 @@ node -e 'const l=require(process.argv[1]); l.concepts[0].explain += " word".repe
 if node "$skill/scripts/validate.mjs" "$long" 2>"$work/err"; then fail "over-long concept passed"; fi
 if grep -q "the limit is 450" "$work/err"; then pass "concepts over 300 words are rejected"; else fail "concepts over 300 words are rejected"; fi
 
+sess="$work/session.json"
+node -e 'const l=require(process.argv[1]); l.session.evidence_ids=["e2"]; l.session.did="Too short."; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$sess"
+if node "$skill/scripts/validate.mjs" "$sess" "$skill/examples/sample.concept-map.json" 2>"$work/err"; then fail "bad session recap passed"; fi
+if grep -q 'session must cite at least one "chat" evidence' "$work/err" && grep -q "session.did has" "$work/err"; then pass "session recap needs chat evidence and a real summary"; else fail "session recap needs chat evidence and a real summary"; fi
+if node "$skill/scripts/validate.mjs" "$skill/examples/sample.lesson.json" 2>"$work/err"; then fail "session recap without a concept map passed"; else pass "session recap needs a concept map"; fi
+
 recap="$work/recap.json"
 node -e 'const l=require(process.argv[1]); l.concepts[0].examples=[{kind:"your-work",title:"x",text:"y"}]; l.hook="As we discussed in our chat, the bug we fixed was a retry."; console.log(JSON.stringify(l))' "$skill/examples/sample.lesson.json" > "$recap"
 if node "$skill/scripts/validate.mjs" "$recap" 2>"$work/err"; then fail "recap lesson passed"; fi
@@ -141,6 +147,7 @@ if [ -f "$lesson/index.html" ]; then pass "lesson page written"; else fail "less
 grep -q "@@" "$lesson/index.html" && fail "placeholder left in lesson page"
 if [ "$(grep -ci '</script' "$lesson/index.html")" -eq 5 ]; then pass "lesson data cannot close its script tag"; else fail "lesson data cannot close its script tag"; fi
 if grep -q 'src="../library.js"' "$lesson/index.html" && grep -q '"dir":"2026-01-01-sample"' "$(dirname "$lesson")/library.js"; then pass "lessons can list the other lessons"; else fail "lessons can list the other lessons"; fi
+if grep -q '"session"' "$lesson/index.html" && grep -q "sessionSection" "$lesson/index.html"; then pass "session recap shipped with the lesson"; else fail "session recap shipped with the lesson"; fi
 if grep -q "Built using GrowthX" "$lesson/index.html"; then pass "watermark present"; else fail "watermark present"; fi
 if grep -q 'id="sidebar"' "$lesson/index.html" && grep -q "^\.layout" "$lesson/index.html"; then pass "sidebar and layout styles inlined"; else fail "sidebar and layout styles inlined"; fi
 if grep -q "^LESSON_URL=file://.*home%20with%20space/lessons/2026-01-01-sample/index.html$" "$work/build.out" && grep -q "^OPENED=no$" "$work/build.out"; then pass "build prints a clickable link and only opens with --open"; else fail "build prints a clickable link and only opens with --open"; fi

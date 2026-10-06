@@ -15,6 +15,11 @@
   },
   "goal": "By the end you can explain why trying again can charge a customer twice, and the two ideas that stop it.",
   "hook": "Apps resend messages all the time when the internet hiccups. So why don't you get charged twice every time it happens?",
+  "session": {
+    "about": "You were making your shop's payment notifications safe to receive more than once.",
+    "did": "Some customers were charged twice. The payment company had sent the same \"payment done\" message again because your shop answered too slowly the first time. You changed the shop so it remembers every message it has already handled and quietly skips repeats.",
+    "evidence_ids": ["e1", "e2"]
+  },
   "concepts": [
     {
       "id": "retries",

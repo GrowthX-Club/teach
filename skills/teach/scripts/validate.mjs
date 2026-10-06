@@ -114,6 +114,12 @@ export function validateConceptMap(map, cat = loadCatalogue()) {
     if (!EVIDENCE_KINDS.includes(e.kind)) err(`evidence "${e.id}" has unknown kind "${e.kind}"`);
     if (!isText(e.source) || !isText(e.supports)) err(`evidence "${e.id}" needs source and supports`);
   }
+  if (map.session) {
+    const s = map.session;
+    if (!isText(s.about) || !isText(s.did)) err("session needs about and did");
+    if (!isList(s.evidence_ids) || s.evidence_ids.length === 0) err("session needs evidence_ids");
+    for (const id of s.evidence_ids || []) if (!evidence.has(id)) err(`session cites missing evidence "${id}"`);
+  }
   const concepts = isList(map.concepts) ? map.concepts : [];
   if (concepts.length < 2 || concepts.length > MAX_CONCEPTS) err(`needs 2-${MAX_CONCEPTS} concepts`);
   const ids = new Set();
@@ -163,6 +169,20 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
   if (!isText(lesson.goal)) err("goal is required");
   if (!isText(lesson.hook)) err("hook is required");
   if (lesson.connect) err("connect is no longer supported; keep the lesson to its concepts");
+  if (lesson.session) {
+    const s = lesson.session;
+    if (!isText(s.about)) err("session.about is required");
+    else if (words(s.about) > 30) err(`session.about has ${words(s.about)} words; say what the session was about in one sentence of at most 30`);
+    if (!isText(s.did)) err("session.did is required");
+    else if (words(s.did) < 20 || words(s.did) > 80) err(`session.did has ${words(s.did)} words; say what the learner did in 20-80 words`);
+    if (!isList(s.evidence_ids) || s.evidence_ids.length === 0) err("session needs evidence_ids");
+    else if (!map) err("session needs a concept map: only write it when there was a real chat");
+    else {
+      for (const id of s.evidence_ids) if (!evidence.has(id)) err(`session cites evidence "${id}" missing from the concept map`);
+      const kinds = s.evidence_ids.map((id) => (map.evidence || []).find((e) => e.id === id)).filter(Boolean).map((e) => e.kind);
+      if (!kinds.includes("chat")) err(`session must cite at least one "chat" evidence`);
+    }
+  }
 
   const concepts = isList(lesson.concepts) ? lesson.concepts : [];
   if (concepts.length < 2 || concepts.length > MAX_CONCEPTS) err(`needs 2-${MAX_CONCEPTS} concepts`);
@@ -333,7 +353,9 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
   const prose = [];
   JSON.parse(visible, (key, value) => { if (typeof value === "string") prose.push(value); return value; });
   const text = prose.join("\n");
-  const ref = text.match(CHAT_REFERENCE);
+  // The session recap is the one place that may talk about the session itself.
+  const lessonText = JSON.stringify(lesson, (key, value) => (NOT_PROSE.has(key) || key === "session" ? undefined : value));
+  const ref = lessonText.match(CHAT_REFERENCE);
   if (ref) err(`refers back to the chat ("${ref[0]}"); learners may not have read it, so describe the idea on its own`);
   const aiWord = text.match(AI_WORDS);
   if (aiWord) err(`uses the stock AI word "${aiWord[0]}"; say it plainly (see humanizer section 12)`);

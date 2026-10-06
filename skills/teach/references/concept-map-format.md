@@ -5,6 +5,11 @@
   "version": 2,
   "subject": "Making payment webhooks safe to retry",
   "domain": "systems",
+  "session": {
+    "about": "Making a shop's payment notifications safe when they arrive more than once",
+    "did": "Customers were charged twice after a resent notification; the handler now skips repeats",
+    "evidence_ids": ["e1", "e2"]
+  },
   "concepts": [
     {
       "id": "idempotency",
@@ -31,5 +36,6 @@ Rules (checked by `validate.mjs`):
 
 - `domain` is a [catalogue](catalogue.json) area id.
 - 2–4 concepts. Concept and evidence `id`s are lowercase words joined by hyphens, and unique. Use catalogue ids and names wherever they fit.
+- `session` is optional and only for a real chat: `about` (what the session was about), `did` (what the learner did in it) and `evidence_ids` that exist in `evidence`, including at least one `chat` evidence.
 - `in_your_work` is optional and only for what this session shows: leave it out unless the chat shows the learner working on it. When present it has a `summary` and `evidence_ids` that exist in `evidence`, including at least one `chat` evidence.
 - `kind` is one of `chat`, `code`, `docs`, `test`, `runtime`.

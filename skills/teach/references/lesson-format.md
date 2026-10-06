@@ -17,6 +17,11 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
   },
   "goal": "By the end you can explain why trying again can charge a customer twice, and the two ideas that stop it.",
   "hook": "Apps resend messages all the time when the internet hiccups. So why don't you get charged twice every time?",
+  "session": {
+    "about": "You were making your shop's payment notifications safe to receive more than once.",
+    "did": "Some customers were charged twice. The payment company had sent the same message again because your shop answered too slowly...",
+    "evidence_ids": ["e1", "e2"]
+  },
   "concepts": [
     {
       "id": "idempotency",
@@ -57,6 +62,16 @@ The designer writes one UTF-8 JSON object. Text fields are plain text; the page 
   }
 }
 ```
+
+## The session recap
+
+Learners often open a lesson long after the chat and have forgotten what it was about. When the lesson comes from a real chat, `session` opens the lesson, right before the first concept, under "What you were working on":
+
+1. `about`: one sentence on what the session was about.
+2. `did`: what the learner was doing in it, as a short paragraph.
+3. "What you'll learn today": the page lists the lesson's concepts by itself, each linking to its section. Don't write this list.
+
+A lesson for a plain topic (`teach me <topic>`) has no session and no recap.
 
 ## How a concept reads on the page
 
@@ -138,5 +153,6 @@ On the page the actors sit side by side. A message slides from its sender to its
 - Exactly **3 quiz** questions, each with 3–4 options, exactly one `correct: true`, and a `why` on every option.
 - 2–3 `next` items.
 - `share.x` at most 250 characters. `share.linkedin` at most 1300 characters. Leave out links: the page adds the teach link (github.com/GrowthX-Club/teach) to the end of both posts.
-- No references back to the chat ("as we discussed", "in our chat", "you just", "the bug we…"), no evidence IDs, file paths, secrets or personal data in visible text.
+- `session` is optional and only for a lesson made from a real chat: `about` is one sentence of at most 30 words, `did` 20–80 words, and `evidence_ids` come from the concept map's `session` and include at least one `chat` evidence. No concept map, no `session`. It is the one place that talks about the session ("You were…"); write it so it makes sense on its own, with no file names, function names or code.
+- Outside `session`, no references back to the chat ("as we discussed", "in our chat", "you just", "the bug we…"), no evidence IDs, file paths, secrets or personal data in visible text.
 - Reads like a person: no em or en dashes, no stock AI words (delve, crucial, pivotal, seamless, leverage, unlock…), no "not just X but Y", straight double quotes, and at most 2 bold phrases per concept. See [humanizer](humanizer.md).
