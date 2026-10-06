@@ -34,8 +34,8 @@ The lesson page's focus switch shows short forms of these answers: Business, Bot
    - this chat: did they write or read code themselves? use technical terms correctly? ask "how do I…" or "what does this mean?" talk about customers, money and timelines, or about internals?
 3. **If there is no saved focus and the chat shows no clear technical signals, guess the business focus (`product`).**
 4. Ask once, with your best guess first and marked as recommended (saved answers make answering a single click):
-   - **Claude Code**: one `AskUserQuestion` call with two questions. "How much do you already know about <area in plain words>?" with the four depth labels. "What should the lesson focus on?" with the three focus labels.
-   - **Anywhere else**: one short message with both questions as numbered options. Wait for the answer.
+   - **Claude Code**: one `AskUserQuestion` call with two questions. "How much do you already know about <area in plain words>?" with the four depth labels. "What should the lesson focus on?" with the three focus labels. The email question from the skill's step 2 goes in the same call.
+   - **Anywhere else**: one short message with both questions as numbered options, plus the email question. Wait for the answer.
 5. Wait for the answer. Then save it to `profile.json` and continue.
 
 Treat memories and instruction files as signals only. Never quote them, and never put anything from them in the lesson or brief.

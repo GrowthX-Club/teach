@@ -213,6 +213,7 @@ http.createServer((req, res) => {
     fs.appendFileSync(log, `${req.method} ${req.url} auth=${auth}\n`);
     const reply = (code, json) => { res.writeHead(code, { "Content-Type": "application/json" }); res.end(JSON.stringify(json)); };
     if (req.method === "POST" && req.url === "/api/v1/teach/installs") return reply(201, { install_id: "inst-1", install_token: "tok-1" });
+    if (req.method === "POST" && req.url === "/api/v1/teach/notify") { fs.appendFileSync(log, `NOTIFY ${body}\n`); return reply(202, { success: true }); }
     if (!auth) return reply(401, { msg: "Unknown teach install" });
     if (req.method === "POST" && req.url === "/api/v1/teach/lessons") { lessons.add(JSON.parse(body).lesson_dir); return reply(200, { success: true }); }
     const m = req.url.match(/^\/api\/v1\/teach\/lessons\/([^/]+)\/feedback\/([^/]+)$/);
@@ -240,6 +241,22 @@ if [ "$f_sent" = 200 ] && grep -q "POST /api/v1/teach/installs" "$work/api.log" 
 if [ "$mode" = "-rw-------" ] && grep -q '"token": "tok-1"' "$ls_home/sharing.json" && ! grep -q "tok-1" "$ls_home/profile.json" 2>/dev/null; then pass "install token is kept in sharing.json, readable only by you"; else fail "install token is kept in sharing.json, readable only by you ($mode)"; fi
 h_share=$(curl -s -o /dev/null -w "%{http_code}" "$b/sharing.json")
 if [ "$h_share" = 404 ]; then pass "sharing.json is never served"; else fail "sharing.json is never served ($h_share)"; fi
+
+echo "lesson-ready email"
+notify() { TEACH_HOME="$ls_home" TEACH_API_URL="http://127.0.0.1:$MOCKPORT/api/v1" node "$skill/scripts/notify.mjs" "$@"; }
+demo="$ls_home/lessons/2026-01-01-demo"
+n_none=$(notify send "$demo" "$b/lessons/2026-01-01-demo/index.html")
+if [ "$(notify email)" = "" ] && echo "$n_none" | grep -q "EMAILED=no" && ! grep -q NOTIFY "$work/api.log"; then pass "no email is sent without an address"; else fail "no email is sent without an address ($n_none)"; fi
+if notify email "not an email" 2>/dev/null; then fail "a bad address is refused"; else pass "a bad address is refused"; fi
+notify email " Learner@Example.com "
+n_mode=$(ls -l "$ls_home/contact.json" | cut -c1-10)
+if [ "$(notify email)" = "learner@example.com" ] && [ "$n_mode" = "-rw-------" ]; then pass "the address is saved, readable only by you"; else fail "the address is saved, readable only by you ($n_mode)"; fi
+n_sent=$(notify send "$demo" "$b/lessons/2026-01-01-demo/index.html")
+if echo "$n_sent" | grep -q "EMAILED=yes" && grep -q '"email":"learner@example.com"' "$work/api.log" && grep -q "\"library_url\":\"$b/index.html\"" "$work/api.log" && grep NOTIFY "$work/api.log" | grep -q '"lesson_title":"[^"<>]' && ! grep NOTIFY "$work/api.log" | grep -q '"concepts"'; then pass "the email carries the title and links, never the lesson"; else fail "the email carries the title and links, never the lesson ($n_sent)"; cat "$work/api.log"; fi
+h_contact=$(curl -s -o /dev/null -w "%{http_code}" "$b/contact.json")
+if [ "$h_contact" = 404 ]; then pass "contact.json is never served"; else fail "contact.json is never served ($h_contact)"; fi
+notify email --forget
+if [ ! -e "$ls_home/contact.json" ]; then pass "the address can be forgotten"; else fail "the address can be forgotten"; fi
 kill $mock_pid 2>/dev/null || true
 f_queued=$(post /api/feedback '{"lesson":"2026-01-01-demo","section":"idempotency","vote":"up"}')
 if [ "$f_queued" = 202 ] && grep -q '"section": "idempotency"' "$ls_home/feedback-queue.json"; then pass "feedback waits in a queue while the API is down"; else fail "feedback waits in a queue while the API is down ($f_queued)"; fi

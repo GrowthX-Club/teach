@@ -27,8 +27,8 @@ Before anything else, run `sh <skill>/scripts/setup.sh` (it creates `<home>` on 
 
 What the user sees:
 
-1. "Looking at what we worked on…" while you do steps 1–3, then the two level questions.
-2. In background mode, once the brief is written: "Writing your lesson in the background. Keep working; I'll drop the link here when it's ready." In foreground mode: "Writing your lesson…"
+1. "Looking at what we worked on…" while you do steps 1–3, then the two level questions and the email question.
+2. In background mode, once the brief is written: "Writing your lesson in the background. Keep working; I'll drop the link here when it's ready." In foreground mode: "Writing your lesson…" Then add the email line from step 2: "I'll also email it to <email> once it's ready." or, without an email, "You'll get the link here in the chat. No email will go out."
 3. Nothing between the background steps. When an agent finishes, start the next one without a message; if the user is in the middle of something, keep helping them.
 4. The hand-off in step 6.
 
@@ -48,6 +48,13 @@ What the user sees:
 ## 2. Set the learner's level
 
 Follow [level-check](references/level-check.md). It sets **depth** (how much they know) and **focus** (business, both, or technical). **Always ask both questions, in one prompt, every time**, with saved or guessed answers pre-selected as recommended. Wait for the answer; never assume it.
+
+In the same prompt, ask whether to email the lesson when it's ready. Run `node <skill>/scripts/notify.mjs email` first; it prints the saved address, or nothing.
+
+- **Claude Code**: a third `AskUserQuestion` question, "Want this lesson emailed to you when it's ready?". With a saved address: "Email me at <email>" (recommended) and "No email, just show me here". Without one: "Yes, I'll type my email" and "No email, just show me here", and say in the descriptions that they can pick Other and type their email straight away.
+- **Anywhere else**: a third numbered question in the same message.
+
+If they type a new address (in Other, or in a follow-up when they picked "I'll type my email"), save it with `node <skill>/scripts/notify.mjs email <address>`. If the script says it isn't an email address, ask once more; if they still don't give one, go on without email. Remember for this lesson whether to email. Never write the address into the brief or any lesson file. "Forget my email" at any time: `node <skill>/scripts/notify.mjs email --forget`.
 
 ## 3. Write the brief
 
@@ -106,6 +113,8 @@ This step is required, also in background mode, where it arrives as its own mess
 - If the lesson did not open by itself (`OPENED=no` in a terminal), add: "If the link doesn't open, copy this into your browser's address bar:" followed by `LESSON_URL` in a code block.
 - Then one short line: "Want it simpler, deeper, more about the business, or more technical? Just say so."
 
+**Email.** If the learner asked for the email in step 2, run `node <skill>/scripts/notify.mjs send <lesson-dir> <URL>` before replying (it needs Node.js; without it, treat it as failed). It prints `EMAILED=yes` or `EMAILED=no`. On yes, add: "I've also emailed it to <email>." On no, add: "I couldn't send the email, but your lesson is ready right here." Don't mention the reason unless they ask. Without an email, say nothing about it. Send it once per lesson: a rebuild after "simpler", "deeper" and the like doesn't send it again.
+
 ## Follow-ups
 
 - **"open my lesson"**, **"the link doesn't work"**, or any request to reopen a lesson: run `sh <skill>/scripts/serve.sh <lesson-dir>` (it restarts the lesson server if it stopped; it stops by itself after 12 hours unused) and open the URL it prints the same way as in step 5.
@@ -121,5 +130,5 @@ This step is required, also in background mode, where it arrives as its own mess
 - Connect every concept to the user's own work where there is one: the story is built on their situation and `in_your_work` says where it shows up. Both must make sense to someone who never read the chat; never retell the chat step by step.
 - Each concept stays under 450 words; 2–4 concepts per lesson. No code anywhere, and the title is an analogy with no jargon.
 - Every claim about the user's own work needs evidence in `concept-map.json`. General knowledge needs none, but must be correct.
-- The finished page never calls a model, a server on the internet, or analytics. It is a local file. Only the local lesson server talks to GrowthX, and only after the learner agrees to share (see the README).
+- The finished page never calls a model, a server on the internet, or analytics. It is a local file. Only the local lesson server talks to GrowthX, and only after the learner agrees to share (see the README). The one exception is the lesson-ready email: `notify.mjs` sends the address, the title, the hook and the links, and only when the learner asked for the email.
 - Never read, quote or copy `<home>/sharing.json` or `<home>/feedback-queue.json`: they hold the learner's install credentials and notes.
