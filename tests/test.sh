@@ -198,6 +198,52 @@ h_list=$(curl -s -H "X-Teach: 1" "$b/api/questions?lesson=2026-01-01-demo")
 h_bad=$(curl -s -o /dev/null -w "%{http_code}" -H "X-Teach: 1" "$b/api/questions?lesson=../../etc")
 if [ "$h_page" = 200 ] && [ "$h_brief" = 404 ] && [ "$h_q" = 404 ] && [ "$h_noheader" = 403 ] && [ "$h_origin" = 403 ] && [ "$h_list" = '{"questions":[]}' ] && [ "$h_bad" = 404 ]; then pass "lesson server serves lessons, hides private files, and only answers its own pages"; else fail "lesson server serves lessons, hides private files, and only answers its own pages ($h_page $h_brief $h_q $h_noheader $h_origin $h_list $h_bad)"; fi
 kill $ls_pid 2>/dev/null || true
+
+echo "data sharing"
+# A stand-in for the GrowthX API that logs every call it gets.
+cat > "$work/mock-api.mjs" <<'MOCK'
+import http from "node:http";
+import fs from "node:fs";
+const [port, log] = process.argv.slice(2);
+const lessons = new Set();
+http.createServer((req, res) => {
+  let body = "";
+  req.on("data", (c) => (body += c)).on("end", () => {
+    const auth = req.headers["x-teach-token"] === "tok-1";
+    fs.appendFileSync(log, `${req.method} ${req.url} auth=${auth}\n`);
+    const reply = (code, json) => { res.writeHead(code, { "Content-Type": "application/json" }); res.end(JSON.stringify(json)); };
+    if (req.method === "POST" && req.url === "/api/v1/teach/installs") return reply(201, { install_id: "inst-1", install_token: "tok-1" });
+    if (!auth) return reply(401, { msg: "Unknown teach install" });
+    if (req.method === "POST" && req.url === "/api/v1/teach/lessons") { lessons.add(JSON.parse(body).lesson_dir); return reply(200, { success: true }); }
+    const m = req.url.match(/^\/api\/v1\/teach\/lessons\/([^/]+)\/feedback\/([^/]+)$/);
+    if (req.method === "PUT" && m) return lessons.has(m[1]) ? reply(200, { success: true }) : reply(404, { msg: "Lesson not found" });
+    reply(404, { msg: "Not found" });
+  });
+}).listen(Number(port), "127.0.0.1", () => console.log("MOCK_UP"));
+MOCK
+MOCKPORT=8759
+node "$work/mock-api.mjs" $MOCKPORT "$work/api.log" > "$work/mock.out" 2>&1 &
+mock_pid=$!
+TEACH_API_URL="http://127.0.0.1:$MOCKPORT/api/v1" node "$skill/scripts/lesson-server.mjs" --port $LSPORT --home "$ls_home" > "$work/ls2.log" 2>&1 &
+ls_pid=$!
+i=0; while [ $i -lt 30 ] && ! { grep -q LESSON_SERVER "$work/ls2.log" && grep -q MOCK_UP "$work/mock.out"; }; do sleep 0.2; i=$((i+1)); done
+post() { curl -s -o /dev/null -w "%{http_code}" -X POST -H "X-Teach: 1" -H "Content-Type: application/json" -d "$2" "$b$1"; }
+s_before=$(curl -s -H "X-Teach: 1" "$b/api/sharing")
+f_noconsent=$(post /api/feedback '{"lesson":"2026-01-01-demo","section":"retries","vote":"up"}')
+s_yes=$(post /api/sharing '{"share":true}')
+sleep 0.5
+f_sent=$(post /api/feedback '{"lesson":"2026-01-01-demo","section":"retries","vote":"down","note":"too fast"}')
+f_bad=$(post /api/feedback '{"lesson":"../etc","section":"retries","vote":"up"}')
+mode=$(ls -l "$ls_home/sharing.json" | cut -c1-10)
+if [ "$s_before" = '{"share":null}' ] && [ "$f_noconsent" = 403 ] && [ "$s_yes" = 200 ] && [ "$f_bad" = 404 ]; then pass "feedback is refused until the learner agrees"; else fail "feedback is refused until the learner agrees ($s_before $f_noconsent $s_yes $f_bad)"; fi
+if [ "$f_sent" = 200 ] && grep -q "POST /api/v1/teach/installs" "$work/api.log" && grep -q "POST /api/v1/teach/lessons auth=true" "$work/api.log" && grep -q "PUT /api/v1/teach/lessons/2026-01-01-demo/feedback/retries auth=true" "$work/api.log"; then pass "after a yes, the server registers, uploads the lesson and sends feedback"; else fail "after a yes, the server registers, uploads the lesson and sends feedback ($f_sent)"; cat "$work/api.log"; fi
+if [ "$mode" = "-rw-------" ] && grep -q '"token": "tok-1"' "$ls_home/sharing.json" && ! grep -q "tok-1" "$ls_home/profile.json" 2>/dev/null; then pass "install token is kept in sharing.json, readable only by you"; else fail "install token is kept in sharing.json, readable only by you ($mode)"; fi
+h_share=$(curl -s -o /dev/null -w "%{http_code}" "$b/sharing.json")
+if [ "$h_share" = 404 ]; then pass "sharing.json is never served"; else fail "sharing.json is never served ($h_share)"; fi
+kill $mock_pid 2>/dev/null || true
+f_queued=$(post /api/feedback '{"lesson":"2026-01-01-demo","section":"idempotency","vote":"up"}')
+if [ "$f_queued" = 202 ] && grep -q '"section": "idempotency"' "$ls_home/feedback-queue.json"; then pass "feedback waits in a queue while the API is down"; else fail "feedback waits in a queue while the API is down ($f_queued)"; fi
+kill $ls_pid 2>/dev/null || true
 first=$(TEACH_HOME="$ls_home" sh "$skill/scripts/serve.sh" "$ls_home/lessons/2026-01-01-demo")
 again=$(TEACH_HOME="$ls_home" sh "$skill/scripts/serve.sh" "$ls_home/lessons/2026-01-01-demo")
 if [ -n "$first" ] && [ "$first" = "$again" ] && curl -s "$first" | grep -q "Built using GrowthX"; then pass "serve.sh starts the lesson server once and reuses it"; else fail "serve.sh starts the lesson server once and reuses it ($first / $again)"; fi

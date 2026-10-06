@@ -2,6 +2,9 @@
 // GrowthX teach lesson server: serves the teach folder on localhost and powers
 // the in-lesson chat. Questions are answered by headless Claude Code with no
 // tools, using the learner's own login; nothing else on the machine is exposed.
+// When the learner agrees to share, it is also the only part of teach that
+// talks to the GrowthX API: it registers the install, uploads a lesson the
+// first time it gets feedback, and sends the feedback.
 // Usage: node lesson-server.mjs --port 8731 [--home ~/growthx-teach]
 import http from "node:http";
 import { spawn, execFileSync } from "node:child_process";
@@ -19,6 +22,95 @@ const MAX_BODY = 64 * 1024;
 const MAX_RUNNING = 2;
 const DEPTHS = { 1: "new to this", 2: "knows the basics", 3: "uses it at work", 4: "knows it well" };
 const LENSES = { product: "what it means for the business", balanced: "a bit of both", tech: "how it works under the hood" };
+
+// ---------- data sharing ----------
+// sharing.json holds the learner's answer and this install's credentials. It is
+// separate from profile.json (which the agent reads) and only this user can read it.
+const API = (process.env.TEACH_API_URL || "https://backend.growthx.club/api/v1").replace(/\/+$/, "");
+const CONSENT_VERSION = "2026-10-06";
+const sharingPath = path.join(home, "sharing.json");
+const queuePath = path.join(home, "feedback-queue.json");
+const SECTION = /^[a-z0-9-]{1,120}$/;
+
+function readJsonFile(p, fallback) {
+  try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return fallback; }
+}
+function writePrivate(p, value) {
+  fs.writeFileSync(p, JSON.stringify(value, null, 2) + "\n", { mode: 0o600 });
+  fs.chmodSync(p, 0o600);
+}
+const sharing = () => readJsonFile(sharingPath, {});
+const updateSharing = (patch) => writePrivate(sharingPath, { ...sharing(), ...patch });
+
+async function teachApi(method, route, body) {
+  const { install } = sharing();
+  const res = await fetch(API + route, {
+    method,
+    headers: { "Content-Type": "application/json", ...(install && { "X-Teach-Install": install.id, "X-Teach-Token": install.token }) },
+    body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(15000),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(json.msg || json.message || `HTTP ${res.status}`), { status: res.status });
+  return json;
+}
+
+// One registration at a time: the yes and the first feedback can both ask for it.
+let registering = null;
+function ensureInstall() {
+  if (sharing().install) return Promise.resolve();
+  registering ||= teachApi("POST", "/teach/installs", { consent_version: CONSENT_VERSION })
+    .then((r) => updateSharing({ install: { id: r.install_id, token: r.install_token } }))
+    .finally(() => { registering = null; });
+  return registering;
+}
+
+// Uploads lesson.json when the server hasn't seen this version of it yet.
+async function syncLesson(name, force = false) {
+  const file = path.join(lessonPath(name), "lesson.json");
+  const mtime = fs.statSync(file).mtimeMs;
+  const uploaded = sharing().uploaded || {};
+  if (!force && uploaded[name] === mtime) return;
+  await teachApi("POST", "/teach/lessons", { lesson_dir: name, lesson: JSON.parse(fs.readFileSync(file, "utf8")) });
+  updateSharing({ uploaded: { ...(sharing().uploaded || {}), [name]: mtime } });
+}
+
+async function sendFeedback(item) {
+  await ensureInstall();
+  await syncLesson(item.lesson);
+  const route = `/teach/lessons/${item.lesson}/feedback/${item.section}`;
+  const body = { vote: item.vote, note: item.note || null };
+  try {
+    await teachApi("PUT", route, body);
+  } catch (e) {
+    if (e.status === 401) { updateSharing({ install: null, uploaded: {} }); await ensureInstall(); await syncLesson(item.lesson, true); }
+    else if (e.status === 404) await syncLesson(item.lesson, true);
+    else throw e;
+    await teachApi("PUT", route, body);
+  }
+}
+
+// Feedback that couldn't be sent (offline, API down) waits here; the newest
+// answer per section wins, and the queue is retried before every send.
+const queueKey = (i) => `${i.lesson}/${i.section}`;
+function enqueue(item) {
+  const q = readJsonFile(queuePath, []).filter((i) => queueKey(i) !== queueKey(item));
+  writePrivate(queuePath, [...q, item]);
+}
+let flushing = false;
+async function flushQueue() {
+  if (flushing || sharing().share !== true) return;
+  flushing = true;
+  try {
+    for (const item of readJsonFile(queuePath, [])) {
+      if (!lessonPath(item.lesson)) { writePrivate(queuePath, readJsonFile(queuePath, []).filter((i) => queueKey(i) !== queueKey(item))); continue; }
+      try { await sendFeedback(item); } catch { break; }
+      writePrivate(queuePath, readJsonFile(queuePath, []).filter((i) => queueKey(i) !== queueKey(item) || i.at !== item.at));
+    }
+  } finally {
+    flushing = false;
+  }
+}
 
 let lastActivity = Date.now();
 let running = 0;
@@ -149,6 +241,38 @@ const server = http.createServer(async (req, res) => {
       return send(res, 200, { questions: readQuestions(dir) });
     }
 
+    if (url.pathname === "/api/sharing" && req.method === "GET") {
+      const s = sharing();
+      return send(res, 200, { share: typeof s.share === "boolean" ? s.share : null });
+    }
+
+    if (url.pathname === "/api/sharing" && req.method === "POST") {
+      let body;
+      try { body = JSON.parse(await readBody(req)); } catch { return send(res, 400, { error: "That answer couldn't be read." }); }
+      if (typeof body.share !== "boolean") return send(res, 400, { error: "Answer yes or no." });
+      updateSharing({ share: body.share, at: new Date().toISOString(), consent_version: CONSENT_VERSION });
+      // Registering can wait if the API is unreachable; it happens with the first feedback sent.
+      if (body.share) ensureInstall().then(flushQueue).catch(() => {});
+      return send(res, 200, { share: body.share });
+    }
+
+    if (url.pathname === "/api/feedback" && req.method === "POST") {
+      if (sharing().share !== true) return send(res, 403, { error: "Feedback is only sent after you agree to share." });
+      let f;
+      try { f = JSON.parse(await readBody(req)); } catch { return send(res, 400, { error: "That feedback couldn't be read." }); }
+      if (!lessonPath(f.lesson) || !SECTION.test(String(f.section || ""))) return send(res, 404, { error: "Unknown lesson." });
+      if (f.vote !== null && f.vote !== "up" && f.vote !== "down") return send(res, 400, { error: "Pick thumbs up or down." });
+      const item = { lesson: f.lesson, section: f.section, vote: f.vote, note: clip(f.note, 1000), at: new Date().toISOString() };
+      await flushQueue();
+      try {
+        await sendFeedback(item);
+        return send(res, 200, { sent: true });
+      } catch {
+        enqueue(item);
+        return send(res, 202, { sent: false, queued: true });
+      }
+    }
+
     if (url.pathname === "/api/ask" && req.method === "POST") {
       if (!CHAT) return send(res, 503, { error: "The lesson chat needs the Claude Code command line (claude), installed and logged in." });
       if (running >= MAX_RUNNING) return send(res, 429, { error: "Still answering your last question. Give it a moment." });
@@ -197,5 +321,8 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(port, "127.0.0.1", () => console.log(`LESSON_SERVER=http://localhost:${port}`));
+server.listen(port, "127.0.0.1", () => {
+  console.log(`LESSON_SERVER=http://localhost:${port}`);
+  flushQueue().catch(() => {});
+});
 setInterval(() => { if (!running && Date.now() - lastActivity > IDLE_LIMIT_MS) process.exit(0); }, 60 * 1000).unref();
