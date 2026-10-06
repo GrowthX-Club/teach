@@ -109,6 +109,12 @@ teach doesn't block your chat. It asks its level question and writes a short bri
 
 Each lesson is one self-contained HTML file. It never calls a model, a server on the internet or analytics.
 
+## Feedback and data sharing
+
+Each concept, and the lesson as a whole, has a thumbs up or down with an optional note. The first time you give feedback, teach asks whether you agree to share your lessons and feedback with GrowthX to improve teach. Nothing is shared unless you agree, and teach never uploads your chat, your code or your files.
+
+If you agree, the local lesson server (not the lesson page) sends the lesson and your feedback to the GrowthX API, using an anonymous install ID. Feedback waits in a local queue while you're offline. Your answer and the install credentials live in `~/growthx-teach/sharing.json`, readable only by you. Delete that file to be asked again. Set `TEACH_API_URL` to point the lesson server at a different API, for example a dev server.
+
 ## Your teach folder
 
 ```
@@ -116,6 +122,8 @@ Each lesson is one self-contained HTML file. It never calls a model, a server on
 ├── index.html          # library of every lesson
 ├── theme.css           # colours and fonts of every lesson; edit it to restyle
 ├── profile.json        # your levels and focus per area
+├── sharing.json        # your data sharing answer and install ID (only if you answered)
+├── feedback-queue.json # feedback waiting to be sent while offline
 └── lessons/
     └── 2026-10-05-safe-retries/
         ├── index.html          # the lesson

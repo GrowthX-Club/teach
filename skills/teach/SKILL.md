@@ -121,4 +121,5 @@ This step is required, also in background mode, where it arrives as its own mess
 - Connect every concept to the user's own work where there is one: the story is built on their situation and `in_your_work` says where it shows up. Both must make sense to someone who never read the chat; never retell the chat step by step.
 - Each concept stays under 450 words; 2–4 concepts per lesson. No code anywhere, and the title is an analogy with no jargon.
 - Every claim about the user's own work needs evidence in `concept-map.json`. General knowledge needs none, but must be correct.
-- The finished page never calls a model, a server on the internet, or analytics. It is a local file.
+- The finished page never calls a model, a server on the internet, or analytics. It is a local file. Only the local lesson server talks to GrowthX, and only after the learner agrees to share (see the README).
+- Never read, quote or copy `<home>/sharing.json` or `<home>/feedback-queue.json`: they hold the learner's install credentials and notes.

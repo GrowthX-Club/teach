@@ -694,6 +694,12 @@
       try {
         document.dispatchEvent(new CustomEvent("teach:feedback", { detail: { lesson: meta.slug, section: id, vote: entry ? entry.vote : null, note: entry ? entry.note : "" } }));
       } catch (e) {}
+      // The lesson server sends it on (or queues it while offline). Opened as a file, it stays in this browser.
+      if (onServer && consent === true) {
+        sharingSaved.then(function () {
+          return api("POST", "/api/feedback", { lesson: thisDir, section: id, vote: entry ? entry.vote : null, note: entry ? entry.note : "" });
+        }).catch(function () {});
+      }
     }
     function show(state) {
       var entry = feedback[id];
@@ -757,8 +763,8 @@
   // Asked the first time the learner gives feedback, in a card pinned to the bottom: may teach send lessons and feedback to
   // GrowthX? Feedback needs a yes. Every answer fires "teach:consent" for the
   // backend to pick up later.
-  // Off while the prompt is being tested: with it on, the answer is remembered
-  // in this browser and the prompt isn't shown again.
+  // For lessons opened as a file (no lesson server): with it on, the answer is
+  // remembered in this browser. Off for now, so a file-opened lesson asks each time.
   var PERSIST_CONSENT = false;
   var CONSENT_KEY = "teach:consent";
   var consent = null;
@@ -766,6 +772,12 @@
     try { var savedConsent = localStorage.getItem(CONSENT_KEY); if (savedConsent) consent = savedConsent === "yes"; } catch (e) {}
   }
   var afterConsent = null;
+  // Served by the lesson server, the answer lives in <home>/sharing.json, so it's asked once for every lesson.
+  var onServer = /^https?:$/.test(location.protocol) && !!thisDir;
+  var sharingSaved = Promise.resolve();
+  if (onServer) {
+    sharingSaved = api("GET", "/api/sharing").then(function (r) { if (consent === null) consent = r.share; }).catch(function () {});
+  }
 
   var consentDlg = document.createElement("dialog");
   consentDlg.className = "consent";
@@ -826,6 +838,8 @@
   function setConsent(value) {
     consent = value;
     if (PERSIST_CONSENT) { try { localStorage.setItem(CONSENT_KEY, value ? "yes" : "no"); } catch (e) {} }
+    // Feedback waits for this, so the server never sees a vote before the yes.
+    if (onServer) sharingSaved = api("POST", "/api/sharing", { share: value }).catch(function () {});
     closeConsent();
     try { document.dispatchEvent(new CustomEvent("teach:consent", { detail: { share: value } })); } catch (e) {}
     var next = afterConsent;
