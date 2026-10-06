@@ -361,6 +361,16 @@
     );
   }
 
+  // Overall feedback, right after the quiz. Per-section boxes are added after render (see feedback below).
+  function feedbackSection() {
+    return (
+      '<section class="block" id="feedback" data-nav="Feedback">' +
+      '<div class="sec-head"><span class="sec-num">Feedback</span><h2>How was this lesson?</h2></div>' +
+      '<div class="feedback overall" data-feedback="lesson"></div>' +
+      "</section>"
+    );
+  }
+
   function footer() {
     var created = meta.created ? "Made " + esc(meta.created) + " · " : "";
     return (
@@ -387,7 +397,7 @@
 
   // ---------- render ----------
   document.title = plain(meta.title || "Lesson") + " · GrowthX teach";
-  var body = hero() + sessionSection() + concepts.map(concept).join("") + quizSection() + nextSection() + videosSection() + shareSection() + moreSection();
+  var body = hero() + sessionSection() + concepts.map(concept).join("") + quizSection() + feedbackSection() + nextSection() + videosSection() + shareSection() + moreSection();
   document.getElementById("app").innerHTML =
     topbar() +
     '<div class="layout wrap"><nav class="sidebar" id="sidebar" aria-label="Lesson sections"></nav><main class="content">' + body + "</main></div>" +
@@ -635,6 +645,228 @@
   }
   Array.prototype.forEach.call(document.querySelectorAll("figure.anim"), startFigure);
 
+  // ---------- feedback ----------
+  // A thumbs up or down on each section, then an optional note. Kept in this
+  // browser only for now; every change also fires a "teach:feedback" event so
+  // sending it somewhere later is one listener.
+  var FEEDBACK_ASK = { section: "What did you think about this section?", lesson: "Help us improve your experience. Did this lesson help you?" };
+  var feedback = {};
+  try { feedback = JSON.parse(load("feedback", "{}")) || {}; } catch (e) {}
+
+  function feedbackBox(box) {
+    var id = box.getAttribute("data-feedback");
+    var kind = id === "lesson" ? "lesson" : "section";
+    box.setAttribute("role", "group");
+    box.setAttribute("aria-label", "Feedback");
+    box.innerHTML =
+      '<div class="fb-row"><span class="fb-ask">' + esc(FEEDBACK_ASK[kind]) + "</span>" +
+      '<span class="fb-votes">' +
+      '<button type="button" class="fb-vote" data-vote="up" aria-pressed="false" aria-label="Yes, helpful"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10v11M15 5.9 14 10h5.8a2 2 0 0 1 1.9 2.6l-2.3 7A2 2 0 0 1 17.5 21H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h2.8a2 2 0 0 0 1.8-1.1L12 2a3.1 3.1 0 0 1 3 3.9z"/></svg></button>' +
+      '<button type="button" class="fb-vote" data-vote="down" aria-pressed="false" aria-label="No, not helpful"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 14V3M9 18.1 10 14H4.2a2 2 0 0 1-1.9-2.6l2.3-7A2 2 0 0 1 6.5 3H20a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-2.8a2 2 0 0 0-1.8 1.1L12 22a3.1 3.1 0 0 1-3-3.9z"/></svg></button>' +
+      "</span></div>" +
+      '<form class="fb-form" inert><div class="fb-inner"><div class="fb-field"><textarea rows="3" maxlength="1000" placeholder="Tell us more (optional)" aria-label="Tell us more (optional)"></textarea>' +
+      '<div class="fb-bar"><span class="fb-count" hidden></span>' +
+      '<button type="submit" class="btn primary fb-send" tabindex="-1">Send</button></div></div></div></form>' +
+      '<p class="fb-thanks" hidden aria-live="polite"><span>Thanks, that helps.</span> <button type="button" class="fb-edit">Add a note</button></p>';
+    var form = box.querySelector(".fb-form");
+    var area = form.querySelector("textarea");
+    var thanks = box.querySelector(".fb-thanks");
+    var votes = box.querySelectorAll(".fb-vote");
+    var sendBtn = form.querySelector(".fb-send");
+    var count = form.querySelector(".fb-count");
+    var NOTE_MAX = area.maxLength;
+    // Send only appears once there is something to send; the countdown only
+    // in the last 100 characters.
+    function syncSend() {
+      var has = !!area.value.trim();
+      form.classList.toggle("has-text", has);
+      sendBtn.tabIndex = has ? 0 : -1;
+      var left = NOTE_MAX - area.value.length;
+      count.hidden = left > 100;
+      count.textContent = left === 1 ? "1 character left" : left + " characters left";
+      count.classList.toggle("low", left <= 20);
+    }
+    area.addEventListener("input", syncSend);
+
+    function store(entry) {
+      if (entry) feedback[id] = entry; else delete feedback[id];
+      save("feedback", JSON.stringify(feedback));
+      try {
+        document.dispatchEvent(new CustomEvent("teach:feedback", { detail: { lesson: meta.slug, section: id, vote: entry ? entry.vote : null, note: entry ? entry.note : "" } }));
+      } catch (e) {}
+    }
+    function show(state) {
+      var entry = feedback[id];
+      votes.forEach(function (b) { b.setAttribute("aria-pressed", String(!!entry && entry.vote === b.getAttribute("data-vote"))); });
+      box.classList.toggle("voted", !!entry);
+      // Closed, the form is inert so its fields can't be tabbed into while it's collapsed.
+      form.classList.toggle("open", state === "note");
+      form.inert = state !== "note";
+      thanks.hidden = state !== "thanks";
+      if (entry) thanks.querySelector(".fb-edit").textContent = entry.note ? "Edit your note" : "Add a note";
+    }
+    votes.forEach(function (b) {
+      // Feedback needs a yes to sharing first.
+      b.addEventListener("click", function () { withConsent(function () { choose(b.getAttribute("data-vote")); }); });
+    });
+    function choose(vote) {
+      var entry = feedback[id];
+      if (entry && entry.vote === vote) { store(null); show(""); return; }
+      store({ vote: vote, note: entry ? entry.note : "", at: new Date().toISOString() });
+      // A small pop and ring on the chosen thumb says the vote landed.
+      var picked = box.querySelector('.fb-vote[data-vote="' + vote + '"]');
+      picked.classList.remove("got");
+      void picked.offsetWidth;
+      picked.classList.add("got");
+      area.value = feedback[id].note;
+      syncSend();
+      show("note");
+      area.focus({ preventScroll: true });
+    }
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var entry = feedback[id];
+      if (!entry || !area.value.trim()) return;
+      entry.note = area.value.trim();
+      entry.at = new Date().toISOString();
+      store(entry);
+      show("thanks");
+    });
+    thanks.querySelector(".fb-edit").addEventListener("click", function () {
+      area.value = (feedback[id] && feedback[id].note) || "";
+      syncSend();
+      show("note");
+      area.focus({ preventScroll: true });
+    });
+    area.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { show("thanks"); }
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event("submit")); }
+    });
+    show(feedback[id] ? "thanks" : "");
+  }
+
+  document.querySelectorAll("section.block[id^='c-']").forEach(function (sec) {
+    var box = document.createElement("div");
+    box.className = "feedback";
+    box.setAttribute("data-feedback", sec.id.slice(2));
+    sec.appendChild(box);
+  });
+  document.querySelectorAll("[data-feedback]").forEach(feedbackBox);
+
+  // ---------- data sharing consent ----------
+  // Asked the first time the learner gives feedback, in a card pinned to the bottom: may teach send lessons and feedback to
+  // GrowthX? Feedback needs a yes. Every answer fires "teach:consent" for the
+  // backend to pick up later.
+  // Off while the prompt is being tested: with it on, the answer is remembered
+  // in this browser and the prompt isn't shown again.
+  var PERSIST_CONSENT = false;
+  var CONSENT_KEY = "teach:consent";
+  var consent = null;
+  if (PERSIST_CONSENT) {
+    try { var savedConsent = localStorage.getItem(CONSENT_KEY); if (savedConsent) consent = savedConsent === "yes"; } catch (e) {}
+  }
+  var afterConsent = null;
+
+  var consentDlg = document.createElement("dialog");
+  consentDlg.className = "consent";
+  consentDlg.setAttribute("aria-labelledby", "consent-title");
+  consentDlg.innerHTML =
+    '<button type="button" class="consent-x" aria-label="Close">' +
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>' +
+    '<div class="consent-body">' +
+    '<p class="consent-need" hidden>You need to accept this to share feedback.</p>' +
+    '<h3 id="consent-title">Help make teach better</h3>' +
+    "<p>Share your lessons and feedback with GrowthX so we can improve the teach experience. We never upload your chat, your code or your files.</p>" +
+    '<button type="button" class="consent-more" aria-expanded="false" aria-controls="consent-details">' +
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>What we collect</button>' +
+    '<div class="consent-details" id="consent-details" inert><div><ul>' +
+    "<li>The lessons teach makes for you</li>" +
+    "<li>Your thumbs up, thumbs down and notes</li>" +
+    "<li>An anonymous ID. No name or email.</li>" +
+    "</ul></div></div>" +
+    '<p class="consent-fine">By choosing Agree, you agree to share this data to improve GrowthX teach.</p></div>' +
+    '<div class="consent-actions"><button type="button" class="btn primary" data-consent="yes">Agree</button><button type="button" class="btn" data-consent="no">No thanks</button></div>';
+  document.body.appendChild(consentDlg);
+  // Dims the page behind the card. Clicking it closes the card, like the × does.
+  var consentShade = document.createElement("div");
+  consentShade.className = "consent-shade";
+  consentShade.hidden = true;
+  document.body.insertBefore(consentShade, consentDlg);
+
+  var moreBtn = consentDlg.querySelector(".consent-more");
+  var details = consentDlg.querySelector(".consent-details");
+  moreBtn.addEventListener("click", function () {
+    var open = moreBtn.getAttribute("aria-expanded") !== "true";
+    moreBtn.setAttribute("aria-expanded", String(open));
+    details.classList.toggle("open", open);
+    details.inert = !open;
+  });
+
+  // Line the card up with the lesson's content column.
+  function placeConsent() {
+    var col = document.querySelector(".content");
+    if (!col) return;
+    var r = col.getBoundingClientRect();
+    consentDlg.style.left = r.left + "px";
+    consentDlg.style.width = r.width + "px";
+  }
+  addEventListener("resize", placeConsent);
+
+  var consentShown = false;
+  function closeConsent() {
+    consentShown = false;
+    consentDlg.classList.remove("open");
+    consentShade.classList.remove("open");
+    setTimeout(function () {
+      if (consentDlg.classList.contains("open")) return;
+      if (consentDlg.open) consentDlg.close();
+      consentShade.hidden = true;
+    }, 200);
+  }
+  function setConsent(value) {
+    consent = value;
+    if (PERSIST_CONSENT) { try { localStorage.setItem(CONSENT_KEY, value ? "yes" : "no"); } catch (e) {} }
+    closeConsent();
+    try { document.dispatchEvent(new CustomEvent("teach:consent", { detail: { share: value } })); } catch (e) {}
+    var next = afterConsent;
+    afterConsent = null;
+    if (value && next) next();
+    else toast(value ? "Thanks for sharing." : "Nothing will be shared.");
+  }
+  // needed: opened because the learner tried to give feedback without a yes.
+  function openConsent(needed, then) {
+    afterConsent = then || null;
+    consentDlg.querySelector(".consent-need").hidden = !needed;
+    // Non-modal: the lesson stays usable while the card waits at the bottom.
+    if (!consentDlg.open) {
+      placeConsent();
+      consentDlg.show();
+    }
+    consentShade.hidden = false;
+    consentShown = true;
+    requestAnimationFrame(function () {
+      if (!consentShown) return;
+      consentDlg.classList.add("open");
+      consentShade.classList.add("open");
+    });
+  }
+  // Runs fn now if sharing is on, otherwise asks first and runs it on a yes.
+  // The first ask is plain; after a no, it says feedback needs a yes.
+  function withConsent(fn) {
+    if (consent === true) fn();
+    else openConsent(consent === false, fn);
+  }
+  consentDlg.querySelectorAll("[data-consent]").forEach(function (b) {
+    b.addEventListener("click", function () { setConsent(b.getAttribute("data-consent") === "yes"); });
+  });
+  // Closing is neither a yes nor a no: nothing is recorded, so it asks again next time.
+  function dismissConsent() {
+    afterConsent = null;
+    closeConsent();
+  }
+  consentDlg.querySelector(".consent-x").addEventListener("click", dismissConsent);
+  consentShade.addEventListener("click", dismissConsent);
+
   // ---------- jargon tooltips ----------
   // Underline the first use of each glossary term per section; hover, focus or tap shows the tip.
   (function applyGlossary() {
@@ -648,7 +880,7 @@
       var walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, {
         acceptNode: function (n) {
           var p = n.parentElement;
-          if (!p || p.closest("h1, h2, h3, .eyebrow, .term, code, pre, button, figure")) return NodeFilter.FILTER_REJECT;
+          if (!p || p.closest("h1, h2, h3, .eyebrow, .term, code, pre, button, figure, .feedback")) return NodeFilter.FILTER_REJECT;
           return NodeFilter.FILTER_ACCEPT;
         }
       });
@@ -1015,7 +1247,7 @@
     if (text.length < 3) return null;
     var node = sel.getRangeAt(0).commonAncestorContainer;
     var el = node.nodeType === 1 ? node : node.parentElement;
-    if (!el || !el.closest(".content") || el.closest("textarea, input, button, .options, figure, .tutor")) return null;
+    if (!el || !el.closest(".content") || el.closest("textarea, input, button, .options, figure, .tutor, .feedback")) return null;
     var section = el.closest("[data-nav]");
     return {
       text: text.length > 600 ? text.slice(0, 600) + "…" : text,

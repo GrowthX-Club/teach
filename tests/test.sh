@@ -148,6 +148,7 @@ grep -q "@@" "$lesson/index.html" && fail "placeholder left in lesson page"
 if [ "$(grep -ci '</script' "$lesson/index.html")" -eq 5 ]; then pass "lesson data cannot close its script tag"; else fail "lesson data cannot close its script tag"; fi
 if grep -q 'src="../library.js"' "$lesson/index.html" && grep -q '"dir":"2026-01-01-sample"' "$(dirname "$lesson")/library.js"; then pass "lessons can list the other lessons"; else fail "lessons can list the other lessons"; fi
 if grep -q '"session"' "$lesson/index.html" && grep -q "sessionSection" "$lesson/index.html"; then pass "session recap shipped with the lesson"; else fail "session recap shipped with the lesson"; fi
+if grep -q "teach:feedback" "$lesson/index.html" && grep -q "feedbackSection" "$lesson/index.html"; then pass "section and lesson feedback shipped"; else fail "section and lesson feedback shipped"; fi
 if grep -q "Built using GrowthX" "$lesson/index.html"; then pass "watermark present"; else fail "watermark present"; fi
 if grep -q 'id="sidebar"' "$lesson/index.html" && grep -q "^\.layout" "$lesson/index.html"; then pass "sidebar and layout styles inlined"; else fail "sidebar and layout styles inlined"; fi
 if grep -q "^LESSON_URL=file://.*home%20with%20space/lessons/2026-01-01-sample/index.html$" "$work/build.out" && grep -q "^OPENED=no$" "$work/build.out"; then pass "build prints a clickable link and only opens with --open"; else fail "build prints a clickable link and only opens with --open"; fi
