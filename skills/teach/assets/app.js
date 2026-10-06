@@ -448,13 +448,17 @@
 
   // ---------- theme ----------
   var root = document.documentElement;
-  var savedTheme = load("theme", "");
+  // Every page opens light (data-theme="light" on <html>) until the learner
+  // switches; the choice is shared by all lessons and the library.
+  var THEME_KEY = "teach:theme";
+  var savedTheme = "";
+  try { savedTheme = localStorage.getItem(THEME_KEY) || ""; } catch (e) {}
+  if (!savedTheme) savedTheme = load("theme", "");
   if (savedTheme) root.setAttribute("data-theme", savedTheme);
   document.getElementById("theme-toggle").addEventListener("click", function () {
-    var current = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-    var next = current === "dark" ? "light" : "dark";
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
     root.setAttribute("data-theme", next);
-    save("theme", next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
     loadBespokes();
   });
 
@@ -541,14 +545,15 @@
   });
 
   // ---------- bespoke animations ----------
-  var THEME_VARS = ["--bg", "--bg-2", "--fg", "--muted", "--card", "--card-2", "--hairline", "--hairline-2", "--glass", "--glass-2", "--brand", "--brand-fg", "--green", "--green-bg", "--red", "--red-bg", "--amber", "--amber-bg", "--violet", "--sans", "--mono"];
+  var THEME_VARS = ["--bg", "--bg-2", "--fg", "--muted", "--card", "--card-2", "--hairline", "--hairline-2", "--glass", "--glass-2", "--brand", "--brand-text", "--brand-fg", "--green", "--green-bg", "--red", "--red-bg", "--amber", "--amber-bg", "--violet", "--sans", "--mono"];
+  // Colours come from the figure, not the page: diagrams stay light in dark mode.
   function loadBespokes() {
-    var cs = getComputedStyle(root);
-    var vars = THEME_VARS.map(function (n) { return n + ":" + cs.getPropertyValue(n).trim(); }).join(";");
-    var dark = (root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")) === "dark";
     var close = "<" + "/script>";
     document.querySelectorAll("iframe[data-bespoke]").forEach(function (f) {
       var a = bespokes[Number(f.getAttribute("data-bespoke"))] || {};
+      var cs = getComputedStyle(f.closest(".anim") || root);
+      var vars = THEME_VARS.map(function (n) { return n + ":" + cs.getPropertyValue(n).trim(); }).join(";");
+      var dark = cs.getPropertyValue("color-scheme").trim() === "dark";
       f.srcdoc =
         '<!doctype html><html><head><meta charset="utf-8">' +
         '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; style-src \'unsafe-inline\'; script-src \'unsafe-inline\'; img-src data:">' +

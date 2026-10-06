@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -89,12 +89,12 @@
   render("");
 
   var root = document.documentElement;
-  try { var t = localStorage.getItem("teach:library:theme"); if (t) root.setAttribute("data-theme", t); } catch (e) {}
+  // Opens light until the learner switches; shared with every lesson.
+  try { var t = localStorage.getItem("teach:theme") || localStorage.getItem("teach:library:theme"); if (t) root.setAttribute("data-theme", t); } catch (e) {}
   document.getElementById("theme-toggle").addEventListener("click", function () {
-    var cur = root.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-    var next = cur === "dark" ? "light" : "dark";
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
     root.setAttribute("data-theme", next);
-    try { localStorage.setItem("teach:library:theme", next); } catch (e) {}
+    try { localStorage.setItem("teach:theme", next); } catch (e) {}
   });
 })();
 </script>
