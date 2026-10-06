@@ -665,18 +665,26 @@
       '<button type="button" class="fb-vote" data-vote="down" aria-pressed="false" aria-label="No, not helpful"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 14V3M9 18.1 10 14H4.2a2 2 0 0 1-1.9-2.6l2.3-7A2 2 0 0 1 6.5 3H20a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-2.8a2 2 0 0 0-1.8 1.1L12 22a3.1 3.1 0 0 1-3-3.9z"/></svg></button>' +
       "</span></div>" +
       '<form class="fb-form" inert><div class="fb-inner"><div class="fb-field"><textarea rows="3" maxlength="1000" placeholder="Tell us more (optional)" aria-label="Tell us more (optional)"></textarea>' +
-      '<button type="submit" class="btn primary fb-send" tabindex="-1">Send</button></div></div></form>' +
+      '<div class="fb-bar"><span class="fb-count" hidden></span>' +
+      '<button type="submit" class="btn primary fb-send" tabindex="-1">Send</button></div></div></div></form>' +
       '<p class="fb-thanks" hidden aria-live="polite"><span>Thanks, that helps.</span> <button type="button" class="fb-edit">Add a note</button></p>';
     var form = box.querySelector(".fb-form");
     var area = form.querySelector("textarea");
     var thanks = box.querySelector(".fb-thanks");
     var votes = box.querySelectorAll(".fb-vote");
     var sendBtn = form.querySelector(".fb-send");
-    // Send only appears once there is something to send.
+    var count = form.querySelector(".fb-count");
+    var NOTE_MAX = area.maxLength;
+    // Send only appears once there is something to send; the countdown only
+    // in the last 100 characters.
     function syncSend() {
       var has = !!area.value.trim();
       form.classList.toggle("has-text", has);
       sendBtn.tabIndex = has ? 0 : -1;
+      var left = NOTE_MAX - area.value.length;
+      count.hidden = left > 100;
+      count.textContent = left === 1 ? "1 character left" : left + " characters left";
+      count.classList.toggle("low", left <= 20);
     }
     area.addEventListener("input", syncSend);
 
@@ -804,7 +812,9 @@
   }
   addEventListener("resize", placeConsent);
 
+  var consentShown = false;
   function closeConsent() {
+    consentShown = false;
     consentDlg.classList.remove("open");
     consentShade.classList.remove("open");
     setTimeout(function () {
@@ -833,7 +843,12 @@
       consentDlg.show();
     }
     consentShade.hidden = false;
-    requestAnimationFrame(function () { consentDlg.classList.add("open"); consentShade.classList.add("open"); });
+    consentShown = true;
+    requestAnimationFrame(function () {
+      if (!consentShown) return;
+      consentDlg.classList.add("open");
+      consentShade.classList.add("open");
+    });
   }
   // Runs fn now if sharing is on, otherwise asks first and runs it on a yes.
   // The first ask is plain; after a no, it says feedback needs a yes.
