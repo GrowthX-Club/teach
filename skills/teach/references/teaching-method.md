@@ -10,6 +10,10 @@ Teach the ideas behind the work so the learner can spot them anywhere. Never ret
 - Bad: "Earlier we fixed the double-charge bug."
 - Good: "This is idempotency. Lift buttons do it, payment apps do it." Then, at most, one line: "Your payment handler now does it too."
 
+## Use the real case
+
+When the chat was about a specific case, teach through that case's exact data, where it fits the concept. If the learner was debugging why usera@example.com can't get into the platform, the story and animation follow usera@example.com: the real error, the real setting, the real cause. A learner understands an idea faster when it's their own problem with the real names on it than when it's "a user" or "user A". Don't force it. In a lesson of three concepts, often two are the case seen from different angles and the third is a general overview. The overview stays general, with an everyday example and no mention of usera@example.com. Use the case only where it's a direct example of the concept.
+
 ## Shape
 
 0. **Title**: an analogy in everyday words, never jargon or the concept's name.

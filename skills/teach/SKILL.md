@@ -64,9 +64,10 @@ Create `<home>/lessons/<YYYY-MM-DD>-<slug>/` (`slug`: lowercase words joined by 
 - the learner's depth and focus
 - for a bare `teach` or a transcript, a **session summary**: one sentence on what the chat was about, then 2–3 plain sentences on what the user was doing and what changed, written so the user remembers it after forgetting the chat. Leave it out for `teach <topic>`
 - for each concept, where it showed up **in this chat**: one plain sentence, written so it makes sense to someone who never saw the chat ("Your sale now switches on by itself at a set time"), never "the bug we fixed earlier". Only write it when this session actually shows the user working on it in the project open here. Don't guess from the project's files or from other projects; when in doubt, write "none"
+- **case details**, when the chat was about a specific case: the exact things it turned on, copied as they appeared, one per line. Who or what was affected (`usera@example.com can't log in`), the exact error or message, the values that mattered (the plan, the date, the order number, the setting that was off) and what turned out to be the cause. The lesson uses these so the learner sees the idea through their own case instead of a made-up one. Leave it out for `teach <topic>` or when the chat was general
 - the project root path, if a project is involved
 
-Never put secrets, tokens, credentials, customer data, or private personal details in the brief.
+Never put secrets, tokens, passwords, API keys or credentials in the brief. Case details may name the specific user, record or value the chat was about; copy only what the chat itself showed, and nothing beyond what the case needs (no phone numbers, addresses or payment details unless they were the problem itself).
 
 ## 4. Run the agents
 
@@ -128,6 +129,7 @@ This step is required, also in background mode, where it arrives as its own mess
 
 - Teach tech and AI concepts only, named as in the catalogue. Each concept is eased in with a short story, explained through an analogy, and acted out in a short animation.
 - Connect every concept to the user's own work where there is one: the story is built on their situation and `in_your_work` says where it shows up. Both must make sense to someone who never read the chat; never retell the chat step by step.
+- When the chat was about a specific case, use its exact data where it illustrates a concept: if the user was debugging why `usera@example.com` can't log in, the story, animation and `in_your_work` follow user A's account, error and cause by name, not "a user". Don't force it: a general or overview concept the case doesn't directly show gets an everyday example and no case data, even when the other concepts use it. Case data never goes in the title, hook, one-liner or share posts.
 - Each concept stays under 450 words; 2–4 concepts per lesson. No code anywhere, and the title is an analogy with no jargon.
 - Every claim about the user's own work needs evidence in `concept-map.json`. General knowledge needs none, but must be correct.
 - The finished page never calls a model, a server on the internet, or analytics. It is a local file. Only the local lesson server talks to GrowthX, and only after the learner agrees to share (see the README). The one exception is the lesson-ready email: `notify.mjs` sends the address, the title, the hook and the links, and only when the learner asked for the email.
