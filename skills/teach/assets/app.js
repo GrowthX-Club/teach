@@ -89,7 +89,7 @@
   var GX_LOGO = '<svg class="brand-logo" role="img" aria-label="GrowthX" viewBox="0 0 98 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M31.5371 8.76074C33.1853 8.7608 34.5911 9.33456 35.7461 10.4795C36.9018 11.6252 37.4805 13.0382 37.4805 14.708C37.4804 16.3777 36.9017 17.7899 35.7461 18.9355C34.5911 20.0805 33.1853 20.6542 31.5371 20.6543C29.8889 20.6543 28.4831 20.0804 27.3281 18.9355L27.3271 18.9346C26.1864 17.7888 25.6153 16.377 25.6152 14.708C25.6152 13.0388 26.1863 11.6263 27.3271 10.4805L27.3281 10.4795C28.4831 9.33467 29.889 8.76074 31.5371 8.76074ZM31.5371 10.9219C30.4899 10.9219 29.6103 11.282 28.8906 12.0049C28.1717 12.727 27.8115 13.6251 27.8115 14.708C27.8116 15.7907 28.1718 16.6882 28.8906 17.4102C29.6103 18.133 30.4899 18.4941 31.5371 18.4941C32.5995 18.4941 33.4858 18.1326 34.2051 17.4102C34.9239 16.6882 35.2841 15.7907 35.2842 14.708C35.2842 13.6251 34.924 12.727 34.2051 12.0049C33.4858 11.2825 32.5995 10.9219 31.5371 10.9219Z" fill="currentColor" stroke="currentColor" stroke-width="0.284384"/><path fill-rule="evenodd" clip-rule="evenodd" d="M23.9704 9.06344V11.1005H22.9736C21.9854 11.1005 21.1922 11.4014 20.6459 11.9583C20.0996 12.5152 19.7941 13.3346 19.7941 14.3841L19.7941 20.5483H17.5762L17.5762 9.16603H19.6552L19.7766 10.6694C20.2796 9.60865 21.3582 8.91797 22.794 8.91797C23.1808 8.91797 23.4991 8.9638 23.9277 9.05443L23.9704 9.06344Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M86.664 11.2135L93.1334 1.07073L98.0003 0L90.3071 12.0068L98.0003 24L93.4539 23.0525L93.1334 22.9915L86.6572 12.7905L82.2623 19.7482L77.8755 20.6673L83.4442 12.0068L77.8633 3.32183L82.2488 4.2423L86.664 11.2135Z" fill="#3096FF"/><path d="M67.6018 3.50586V9.7832C68.5062 8.75158 69.6226 8.23577 70.9509 8.23577C71.714 8.23577 72.4135 8.41023 73.0494 8.75916C73.6853 9.10809 74.187 9.60873 74.5544 10.2611C74.9359 10.9134 75.1267 11.6872 75.1267 12.5822V20.6294H72.9646V13.1284C72.9646 12.2333 72.7244 11.5506 72.2439 11.0803C71.7776 10.61 71.1911 10.3749 70.4846 10.3749C69.9476 10.3749 69.4177 10.519 68.8948 10.8072C68.372 11.0803 67.941 11.4672 67.6018 11.9678V20.6294H65.4609V3.50586H67.6018Z" fill="currentColor"/><path d="M49.4858 20.4948L54.2356 9.16895H51.9477L49.3366 15.7993L46.5513 9.16895H44.537L45.3576 11.0007L43.4428 15.6445L40.6824 9.16895H38.3945L43.1692 20.4948L46.1783 13.1678L49.4858 20.4948Z" fill="currentColor"/><path d="M11.7693 19.9889C12.8659 19.6517 13.6691 19.2839 14.1788 18.8854V11.094H8.57215V13.232H11.9083V17.598C11.5377 17.8126 11.0743 17.9812 10.5183 18.1038C9.96223 18.2111 9.39074 18.2647 8.80383 18.2647C7.53731 18.2647 6.40982 18.0118 5.42131 17.5061C4.4328 16.985 3.66825 16.257 3.12768 15.3221C2.5871 14.3872 2.3168 13.3221 2.3168 12.1267C2.3168 10.8393 2.5871 9.71285 3.12768 8.74732C3.66825 7.78179 4.4328 7.03849 5.42131 6.5174C6.42524 5.99631 7.57593 5.73578 8.87334 5.73578C9.47571 5.73578 10.1476 5.84307 10.889 6.05762C11.4481 6.20483 11.9356 6.37293 12.3514 6.56195L13.5069 4.72427C12.8428 4.35645 12.0937 4.06524 11.2596 3.85069C10.4256 3.6208 9.5375 3.50586 8.59532 3.50586C7.03536 3.50586 5.59894 3.85834 4.28608 4.56335C2.97321 5.26835 1.93066 6.28751 1.1584 7.62086C0.386134 8.93888 0 10.5021 0 12.3106C0 13.8585 0.355241 15.2532 1.06573 16.4946C1.79166 17.736 2.81878 18.7168 4.14707 19.4371C5.47536 20.1421 7.01219 20.4946 8.7575 20.4946C9.68422 20.4946 10.6882 20.3261 11.7693 19.9889Z" fill="currentColor"/><path d="M58.1964 5.54883H60.5185V9.35403H63.3649V11.1847H60.5185V20.4948H58.1964V11.1847H56.2988V9.35403H58.1964V5.54883Z" fill="currentColor"/></svg>';
   function topbar() {
     return (
-      '<header class="topbar"><div class="wrap">' +
+      '<header class="topbar"><div class="wrap topbar-lesson">' +
       '<a class="brand" href="' + REPO_URL + '" target="_blank" rel="noopener">' + GX_LOGO + ' <span class="grad">teach</span></a>' +
       '<div class="controls">' +
       (thisDir ? '<a class="btn" href="../../index.html">All lessons</a>' : "") +
@@ -1045,14 +1045,16 @@
   panel.setAttribute("role", "dialog");
   panel.setAttribute("aria-label", "Lesson tutor");
   panel.innerHTML =
-    '<header class="tutor-head"><div class="tutor-avatar" aria-hidden="true">t</div>' +
-    '<div class="tutor-title"><b>Lesson tutor</b><span id="tutor-status">Answers in plain words</span></div>' +
-    '<button type="button" class="tutor-x" aria-label="Close">×</button></header>' +
+    '<div class="tutor-resize" role="separator" aria-orientation="vertical" aria-label="Resize tutor panel" tabindex="0"></div>' +
+    '<header class="tutor-head">' +
+    '<div class="tutor-title"><b>Lesson tutor</b></div>' +
+    '<button type="button" class="tutor-x" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>' +
     '<div class="tutor-body" id="tutor-body" aria-live="polite"></div>' +
+    '<div class="tutor-compose">' +
     '<div class="tutor-quote" hidden><span class="tq-label">Asking about</span><q></q><button type="button" aria-label="Remove passage">×</button></div>' +
     '<form class="tutor-form"><label class="sr-only" for="tutor-input">Your question</label>' +
     '<textarea id="tutor-input" rows="1" placeholder="Ask anything about this lesson…"></textarea>' +
-    '<button type="submit" class="tutor-send" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l15-7-5 16-2.5-6.5z" fill="currentColor"/></svg></button></form>' +
+    '<button type="submit" class="tutor-send" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></form></div>' +
     '<p class="tutor-foot" id="tutor-foot"></p>';
   document.body.appendChild(panel);
   var body = panel.querySelector("#tutor-body");
@@ -1082,7 +1084,7 @@
   function renderEmpty() {
     if (thread.length) return;
     body.innerHTML =
-      '<div class="tutor-hello"><p><b>Hi!</b> Ask me anything about this lesson and I\'ll explain it in plain words.</p>' +
+      '<div class="tutor-hello"><h2>What can I explain?</h2><p>Ask me anything about this lesson and I\'ll explain it in plain words.</p>' +
       '<p class="tutor-tip">Tip: select any text in the lesson and tap <b>Ask about this</b>.</p>' +
       '<div class="tutor-chips">' + ["Explain the main idea more simply", "Give me another real-life example", "How does this connect to my work?"].map(function (t) {
         return '<button type="button" class="tutor-chip">' + esc(t) + "</button>";
@@ -1114,6 +1116,7 @@
   }
   function openPanel() {
     panel.hidden = false;
+    document.documentElement.classList.add("tutor-open");
     fab.classList.add("open");
     fab.classList.remove("pulse");
     fab.querySelector(".tutor-dot").hidden = true;
@@ -1121,10 +1124,50 @@
     renderEmpty();
     setTimeout(function () { input.focus(); scrollBottom(); }, 30);
   }
-  function closePanel() { panel.hidden = true; fab.classList.remove("open"); }
+  function closePanel() { panel.hidden = true; document.documentElement.classList.remove("tutor-open"); fab.classList.remove("open"); }
   fab.addEventListener("click", function () { panel.hidden ? openPanel() : closePanel(); });
   panel.querySelector(".tutor-x").addEventListener("click", closePanel);
   panel.addEventListener("keydown", function (e) { if (e.key === "Escape") closePanel(); });
+
+  // Drag the panel's left edge to resize it. The width is shared by every lesson in this browser.
+  var resizer = panel.querySelector(".tutor-resize");
+  var widthKey = "teach:tutor-width";
+  function setWidth(w, save) {
+    var max = Math.max(320, Math.min(900, innerWidth - 420));
+    w = Math.round(Math.min(max, Math.max(320, w)));
+    document.documentElement.style.setProperty("--tutor-w", w + "px");
+    resizer.setAttribute("aria-valuenow", w);
+    if (save) { try { localStorage.setItem(widthKey, w); } catch (e) {} }
+  }
+  function savedWidth() { try { return +localStorage.getItem(widthKey) || 0; } catch (e) { return 0; } }
+  if (savedWidth()) setWidth(savedWidth());
+  addEventListener("resize", function () { if (savedWidth()) setWidth(savedWidth()); });
+  resizer.addEventListener("pointerdown", function (e) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    resizer.setPointerCapture(e.pointerId);
+    document.documentElement.classList.add("tutor-resizing");
+  });
+  resizer.addEventListener("pointermove", function (e) {
+    if (resizer.hasPointerCapture(e.pointerId)) setWidth(innerWidth - e.clientX);
+  });
+  function endResize(e) {
+    if (!resizer.hasPointerCapture(e.pointerId)) return;
+    resizer.releasePointerCapture(e.pointerId);
+    document.documentElement.classList.remove("tutor-resizing");
+    setWidth(panel.offsetWidth, true);
+  }
+  resizer.addEventListener("pointerup", endResize);
+  resizer.addEventListener("pointercancel", endResize);
+  resizer.addEventListener("dblclick", function () {
+    document.documentElement.style.removeProperty("--tutor-w");
+    try { localStorage.removeItem(widthKey); } catch (e) {}
+  });
+  resizer.addEventListener("keydown", function (e) {
+    var step = e.shiftKey ? 80 : 20;
+    if (e.key === "ArrowLeft") { e.preventDefault(); setWidth(panel.offsetWidth + step, true); }
+    if (e.key === "ArrowRight") { e.preventDefault(); setWidth(panel.offsetWidth - step, true); }
+  });
 
   function setQuote(p) {
     pendingQuote = p;
@@ -1172,7 +1215,7 @@
       .catch(function (err) { turn.querySelector(".bubble.bot").innerHTML = '<p class="tutor-err">' + esc(err.message) + "</p>"; })
       .then(function () { waiting = false; scrollBottom(); });
   }
-  function autosize() { input.style.height = "auto"; input.style.height = Math.min(140, input.scrollHeight) + "px"; }
+  function autosize() { input.style.height = "auto"; input.style.height = Math.min(200, input.scrollHeight) + "px"; }
   input.addEventListener("input", autosize);
   input.addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input.value); } });
   panel.querySelector(".tutor-form").addEventListener("submit", function (e) { e.preventDefault(); send(input.value); });
