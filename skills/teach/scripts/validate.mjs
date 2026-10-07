@@ -26,6 +26,8 @@ const opensAsDefinition = (c) => {
   return nameVariants(c.name).some((v) => new RegExp(`^(an? |the )?${v.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}s? (means|is|are|refers)\\b`).test(start));
 };
 // Learners rarely read the chat, so the lesson must never point back at it.
+// Distinctive bits of a case: emails, and IDs that mix letters and digits or start with #.
+const CASE_TOKEN = /[\w.+-]+@[\w-]+(?:\.[\w-]+)+|#\w*\d\w*|\b(?=\w*[a-z])(?=\w*\d)\w{4,}\b/gi;
 const CHAT_REFERENCE = /\b(earlier (in|today)|as (we|you) (discussed|saw|did)|we just|you just|in (our|this|the) (chat|conversation|session)|the bug we|our discussion|mentioned above)\b/i;
 
 // The strongest AI-writing tells from the humanizer (references/humanizer.md), checked mechanically.
@@ -133,6 +135,16 @@ export function validateConceptMap(map, cat = loadCatalogue()) {
       if (!isText(w.summary)) err(`${c.id}.in_your_work needs a summary`);
       if (!isList(w.evidence_ids) || w.evidence_ids.length === 0) err(`${c.id}.in_your_work needs evidence_ids`);
       for (const id of w.evidence_ids || []) if (!evidence.has(id)) err(`${c.id} cites missing evidence "${id}"`);
+    }
+  }
+  if (map.case_details !== undefined) {
+    if (!isList(map.case_details)) err("case_details must be a list");
+    for (const [i, d] of (isList(map.case_details) ? map.case_details : []).entries()) {
+      if (!isText(d.detail)) err(`case_details[${i}] needs detail`);
+      if (!isList(d.evidence_ids) || d.evidence_ids.length === 0) err(`case_details[${i}] needs evidence_ids`);
+      for (const id of d.evidence_ids || []) if (!evidence.has(id)) err(`case_details[${i}] cites missing evidence "${id}"`);
+      if (!isList(d.concept_ids) || d.concept_ids.length === 0) err(`case_details[${i}] needs concept_ids: the concepts this detail is a direct example of`);
+      for (const id of d.concept_ids || []) if (!ids.has(id)) err(`case_details[${i}] refers to unknown concept "${id}"`);
     }
   }
   return { errors, evidence };
@@ -363,6 +375,22 @@ export function validateLesson(lesson, map, cat = loadCatalogue(), warnings = []
   if (contrast) err(`uses the "${contrast[0]} X but Y" contrast; state the point directly (humanizer section 1)`);
   if (DASHES.test(text)) err("contains em or en dashes; use a period, comma, colon or parentheses instead (humanizer section 8)");
   if (CURLY_DOUBLE.test(text)) err("contains curly double quotes; use straight quotes");
+  // Case data (emails, IDs) belongs only in the session and the concepts the case illustrates.
+  if (map && isList(map.case_details)) {
+    const caseTokens = map.case_details.flatMap((d) => (isText(d.detail) ? d.detail.match(CASE_TOKEN) || [] : []));
+    const allowed = new Set(map.case_details.flatMap((d) => d.concept_ids || []));
+    const proseOf = (value) => JSON.stringify(value, (key, v) => (NOT_PROSE.has(key) ? undefined : v));
+    const places = [
+      ...concepts.filter((c) => !allowed.has(c.id)).map((c) => [`concept "${c.id}"`, c]),
+      ["meta.title", m.title], ["meta.one_liner", m.one_liner], ["hook", lesson.hook], ["goal", lesson.goal],
+      ["quiz", lesson.quiz], ["next", lesson.next], ["share", lesson.share],
+    ];
+    for (const [where, value] of places) {
+      if (value === undefined) continue;
+      const found = caseTokens.find((t) => proseOf(value).includes(t));
+      if (found) err(`${where} uses case data "${found}"; keep the learner's case to the session and the concepts it illustrates`);
+    }
+  }
   for (const c of concepts) {
     const bold = [c.story, c.explain, c.real_world, c.fun_fact].join(" ").match(/\*\*[^*]+\*\*/g) || [];
     if (bold.length > 2) err(`concept "${c.id}" bolds ${bold.length} phrases; bold only the concept's own term (humanizer section 19)`);

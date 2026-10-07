@@ -26,6 +26,7 @@ Apply [humanizer](humanizer.md) in embedded mode to each text field: mark the te
 ## Hard limits
 
 - Do not add facts, numbers, names, companies, or claims that are not already in the lesson. You may cut.
+- Keep the learner's case data exactly as written: emails, names, IDs, error messages, plans, dates and amounts from their own case stay character for character. Never swap them for a generic "a user" or "user A", and never move them into the title, one-liner, hook, goal, quiz, share posts, or a concept that didn't already use them.
 - Keep the quiz answers correct: the right option stays right and every `why` still matches its option. Keep all options a similar length and equally believable; never make the right one stand out.
 - Keep every rule in [lesson format](lesson-format.md), including the 450-word limit per concept, the 80-word story, 40–100 words for `real_world` and `in_your_work` the 100-word explanation that starts from an analogy (never "X means…"), and one sentence for `in_your_work`. If you reword a sentence that contains a glossary term, keep the term's exact words.
 - No em dashes (—), en dashes (–) or double hyphens used as dashes anywhere in visible text.
