@@ -536,6 +536,13 @@ mark.asked.flash, .tutor-turn.flash { animation: flash 1.6s ease-out; }
   html.tutor-open .progress { right: var(--tutor-w); }
 }
 @media (max-width: 1099px) { .tutor { box-shadow: -24px 0 60px rgba(0, 0, 0, 0.22); } }
+/* Drag handle on the panel's left edge. */
+.tutor-resize { position: absolute; top: 0; bottom: 0; left: 0; z-index: 2; width: 8px; cursor: col-resize; touch-action: none; }
+.tutor-resize::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 2px; background: var(--brand-text, var(--brand)); opacity: 0; transition: opacity 0.15s; }
+.tutor-resize:hover::after, .tutor-resize:focus-visible::after, html.tutor-resizing .tutor-resize::after { opacity: 1; }
+.tutor-resize:focus-visible { outline: none; }
+html.tutor-resizing, html.tutor-resizing * { cursor: col-resize !important; user-select: none; -webkit-user-select: none; }
+html.tutor-resizing iframe { pointer-events: none; }
 .tutor-head { display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 20px; border-bottom: 1px solid var(--hairline); }
 .tutor-title { display: grid; flex: 1; min-width: 0; line-height: 1.3; }
 .tutor-title b { font-size: 15px; font-weight: 650; }
@@ -585,6 +592,7 @@ mark.asked.flash, .tutor-turn.flash { animation: flash 1.6s ease-out; }
 .tutor-foot { margin: 8px 16px calc(12px + env(safe-area-inset-bottom, 0px)); font-size: 11.5px; color: var(--muted); text-align: center; }
 @media (max-width: 640px) {
   .tutor { width: 100vw; border-left: 0; }
+  .tutor-resize { display: none; }
   .tutor-body { padding-inline: 16px; }
   .tutor-compose { width: calc(100% - 24px); }
   .tutor-fab { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }

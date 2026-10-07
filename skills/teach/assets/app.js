@@ -1045,6 +1045,7 @@
   panel.setAttribute("role", "dialog");
   panel.setAttribute("aria-label", "Lesson tutor");
   panel.innerHTML =
+    '<div class="tutor-resize" role="separator" aria-orientation="vertical" aria-label="Resize tutor panel" tabindex="0"></div>' +
     '<header class="tutor-head">' +
     '<div class="tutor-title"><b>Lesson tutor</b><span id="tutor-status">Answers in plain words</span></div>' +
     '<button type="button" class="tutor-x" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>' +
@@ -1127,6 +1128,46 @@
   fab.addEventListener("click", function () { panel.hidden ? openPanel() : closePanel(); });
   panel.querySelector(".tutor-x").addEventListener("click", closePanel);
   panel.addEventListener("keydown", function (e) { if (e.key === "Escape") closePanel(); });
+
+  // Drag the panel's left edge to resize it. The width is shared by every lesson in this browser.
+  var resizer = panel.querySelector(".tutor-resize");
+  var widthKey = "teach:tutor-width";
+  function setWidth(w, save) {
+    var max = Math.max(320, Math.min(900, innerWidth - 420));
+    w = Math.round(Math.min(max, Math.max(320, w)));
+    document.documentElement.style.setProperty("--tutor-w", w + "px");
+    resizer.setAttribute("aria-valuenow", w);
+    if (save) { try { localStorage.setItem(widthKey, w); } catch (e) {} }
+  }
+  function savedWidth() { try { return +localStorage.getItem(widthKey) || 0; } catch (e) { return 0; } }
+  if (savedWidth()) setWidth(savedWidth());
+  addEventListener("resize", function () { if (savedWidth()) setWidth(savedWidth()); });
+  resizer.addEventListener("pointerdown", function (e) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    resizer.setPointerCapture(e.pointerId);
+    document.documentElement.classList.add("tutor-resizing");
+  });
+  resizer.addEventListener("pointermove", function (e) {
+    if (resizer.hasPointerCapture(e.pointerId)) setWidth(innerWidth - e.clientX);
+  });
+  function endResize(e) {
+    if (!resizer.hasPointerCapture(e.pointerId)) return;
+    resizer.releasePointerCapture(e.pointerId);
+    document.documentElement.classList.remove("tutor-resizing");
+    setWidth(panel.offsetWidth, true);
+  }
+  resizer.addEventListener("pointerup", endResize);
+  resizer.addEventListener("pointercancel", endResize);
+  resizer.addEventListener("dblclick", function () {
+    document.documentElement.style.removeProperty("--tutor-w");
+    try { localStorage.removeItem(widthKey); } catch (e) {}
+  });
+  resizer.addEventListener("keydown", function (e) {
+    var step = e.shiftKey ? 80 : 20;
+    if (e.key === "ArrowLeft") { e.preventDefault(); setWidth(panel.offsetWidth + step, true); }
+    if (e.key === "ArrowRight") { e.preventDefault(); setWidth(panel.offsetWidth - step, true); }
+  });
 
   function setQuote(p) {
     pendingQuote = p;
