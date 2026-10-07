@@ -295,6 +295,27 @@ if [ -f "$fake_home/growthx-teach/theme.css" ] && [ -f "$fake_home/growthx-teach
 echo "/* mine */" >> "$fake_home/growthx-teach/theme.css"
 HOME="$fake_home" TEACH_HOME="$fake_home/growthx-teach" sh "$root/install.sh" >/dev/null
 if grep -q "mine" "$fake_home/growthx-teach/theme.css" && [ -f "$fake_home/growthx-teach/theme.default.css" ]; then pass "reinstall keeps a customised theme"; else fail "reinstall keeps a customised theme"; fi
+plugin_version=$(sed -n 's/.*"version": "\(.*\)".*/\1/p' "$root/.claude-plugin/plugin.json")
+if [ "$(cat "$fake_home/.claude/skills/teach/.version")" = "$plugin_version" ]; then pass "install records the version for the update check"; else fail "install records the version for the update check"; fi
+
+echo "update check"
+upd="$fake_home/.claude/skills/teach/scripts/update.sh"
+uh="$work/update-home"
+mkdir -p "$uh"
+printf 'checked=%s\nlatest=99.0.0\nskipped=\n' "$(date +%s)" > "$uh/update-check"
+if [ "$(TEACH_HOME="$uh" sh "$upd" check)" = "UPDATE=available CURRENT=$plugin_version LATEST=99.0.0" ]; then pass "a newer version is offered"; else fail "a newer version is offered"; fi
+if [ "$(TEACH_NO_UPDATE_CHECK=1 TEACH_HOME="$uh" sh "$upd" check)" = "UPDATE=none" ]; then pass "TEACH_NO_UPDATE_CHECK turns it off"; else fail "TEACH_NO_UPDATE_CHECK turns it off"; fi
+TEACH_HOME="$uh" sh "$upd" skip >/dev/null
+if [ "$(TEACH_HOME="$uh" sh "$upd" check)" = "UPDATE=none" ]; then pass "a skipped version isn't offered again"; else fail "a skipped version isn't offered again"; fi
+printf 'checked=%s\nlatest=99.0.0\nskipped=98.0.0\n' "$(date +%s)" > "$uh/update-check"
+if TEACH_HOME="$uh" sh "$upd" check | grep -q "LATEST=99.0.0"; then pass "a version newer than the skipped one is offered"; else fail "a version newer than the skipped one is offered"; fi
+printf 'checked=%s\nlatest=%s\nskipped=\n' "$(date +%s)" "$plugin_version" > "$uh/update-check"
+if [ "$(TEACH_HOME="$uh" sh "$upd" check)" = "UPDATE=none" ]; then pass "the latest version isn't offered"; else fail "the latest version isn't offered"; fi
+printf 'checked=%s\nlatest=1.9.0\nskipped=\n' "$(date +%s)" > "$uh/update-check"
+printf '1.10.0\n' > "$fake_home/.claude/skills/teach/.version"
+if [ "$(TEACH_HOME="$uh" sh "$upd" check)" = "UPDATE=none" ]; then pass "versions compare as numbers (1.10 is newer than 1.9)"; else fail "versions compare as numbers (1.10 is newer than 1.9)"; fi
+if [ "$(TEACH_HOME="$uh" sh "$skill/scripts/update.sh" check)" = "UPDATE=none" ]; then pass "a git clone is never offered updates"; else fail "a git clone is never offered updates"; fi
+
 HOME="$fake_home" sh "$root/uninstall.sh" >/dev/null
 if [ ! -e "$fake_home/.claude/skills/teach" ] && [ ! -e "$fake_home/.agents/skills/teach" ] && [ -d "$fake_home/growthx-teach/lessons" ]; then pass "uninstall removes the skill, keeps lessons"; else fail "uninstall removes the skill, keeps lessons"; fi
 

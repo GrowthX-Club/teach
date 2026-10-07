@@ -23,11 +23,11 @@ Steps 1–3 need this chat and the user's answers to the two level questions, so
 - If you can start agents in the background and get told when each one finishes (Claude Code: the Agent tool with `run_in_background: true`), use **background mode**.
 - Otherwise use **foreground mode**: run the same steps one after another, as normal.
 
-Before anything else, run `sh <skill>/scripts/setup.sh` (it creates `<home>` on first use and changes nothing later).
+Before anything else, run `sh <skill>/scripts/setup.sh` (it creates `<home>` on first use and changes nothing later), then `sh <skill>/scripts/update.sh check`. It prints `UPDATE=none`, or `UPDATE=available CURRENT=<x> LATEST=<y>` when a newer teach is out; step 2 asks about it.
 
 What the user sees:
 
-1. "Looking at what we worked on…" while you do steps 1–3, then the two level questions and the email question.
+1. "Looking at what we worked on…" while you do steps 1–3, then the two level questions, the email question and, when there is one, the update question.
 2. In background mode, once the brief is written: "Writing your lesson in the background. Keep working; I'll drop the link here when it's ready." In foreground mode: "Writing your lesson…" Then add the email line from step 2: "I'll also email it to <email> once it's ready." or, without an email, "You'll get the link here in the chat. No email will go out."
 3. Nothing between the background steps. When an agent finishes, start the next one without a message; if the user is in the middle of something, keep helping them.
 4. The hand-off in step 6.
@@ -55,6 +55,8 @@ In the same prompt, ask whether to email the lesson when it's ready. Run `node <
 - **Anywhere else**: a third numbered question in the same message.
 
 If they type a new address (in Other, or in a follow-up when they picked "I'll type my email"), save it with `node <skill>/scripts/notify.mjs email <address>`. If the script says it isn't an email address, ask once more; if they still don't give one, go on without email. Remember for this lesson whether to email. Never write the address into the brief or any lesson file. "Forget my email" at any time: `node <skill>/scripts/notify.mjs email --forget`.
+
+**Update.** Only when `update.sh check` printed `UPDATE=available`, add one more question to the same prompt: "A newer version of teach is out (<LATEST>, you have <CURRENT>). Update it after this lesson?" with "Yes, update after this lesson" (recommended) and "Not now". In Claude Code it's a fourth `AskUserQuestion` question; anywhere else, a fourth numbered question. Never update before the lesson is built: the agents are still reading the skill's files. On "Not now", run `sh <skill>/scripts/update.sh skip` so they aren't asked again until the next version. With `UPDATE=none`, don't mention updates at all.
 
 ## 3. Write the brief
 
@@ -116,6 +118,8 @@ This step is required, also in background mode, where it arrives as its own mess
 
 **Email.** If the learner asked for the email in step 2, run `node <skill>/scripts/notify.mjs send <lesson-dir> <URL>` before replying (it needs Node.js; without it, treat it as failed). It prints `EMAILED=yes` or `EMAILED=no`. On yes, add: "I've also emailed it to <email>." On no, add: "I couldn't send the email, but your lesson is ready right here." Don't mention the reason unless they ask. Without an email, say nothing about it. Send it once per lesson: a rebuild after "simpler", "deeper" and the like doesn't send it again.
 
+**Update.** If the learner said yes to the update in step 2, run `sh <skill>/scripts/update.sh apply` after everything above, as the last thing. It prints `UPDATED=yes` or `UPDATED=no`. On yes, add: "teach is updated to <LATEST>. Restart Claude Code (or start a new chat) to use it." On no: in Claude Code, "I couldn't update teach automatically. Type /plugin, open the growthx marketplace and update teach there."; anywhere else, "I couldn't update teach automatically. Reinstall it the way you installed it to get the latest version." Don't mention the reason unless they ask.
+
 ## Follow-ups
 
 - **"open my lesson"**, **"the link doesn't work"**, or any request to reopen a lesson: run `sh <skill>/scripts/serve.sh <lesson-dir>` (it restarts the lesson server if it stopped; it stops by itself after 12 hours unused) and open the URL it prints the same way as in step 5.
@@ -124,6 +128,7 @@ This step is required, also in background mode, where it arrives as its own mess
 
 - "simpler" / "easier", "deeper" / "harder", "more business", "more technical" (or `teach easier`, `teach harder`, `teach more product`, `teach more tech`): change the dial in `profile.json` as [level-check](references/level-check.md) describes, update the depth or focus in `brief.md`, then rerun the designer and the editor (in the background, in background mode) with the same brief and concept map, into the same folder, and hand it over again.
 - New subject: start again from step 1.
+- **"update teach"** or "is there a new version of teach?": run `sh <skill>/scripts/update.sh check --now`. If an update is available, say which version and, unless they already asked to update, ask once whether to install it now. Then run `sh <skill>/scripts/update.sh apply` and reply as in step 6. If none, say they already have the latest version. If a lesson is still being written in the background, wait for it to hand over before applying.
 
 ## Rules
 
@@ -132,5 +137,5 @@ This step is required, also in background mode, where it arrives as its own mess
 - When the chat was about a specific case, use its exact data where it illustrates a concept: if the user was debugging why `usera@example.com` can't log in, the story, animation and `in_your_work` follow user A's account, error and cause by name, not "a user". Don't force it: a general or overview concept the case doesn't directly show gets an everyday example and no case data, even when the other concepts use it. Case data never goes in the title, hook, one-liner or share posts.
 - Each concept stays under 450 words; 2–4 concepts per lesson. No code anywhere, and the title is an analogy with no jargon.
 - Every claim about the user's own work needs evidence in `concept-map.json`. General knowledge needs none, but must be correct.
-- The finished page never calls a model, a server on the internet, or analytics. It is a local file. Only the local lesson server talks to GrowthX, and only after the learner agrees to share (see the README). The one exception is the lesson-ready email: `notify.mjs` sends the address, the title, the hook and the links, and only when the learner asked for the email.
+- The finished page never calls a model, a server on the internet, or analytics. It is a local file. Only the local lesson server talks to GrowthX, and only after the learner agrees to share (see the README). The update check is the other: `update.sh check` reads teach's version number from GitHub at most once a day and sends nothing about the learner. The one other exception is the lesson-ready email: `notify.mjs` sends the address, the title, the hook and the links, and only when the learner asked for the email.
 - Never read, quote or copy `<home>/sharing.json` or `<home>/feedback-queue.json`: they hold the learner's install credentials and notes.
