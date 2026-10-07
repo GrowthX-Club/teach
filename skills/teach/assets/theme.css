@@ -7,43 +7,48 @@
  * Layout and components live in the skill (assets/base.css) and update
  * with it.
  *
- * Default = dark. Follows prefers-color-scheme; data-theme on <html>
- * overrides it in both directions.
+ * Lessons and the library open light (data-theme="light" on <html>)
+ * until the learner switches. Without data-theme, :root is dark and
+ * prefers-color-scheme: light switches it.
  * ===================================================================== */
 
 @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap");
 
 :root {
-  --bg: #050505;
-  --bg-2: #0b0b0d;
-  --fg: hsl(0 0% 98%);
-  --muted: hsl(0 0% 64%);
-  --card: #141416;
-  --card-2: #1a1a1c;
-  --hairline: rgba(255, 255, 255, 0.08);
-  --hairline-2: rgba(255, 255, 255, 0.16);
+  /* dark = the GrowthX community palette: 900 greys, not pure black */
+  --bg: #171717;
+  --bg-2: #1c1c1e;
+  --fg: #f5f5f5;
+  --muted: #9ca3af;
+  --card: #222529;
+  --card-2: #2a2d32;
+  --hairline: rgba(255, 255, 255, 0.1);
+  --hairline-2: rgba(255, 255, 255, 0.18);
   --glass: rgba(255, 255, 255, 0.04);
-  --glass-2: rgba(255, 255, 255, 0.08);
+  --glass-2: rgba(255, 255, 255, 0.1);
 
-  --g1: #ffffff;
-  --g2: #561eff;
-  --g3: #0064ff;
-  --brand: #0064ff;
+  --g1: #f5f5f5;
+  /* dark gets its own brand shades: fills behind white text stay deep,
+     text and icons on grey go lighter so both pass WCAG AA */
+  --g2: #9f7fff;
+  --g3: #5c9dff;
+  --brand: #1f66f0;
+  --brand-text: #5c9dff;
   --brand-fg: #ffffff;
   --violet: #a78bfa;
-  --green: #4ade80;
-  --green-bg: rgba(74, 222, 128, 0.1);
-  --red: #ff5b42;
-  --red-bg: rgba(255, 91, 66, 0.1);
-  --amber: #f59e0b;
-  --amber-bg: rgba(245, 158, 11, 0.1);
+  --green: #5cc98a;
+  --green-bg: rgba(92, 201, 138, 0.12);
+  --red: #f0705c;
+  --red-bg: rgba(240, 112, 92, 0.12);
+  --amber: #e8a838;
+  --amber-bg: rgba(232, 168, 56, 0.12);
 
-  --code-bg: #07070a;
-  --code-fg: #d4d4d8;
+  --code-bg: #1c1c1e;
+  --code-fg: #d1d5db;
 
   --hero-glow:
-    radial-gradient(1100px 560px at 15% -10%, rgba(86, 30, 255, 0.2), transparent 60%),
-    radial-gradient(900px 480px at 90% 0%, rgba(0, 100, 255, 0.14), transparent 60%);
+    radial-gradient(1100px 560px at 15% -10%, rgba(86, 30, 255, 0.14), transparent 60%),
+    radial-gradient(900px 480px at 90% 0%, rgba(0, 100, 255, 0.1), transparent 60%);
 
   --sans: "Gilroy", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --mono: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -68,12 +73,16 @@
     --glass: rgba(0, 0, 0, 0.03);
     --glass-2: rgba(0, 0, 0, 0.06);
     --g1: #18181b;
+    --g2: #561eff;
+    --g3: #0064ff;
+    --brand: #0064ff;
+    --brand-text: #0057e0;
     --violet: #6d28d9;
-    --green: #15803d;
+    --green: #137537;
     --green-bg: rgba(22, 163, 74, 0.08);
-    --red: #c2410c;
+    --red: #b33a0a;
     --red-bg: rgba(220, 38, 38, 0.07);
-    --amber: #b45309;
+    --amber: #a14a08;
     --amber-bg: rgba(217, 119, 6, 0.08);
     --code-bg: #f4f4f6;
     --code-fg: #1f2937;
@@ -84,7 +93,9 @@
   }
 }
 
-:root[data-theme="light"] {
+/* Diagrams (.anim) always use the light palette, even on a dark page. */
+:root[data-theme="light"],
+.anim {
   --bg: #fafafa;
   --bg-2: #ffffff;
   --fg: hsl(0 0% 9%);
@@ -96,12 +107,16 @@
   --glass: rgba(0, 0, 0, 0.03);
   --glass-2: rgba(0, 0, 0, 0.06);
   --g1: #18181b;
+  --g2: #561eff;
+  --g3: #0064ff;
+  --brand: #0064ff;
+  --brand-text: #0057e0;
   --violet: #6d28d9;
-  --green: #15803d;
+  --green: #137537;
   --green-bg: rgba(22, 163, 74, 0.08);
-  --red: #c2410c;
+  --red: #b33a0a;
   --red-bg: rgba(220, 38, 38, 0.07);
-  --amber: #b45309;
+  --amber: #a14a08;
   --amber-bg: rgba(217, 119, 6, 0.08);
   --code-bg: #f4f4f6;
   --code-fg: #1f2937;
