@@ -115,6 +115,12 @@ Each concept, and the lesson as a whole, has a thumbs up or down with an optiona
 
 If you agree, the local lesson server (not the lesson page) sends the lesson and your feedback to the GrowthX API, using an anonymous install ID. Feedback waits in a local queue while you're offline. Your answer and the install credentials live in `~/growthx-teach/sharing.json`, readable only by you. Delete that file to be asked again. Set `TEACH_API_URL` to point the lesson server at a different API, for example a dev server.
 
+## Lesson-ready email
+
+When teach asks its level questions, it also asks whether to email you the lesson once it's ready. Give an address and, when the lesson is built, `scripts/notify.mjs` asks the GrowthX API to send you an email with the lesson's title, its opening question and links to it. Skip it and the link only shows up in the chat. The links point at this computer, so they open only here.
+
+The email is separate from data sharing: it never sends the lesson itself, and it works whether or not you agreed to share. Your address is kept in `~/growthx-teach/contact.json`, readable only by you, so next time it's one click. Say "forget my email", or delete that file, to remove it.
+
 ## Your teach folder
 
 ```
@@ -124,6 +130,7 @@ If you agree, the local lesson server (not the lesson page) sends the lesson and
 ├── profile.json        # your levels and focus per area
 ├── sharing.json        # your data sharing answer and install ID (only if you answered)
 ├── feedback-queue.json # feedback waiting to be sent while offline
+├── contact.json        # your email for lesson-ready emails (only if you gave one)
 └── lessons/
     └── 2026-10-05-safe-retries/
         ├── index.html          # the lesson
