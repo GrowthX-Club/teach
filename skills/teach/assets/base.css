@@ -43,6 +43,8 @@ strong { font-weight: 650; }
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--hairline);
 }
+/* On a lesson the bar lines up with the sidebar and content below it. */
+.topbar .wrap.topbar-lesson { max-width: 1080px; }
 .topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 10px; flex-wrap: wrap; }
 .brand { display: flex; align-items: center; gap: 7px; text-decoration: none; font-weight: 700; letter-spacing: -0.01em; }
 .brand .grad { font-size: 1.15em; line-height: 1; }
@@ -546,7 +548,6 @@ html.tutor-resizing iframe { pointer-events: none; }
 .tutor-head { display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 20px; border-bottom: 1px solid var(--hairline); }
 .tutor-title { display: grid; flex: 1; min-width: 0; line-height: 1.3; }
 .tutor-title b { font-size: 15px; font-weight: 650; }
-.tutor-title span { font-size: 12.5px; color: var(--muted); }
 .tutor-x { flex: none; border: 0; background: transparent; color: var(--muted); cursor: pointer; width: 34px; height: 34px; border-radius: var(--radius-sm); display: grid; place-items: center; }
 .tutor-x:hover { background: var(--glass-2); color: var(--fg); }
 .tutor-x svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
