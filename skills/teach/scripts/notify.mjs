@@ -30,8 +30,10 @@ function writeContact(value) {
   fs.chmodSync(contactPath, 0o600);
 }
 const die = (msg, code = 2) => { console.error(msg); process.exit(code); };
-// The API rejects markup, so drop angle brackets instead of failing the send.
-const plain = (s, max) => String(s || "").replace(/[<>]/g, "").replace(/\s+/g, " ").trim().slice(0, max);
+// The API rejects markup, so drop angle brackets instead of failing the send. Lesson text uses
+// markdown emphasis (a **taster**), which would show as literal asterisks in the subject.
+const plain = (s, max) =>
+  String(s || "").replace(/[<>]/g, "").replace(/\*\*|__|[*`]/g, "").replace(/\s+/g, " ").trim().slice(0, max);
 
 // Same server for the library: http://localhost:<port>/index.html, or the file next to the lessons folder.
 function libraryUrlFor(lessonUrl) {

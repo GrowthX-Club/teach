@@ -252,7 +252,7 @@ notify email " Learner@Example.com "
 n_mode=$(ls -l "$ls_home/contact.json" | cut -c1-10)
 if [ "$(notify email)" = "learner@example.com" ] && [ "$n_mode" = "-rw-------" ]; then pass "the address is saved, readable only by you"; else fail "the address is saved, readable only by you ($n_mode)"; fi
 n_sent=$(notify send "$demo" "$b/lessons/2026-01-01-demo/index.html")
-if echo "$n_sent" | grep -q "EMAILED=yes" && grep -q '"email":"learner@example.com"' "$work/api.log" && grep -q "\"library_url\":\"$b/index.html\"" "$work/api.log" && grep NOTIFY "$work/api.log" | grep -q '"lesson_title":"[^"<>]' && ! grep NOTIFY "$work/api.log" | grep -q '"concepts"'; then pass "the email carries the title and links, never the lesson"; else fail "the email carries the title and links, never the lesson ($n_sent)"; cat "$work/api.log"; fi
+if echo "$n_sent" | grep -q "EMAILED=yes" && grep -q '"email":"learner@example.com"' "$work/api.log" && grep -q "\"library_url\":\"$b/index.html\"" "$work/api.log" && grep NOTIFY "$work/api.log" | grep -q '"lesson_title":"[^"<>*]*"' && ! grep NOTIFY "$work/api.log" | grep -q '"concepts"'; then pass "the email carries the title and links, never the lesson"; else fail "the email carries the title and links, never the lesson ($n_sent)"; cat "$work/api.log"; fi
 h_contact=$(curl -s -o /dev/null -w "%{http_code}" "$b/contact.json")
 if [ "$h_contact" = 404 ]; then pass "contact.json is never served"; else fail "contact.json is never served ($h_contact)"; fi
 notify email --forget
