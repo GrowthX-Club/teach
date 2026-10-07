@@ -90,6 +90,11 @@ async function sendFeedback(item) {
   }
 }
 
+// Only network failures, rate limits and server errors are worth retrying. A
+// 4xx left after the 401/404 recovery (e.g. a section the lesson no longer has)
+// would fail forever, so it is dropped instead of queued.
+const retryable = (e) => !e.status || e.status === 429 || e.status >= 500;
+
 // Feedback that couldn't be sent (offline, API down) waits here; the newest
 // answer per section wins, and the queue is retried before every send.
 const queueKey = (i) => `${i.lesson}/${i.section}`;
@@ -104,7 +109,7 @@ async function flushQueue() {
   try {
     for (const item of readJsonFile(queuePath, [])) {
       if (!lessonPath(item.lesson)) { writePrivate(queuePath, readJsonFile(queuePath, []).filter((i) => queueKey(i) !== queueKey(item))); continue; }
-      try { await sendFeedback(item); } catch { break; }
+      try { await sendFeedback(item); } catch (e) { if (retryable(e)) break; }
       writePrivate(queuePath, readJsonFile(queuePath, []).filter((i) => queueKey(i) !== queueKey(item) || i.at !== item.at));
     }
   } finally {
@@ -267,7 +272,8 @@ const server = http.createServer(async (req, res) => {
       try {
         await sendFeedback(item);
         return send(res, 200, { sent: true });
-      } catch {
+      } catch (e) {
+        if (!retryable(e)) return send(res, 422, { sent: false, error: "GrowthX didn't accept this feedback." });
         enqueue(item);
         return send(res, 202, { sent: false, queued: true });
       }

@@ -217,7 +217,7 @@ http.createServer((req, res) => {
     if (!auth) return reply(401, { msg: "Unknown teach install" });
     if (req.method === "POST" && req.url === "/api/v1/teach/lessons") { lessons.add(JSON.parse(body).lesson_dir); return reply(200, { success: true }); }
     const m = req.url.match(/^\/api\/v1\/teach\/lessons\/([^/]+)\/feedback\/([^/]+)$/);
-    if (req.method === "PUT" && m) return lessons.has(m[1]) ? reply(200, { success: true }) : reply(404, { msg: "Lesson not found" });
+    if (req.method === "PUT" && m) return lessons.has(m[1]) && m[2] !== "not-a-concept" ? reply(200, { success: true }) : reply(404, { msg: "Lesson not found" });
     reply(404, { msg: "Not found" });
   });
 }).listen(Number(port), "127.0.0.1", () => console.log("MOCK_UP"));
@@ -239,6 +239,8 @@ mode=$(ls -l "$ls_home/sharing.json" | cut -c1-10)
 if [ "$s_before" = '{"share":null}' ] && [ "$f_noconsent" = 403 ] && [ "$s_yes" = 200 ] && [ "$f_bad" = 404 ]; then pass "feedback is refused until the learner agrees"; else fail "feedback is refused until the learner agrees ($s_before $f_noconsent $s_yes $f_bad)"; fi
 if [ "$f_sent" = 200 ] && grep -q "POST /api/v1/teach/installs" "$work/api.log" && grep -q "POST /api/v1/teach/lessons auth=true" "$work/api.log" && grep -q "PUT /api/v1/teach/lessons/2026-01-01-demo/feedback/retries auth=true" "$work/api.log"; then pass "after a yes, the server registers, uploads the lesson and sends feedback"; else fail "after a yes, the server registers, uploads the lesson and sends feedback ($f_sent)"; cat "$work/api.log"; fi
 if [ "$mode" = "-rw-------" ] && grep -q '"token": "tok-1"' "$ls_home/sharing.json" && ! grep -q "tok-1" "$ls_home/profile.json" 2>/dev/null; then pass "install token is kept in sharing.json, readable only by you"; else fail "install token is kept in sharing.json, readable only by you ($mode)"; fi
+f_reject=$(post /api/feedback '{"lesson":"2026-01-01-demo","section":"not-a-concept","vote":"up"}')
+if [ "$f_reject" = 422 ] && ! grep -q "not-a-concept" "$ls_home/feedback-queue.json" 2>/dev/null; then pass "feedback the API rejects is dropped, not queued forever"; else fail "feedback the API rejects is dropped, not queued forever ($f_reject)"; fi
 h_share=$(curl -s -o /dev/null -w "%{http_code}" "$b/sharing.json")
 if [ "$h_share" = 404 ]; then pass "sharing.json is never served"; else fail "sharing.json is never served ($h_share)"; fi
 
