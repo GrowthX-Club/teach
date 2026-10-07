@@ -64,6 +64,7 @@ fi
 [ "$claude" = true ] || [ "$codex" = true ] || fail "could not find Claude Code or Codex. Install one, then run this again."
 
 # ---- copy the skill (replacing any previous teach install) ----
+version=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([0-9][0-9.]*\)".*/\1/p' "$source_dir/../../.claude-plugin/plugin.json" 2>/dev/null | head -n 1)
 install_to() {
   dest=$1
   mkdir -p "$(dirname -- "$dest")"
@@ -72,6 +73,8 @@ install_to() {
   cp -R "$source_dir" "$staging"
   rm -rf "$dest"
   mv "$staging" "$dest"
+  # Lets the skill tell when a newer teach is out (scripts/update.sh).
+  if [ -n "$version" ]; then printf '%s\n' "$version" > "$dest/.version"; fi
   say "  ✓ $dest"
 }
 

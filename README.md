@@ -31,7 +31,7 @@ Inside Claude Code:
 /plugin install teach@growthx
 ```
 
-Plugins update automatically. The skill shows up as `teach:teach`; typing `teach` still works.
+Plugins update automatically if you turn on auto-update for the growthx marketplace in `/plugin`; otherwise teach tells you when a new version is out and updates itself when you say yes. The skill shows up as `teach:teach`; typing `teach` still works.
 
 ### Any agent, with the skills CLI
 
@@ -109,6 +109,8 @@ teach doesn't block your chat. It asks its level question and writes a short bri
 
 Each lesson is one self-contained HTML file. It never calls a model, a server on the internet or analytics.
 
+When you type `teach`, the skill checks at most once a day whether a newer version is out, by reading the version number in this repo's `.claude-plugin/plugin.json` on GitHub. Nothing about you is sent. If there is one, teach offers to update itself after your lesson is built; say no and it won't ask again until the next version. Say "update teach" any time to check right away. Set `TEACH_NO_UPDATE_CHECK=1` to turn the check off.
+
 ## Feedback and data sharing
 
 Each concept, and the lesson as a whole, has a thumbs up or down with an optional note. The first time you give feedback, teach asks whether you agree to share your lessons and feedback with GrowthX to improve teach. Nothing is shared unless you agree, and teach never uploads your chat, your code or your files.
@@ -131,6 +133,7 @@ The email is separate from data sharing: it never sends the lesson itself, and i
 ├── sharing.json        # your data sharing answer and install ID (only if you answered)
 ├── feedback-queue.json # feedback waiting to be sent while offline
 ├── contact.json        # your email for lesson-ready emails (only if you gave one)
+├── update-check        # when teach last looked for a new version, and any version you skipped
 └── lessons/
     └── 2026-10-05-safe-retries/
         ├── index.html          # the lesson
