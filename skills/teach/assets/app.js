@@ -1045,14 +1045,15 @@
   panel.setAttribute("role", "dialog");
   panel.setAttribute("aria-label", "Lesson tutor");
   panel.innerHTML =
-    '<header class="tutor-head"><div class="tutor-avatar" aria-hidden="true">t</div>' +
+    '<header class="tutor-head">' +
     '<div class="tutor-title"><b>Lesson tutor</b><span id="tutor-status">Answers in plain words</span></div>' +
-    '<button type="button" class="tutor-x" aria-label="Close">×</button></header>' +
+    '<button type="button" class="tutor-x" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>' +
     '<div class="tutor-body" id="tutor-body" aria-live="polite"></div>' +
+    '<div class="tutor-compose">' +
     '<div class="tutor-quote" hidden><span class="tq-label">Asking about</span><q></q><button type="button" aria-label="Remove passage">×</button></div>' +
     '<form class="tutor-form"><label class="sr-only" for="tutor-input">Your question</label>' +
     '<textarea id="tutor-input" rows="1" placeholder="Ask anything about this lesson…"></textarea>' +
-    '<button type="submit" class="tutor-send" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12l15-7-5 16-2.5-6.5z" fill="currentColor"/></svg></button></form>' +
+    '<button type="submit" class="tutor-send" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></form></div>' +
     '<p class="tutor-foot" id="tutor-foot"></p>';
   document.body.appendChild(panel);
   var body = panel.querySelector("#tutor-body");
@@ -1082,7 +1083,7 @@
   function renderEmpty() {
     if (thread.length) return;
     body.innerHTML =
-      '<div class="tutor-hello"><p><b>Hi!</b> Ask me anything about this lesson and I\'ll explain it in plain words.</p>' +
+      '<div class="tutor-hello"><h2>What can I explain?</h2><p>Ask me anything about this lesson and I\'ll explain it in plain words.</p>' +
       '<p class="tutor-tip">Tip: select any text in the lesson and tap <b>Ask about this</b>.</p>' +
       '<div class="tutor-chips">' + ["Explain the main idea more simply", "Give me another real-life example", "How does this connect to my work?"].map(function (t) {
         return '<button type="button" class="tutor-chip">' + esc(t) + "</button>";
@@ -1114,6 +1115,7 @@
   }
   function openPanel() {
     panel.hidden = false;
+    document.documentElement.classList.add("tutor-open");
     fab.classList.add("open");
     fab.classList.remove("pulse");
     fab.querySelector(".tutor-dot").hidden = true;
@@ -1121,7 +1123,7 @@
     renderEmpty();
     setTimeout(function () { input.focus(); scrollBottom(); }, 30);
   }
-  function closePanel() { panel.hidden = true; fab.classList.remove("open"); }
+  function closePanel() { panel.hidden = true; document.documentElement.classList.remove("tutor-open"); fab.classList.remove("open"); }
   fab.addEventListener("click", function () { panel.hidden ? openPanel() : closePanel(); });
   panel.querySelector(".tutor-x").addEventListener("click", closePanel);
   panel.addEventListener("keydown", function (e) { if (e.key === "Escape") closePanel(); });
@@ -1172,7 +1174,7 @@
       .catch(function (err) { turn.querySelector(".bubble.bot").innerHTML = '<p class="tutor-err">' + esc(err.message) + "</p>"; })
       .then(function () { waiting = false; scrollBottom(); });
   }
-  function autosize() { input.style.height = "auto"; input.style.height = Math.min(140, input.scrollHeight) + "px"; }
+  function autosize() { input.style.height = "auto"; input.style.height = Math.min(200, input.scrollHeight) + "px"; }
   input.addEventListener("input", autosize);
   input.addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input.value); } });
   panel.querySelector(".tutor-form").addEventListener("submit", function (e) { e.preventDefault(); send(input.value); });
