@@ -1,0 +1,29 @@
+GrowthX teach licence
+
+Copyright (c) 2026 GrowthX. All rights reserved.
+
+This is not an MIT or other open-source licence. teach belongs to GrowthX. The
+code is public so you can see what runs on your computer; that does not give
+you any right to reuse it.
+
+What you may do
+1. Install teach and use it to make lessons for yourself, free of charge.
+2. Keep and share the lessons teach makes for you.
+
+What you may not do
+3. Copy, change, publish or share the teach code, in whole or in part.
+4. Build anything on top of teach, or use its code, prompts or design in your
+   own product, skill, plugin or service.
+5. Use teach commercially in any way: selling it, charging for it, or putting
+   it inside a product or service you offer to others, paid or free.
+6. Remove the "Built using GrowthX teach" line from teach or from the lessons
+   it makes.
+
+Third-party parts
+skills/teach/references/humanizer.md is by Siqi Chen and stays under its own
+MIT licence, in skills/teach/references/humanizer.LICENSE. This licence does
+not change it.
+
+No warranty
+teach is provided "as is", without warranty of any kind. GrowthX is not liable
+for any claim, damage or other liability arising from teach or its use.

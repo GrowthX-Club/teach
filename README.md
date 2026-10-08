@@ -160,6 +160,44 @@ Steps 3 to 8 run in the background where the agent supports it (Claude Code): th
 
 Keeping fact-finding and teaching in separate agents stops the lesson from inventing things about your work.
 
+## FAQ
+
+**What is teach?**
+A skill for Claude Code and Codex. Type `teach` and it turns the chat you just had, your project, or any topic you name into a short interactive lesson on the tech and AI ideas behind it, pitched at your level.
+
+**Who is it for?**
+Anyone building with AI who wants to understand what they built, not just ship it: founders, product managers, marketers, designers and engineers. You pick how much you already know, and the lesson meets you there.
+
+**Is it free?**
+Yes. teach itself costs nothing. Lessons are written by the coding agent you already use, so they run on your own Claude or Codex plan.
+
+**Which agents does it work with?**
+Claude Code (terminal and desktop app) and Codex. The skills CLI also installs it for other agents that read a skills folder.
+
+**Does it work on Windows?**
+Through WSL or Git Bash. macOS and Linux work out of the box.
+
+**Do I need to explain my project to it?**
+No. teach reads the chat you are in and the project folder, so `teach` on its own is enough.
+
+**Does it send my chat or code anywhere?**
+Nothing beyond the AI you already use. Lessons are built and stored on your computer, in `~/growthx-teach/`. teach only sends something to GrowthX if you say yes: your lessons and feedback if you agree to share (the lesson text, which can mention your project, but never your chat, code or files), and a lesson-ready email with the lesson's title and opening line if you give an address. See [Feedback and data sharing](#feedback-and-data-sharing).
+
+**Will it slow down my work?**
+Barely. It asks a couple of quick questions (one click with your saved answers). In Claude Code it then builds the lesson in the background while you keep working and posts a link when it's ready; in other agents it builds it right there in the chat.
+
+**Can I share a lesson?**
+Yes. Each lesson is one HTML file you can send to anyone, and every lesson comes with ready-to-post LinkedIn and X text.
+
+**Can I use it at work?**
+Yes, to learn, for free. You can't sell it, charge for it, or put it inside a product or service you offer to others. See [Licence](#licence).
+
+**Is it open source?**
+No. The code is public so you can see what runs on your computer, but it belongs to GrowthX. You can install and use teach; you can't copy, change, share or build on its code. See [Licence](#licence).
+
+**How do I report a bug or suggest a lesson topic?**
+Open an issue at [GrowthX-Club/teach](https://github.com/GrowthX-Club/teach/issues), or, if you agreed to share feedback, use the thumbs up or down inside any lesson.
+
 ## Develop
 
 ```
@@ -193,6 +231,12 @@ open /tmp/teach-demo/lessons/2026-10-05-safe-retries/index.html
 
 ## Credits
 
+Created by [GrowthX](https://growthx.club), built by:
+
+- [Udayan Walvekar](https://github.com/udayangx)
+- [Sudesh Das](https://github.com/sudesh-growthx)
+- [Pranav Bakre](https://github.com/pranav-growthx)
+
 The lesson editor uses [humanizer](https://github.com/blader/humanizer) by Siqi Chen (MIT), bundled at `skills/teach/references/humanizer.md` with its licence in `humanizer.LICENSE`. To update it, copy the latest `SKILL.md` body over that file and bump the version note at its top.
 
 ## Uninstall
@@ -204,3 +248,7 @@ The lesson editor uses [humanizer](https://github.com/blader/humanizer) by Siqi 
 | clone | `sh uninstall.sh` |
 
 Your lessons in `~/growthx-teach/` are kept.
+
+## Licence
+
+teach is **not** MIT licensed and not open source. It is © 2026 GrowthX, all rights reserved, under the [GrowthX teach licence](LICENSE). You may install it, use it to learn for free, and share the lessons it makes. You may not copy, change, share or build on the code, or use it commercially in any way. The bundled humanizer rules stay under their own MIT licence.
