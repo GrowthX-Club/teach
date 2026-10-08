@@ -1,32 +1,23 @@
 GrowthX teach licence
 
-Copyright (c) 2026 GrowthX. All rights reserved, except as granted below.
+Copyright (c) 2026 GrowthX. All rights reserved.
 
-This is not an MIT or other open-source licence. teach is made by GrowthX and
-must stay credited to GrowthX.
+This is not an MIT or other open-source licence. teach belongs to GrowthX. The
+code is public so you can see what runs on your computer; that does not give
+you any right to reuse it.
 
 What you may do
-1. Install and use teach, for yourself or at work, free of charge.
-2. Share the lessons teach makes for you.
-3. Read, change and share the teach code, as long as you follow the rules below.
-
-What you must do
-4. Keep this licence and the copyright line above in every copy or changed
-   version of teach you share.
-5. Credit GrowthX clearly wherever you share teach or anything built from it,
-   with a link to https://github.com/GrowthX-Club/teach. Do not remove the
-   "Built using GrowthX teach" credit from teach or from the lessons it makes.
-6. Say clearly when a version you share has been changed from the original.
+1. Install teach and use it to make lessons for yourself, free of charge.
+2. Keep and share the lessons teach makes for you.
 
 What you may not do
-7. Present teach, or a changed version of it, as your own work. A changed
-   version must say it is based on GrowthX teach; you may name yourself as the
-   person who changed it.
-8. Use teach, or a changed version of it, commercially in any way: no
-   selling it, charging for it, or putting it inside a product or service you
-   offer to others, paid or free.
-9. Use the GrowthX name or logo to suggest GrowthX endorses you or your
-   version, beyond the credit required above.
+3. Copy, change, publish or share the teach code, in whole or in part.
+4. Build anything on top of teach, or use its code, prompts or design in your
+   own product, skill, plugin or service.
+5. Use teach commercially in any way: selling it, charging for it, or putting
+   it inside a product or service you offer to others, paid or free.
+6. Remove the "Built using GrowthX teach" line from teach or from the lessons
+   it makes.
 
 Third-party parts
 skills/teach/references/humanizer.md is by Siqi Chen and stays under its own

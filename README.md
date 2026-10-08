@@ -187,13 +187,13 @@ Nothing beyond the AI you already use. Lessons are built and stored on your comp
 Barely. It asks a couple of quick questions (one click with your saved answers). In Claude Code it then builds the lesson in the background while you keep working and posts a link when it's ready; in other agents it builds it right there in the chat.
 
 **Can I share a lesson?**
-Yes. Each lesson is one HTML file you can send to anyone, and every lesson comes with ready-to-post LinkedIn and X text. Keep the "Built using GrowthX teach" credit on it.
+Yes. Each lesson is one HTML file you can send to anyone, and every lesson comes with ready-to-post LinkedIn and X text.
 
 **Can I use it at work?**
 Yes, to learn, for free. You can't sell it, charge for it, or put it inside a product or service you offer to others. See [Licence](#licence).
 
 **Is it open source?**
-The code is public so you can read it, change it and share it, but it is not under an MIT or other open-source licence. Anything you share must credit GrowthX. See [Licence](#licence).
+No. The code is public so you can see what runs on your computer, but it belongs to GrowthX. You can install and use teach; you can't copy, change, share or build on its code. See [Licence](#licence).
 
 **How do I report a bug or suggest a lesson topic?**
 Open an issue at [GrowthX-Club/teach](https://github.com/GrowthX-Club/teach/issues), or, if you agreed to share feedback, use the thumbs up or down inside any lesson.
@@ -251,4 +251,4 @@ Your lessons in `~/growthx-teach/` are kept.
 
 ## Licence
 
-teach is **not** MIT licensed. It is © 2026 GrowthX under the [GrowthX teach licence](LICENSE): free to install and use, including at work, and free to change and share as long as you keep the licence, credit GrowthX with a link back here, and keep the "Built using GrowthX teach" credit. Passing it off as your own is not allowed, and neither is any commercial use: no selling it, charging for it, or putting it inside a product or service you offer to others. The bundled humanizer rules stay under their own MIT licence.
+teach is **not** MIT licensed and not open source. It is © 2026 GrowthX, all rights reserved, under the [GrowthX teach licence](LICENSE). You may install it, use it to learn for free, and share the lessons it makes. You may not copy, change, share or build on the code, or use it commercially in any way. The bundled humanizer rules stay under their own MIT licence.
