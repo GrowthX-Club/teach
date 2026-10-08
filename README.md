@@ -190,7 +190,7 @@ Barely. It asks a couple of quick questions (one click with your saved answers).
 Yes. Each lesson is one HTML file you can send to anyone, and every lesson comes with ready-to-post LinkedIn and X text. Keep the "Built using GrowthX teach" credit on it.
 
 **Can I use it at work?**
-Yes, free. You may not sell it or offer it as a paid product without our written permission. See [Licence](#licence).
+Yes, to learn, for free. You can't sell it, charge for it, or put it inside a product or service you offer to others. See [Licence](#licence).
 
 **Is it open source?**
 The code is public so you can read it, change it and share it, but it is not under an MIT or other open-source licence. Anything you share must credit GrowthX. See [Licence](#licence).
@@ -251,4 +251,4 @@ Your lessons in `~/growthx-teach/` are kept.
 
 ## Licence
 
-teach is **not** MIT licensed. It is © 2026 GrowthX under the [GrowthX teach licence](LICENSE): free to install and use, including at work, and free to change and share as long as you keep the licence, credit GrowthX with a link back here, and keep the "Built using GrowthX teach" credit. Selling it, or passing it off as your own, needs our written permission. The bundled humanizer rules stay under their own MIT licence.
+teach is **not** MIT licensed. It is © 2026 GrowthX under the [GrowthX teach licence](LICENSE): free to install and use, including at work, and free to change and share as long as you keep the licence, credit GrowthX with a link back here, and keep the "Built using GrowthX teach" credit. Passing it off as your own is not allowed, and neither is any commercial use: no selling it, charging for it, or putting it inside a product or service you offer to others. The bundled humanizer rules stay under their own MIT licence.
