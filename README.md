@@ -181,10 +181,10 @@ Through WSL or Git Bash. macOS and Linux work out of the box.
 No. teach reads the chat you are in and the project folder, so `teach` on its own is enough.
 
 **Does it send my chat or code anywhere?**
-No. Lessons are built and stored on your computer, in `~/growthx-teach/`. teach only sends something to GrowthX if you say yes: your lessons and feedback (if you agree to share, never your chat, code or files) and a lesson-ready email (if you give an address). See [Feedback and data sharing](#feedback-and-data-sharing).
+Nothing beyond the AI you already use. Lessons are built and stored on your computer, in `~/growthx-teach/`. teach only sends something to GrowthX if you say yes: your lessons and feedback if you agree to share (the lesson text, which can mention your project, but never your chat, code or files), and a lesson-ready email with the lesson's title and opening line if you give an address. See [Feedback and data sharing](#feedback-and-data-sharing).
 
 **Will it slow down my work?**
-No. It asks two quick questions, then builds the lesson in the background while you keep working, and posts a link when it's ready.
+Barely. It asks a couple of quick questions (one click with your saved answers). In Claude Code it then builds the lesson in the background while you keep working and posts a link when it's ready; in other agents it builds it right there in the chat.
 
 **Can I share a lesson?**
 Yes. Each lesson is one HTML file you can send to anyone, and every lesson comes with ready-to-post LinkedIn and X text. Keep the "Built using GrowthX teach" credit on it.
@@ -196,7 +196,7 @@ Yes, free. You may not sell it or offer it as a paid product without our written
 The code is public so you can read it, change it and share it, but it is not under an MIT or other open-source licence. Anything you share must credit GrowthX. See [Licence](#licence).
 
 **How do I report a bug or suggest a lesson topic?**
-Open an issue at [GrowthX-Club/teach](https://github.com/GrowthX-Club/teach/issues), or use the thumbs up or down inside any lesson.
+Open an issue at [GrowthX-Club/teach](https://github.com/GrowthX-Club/teach/issues), or, if you agreed to share feedback, use the thumbs up or down inside any lesson.
 
 ## Develop
 
