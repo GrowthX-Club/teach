@@ -35,7 +35,8 @@ The lesson page's focus switch shows short forms of these answers: Business, Bot
 3. **If there is no saved focus and the chat shows no clear technical signals, guess the business focus (`product`).**
 4. Ask once, with your best guess first and marked as recommended (saved answers make answering a single click):
    - **Claude Code**: one `AskUserQuestion` call with two questions. "How much do you already know about <area in plain words>?" with the four depth labels. "What should the lesson focus on?" with the three focus labels. The email question from the skill's step 2 goes in the same call.
-   - **Anywhere else**: one short message with both questions as numbered options, plus the email question. Wait for the answer.
+   - **Codex**: if `request_user_input` is in your tools this turn, use it, the same way. It takes at most three questions with two or three options each: put the recommended option first with "(Recommended)" at the end of its label, and don't add an "Other" option (Codex adds a free-text answer itself). For depth, offer your best guess and the two labels next to it; the learner can type the fourth. The email question is the third question.
+   - **Anywhere else** (or Codex without `request_user_input`): one short message with the questions numbered and the options lettered, the recommended one marked, ending with "Reply with your picks, like 1b 2a 3a, or just say go to take the recommended ones." Wait for the answer.
 5. Wait for the answer. Then save it to `profile.json` and continue.
 
 Treat memories and instruction files as signals only. Never quote them, and never put anything from them in the lesson or brief.
