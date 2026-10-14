@@ -5,6 +5,7 @@
 # From GitHub:    curl -fsSL https://raw.githubusercontent.com/GrowthX-Club/teach/main/install.sh | sh
 #
 # Overrides: TEACH_HOME (default ~/growthx-teach), TEACH_INSTALL_CLAUDE / TEACH_INSTALL_CODEX (1 or 0).
+# Sends one anonymous install ping (see scripts/setup.sh); TEACH_NO_PING=1 turns it off.
 
 set -eu
 
@@ -89,7 +90,11 @@ if [ -f "$teach_home/theme.css" ] && ! cmp -s "$source_dir/assets/theme.css" "$t
   cp "$source_dir/assets/theme.css" "$teach_home/theme.default.css"
   say "  · kept your theme.css; the latest default is in theme.default.css"
 fi
-TEACH_HOME="$teach_home" sh "$source_dir/scripts/setup.sh" >/dev/null
+if [ "$claude" = true ] && [ "$codex" = true ]; then agents=both
+elif [ "$claude" = true ]; then agents=claude
+else agents=codex
+fi
+TEACH_HOME="$teach_home" TEACH_PING_CHANNEL=script TEACH_PING_AGENT=$agents sh "$source_dir/scripts/setup.sh" >/dev/null
 say "  ✓ $teach_home"
 
 command -v node >/dev/null 2>&1 || say "  · node not found: lessons still build, but validation is skipped"

@@ -111,6 +111,10 @@ Each lesson is one self-contained HTML file. It never calls a model, a server on
 
 When you type `teach`, the skill checks at most once a day whether a newer version is out, by reading the version number in this repo's `.claude-plugin/plugin.json` on GitHub. Nothing about you is sent. If there is one, teach offers to update itself after your lesson is built; say no and it won't ask again until the next version. Say "update teach" any time to check right away. Set `TEACH_NO_UPDATE_CHECK=1` to turn the check off.
 
+## Install count
+
+To know how many people use teach, the installer (or teach's first run, for plugin installs) sends GrowthX one anonymous ping: a random ID made on your computer, the teach version, how it was installed (script or plugin), which agent (Claude Code, Codex or both) and your OS. Nothing about you, your chats, your code or your lessons. It's sent again only when teach updates, with the same ID, so a machine counts once. The ID lives in `~/growthx-teach/ping`. Set `TEACH_NO_PING=1` or `DO_NOT_TRACK=1` to turn it off.
+
 ## Feedback and data sharing
 
 Each concept, and the lesson as a whole, has a thumbs up or down with an optional note. The first time you give feedback, teach asks whether you agree to share your lessons and feedback with GrowthX to improve teach. Nothing is shared unless you agree, and teach never uploads your chat, your code or your files.
@@ -134,6 +138,7 @@ The email is separate from data sharing: it never sends the lesson itself, and i
 ├── feedback-queue.json # feedback waiting to be sent while offline
 ├── contact.json        # your email for lesson-ready emails (only if you gave one)
 ├── update-check        # when teach last looked for a new version, and any version you skipped
+├── ping                # the random ID for the anonymous install count, and the version last counted
 └── lessons/
     └── 2026-10-05-safe-retries/
         ├── index.html          # the lesson
@@ -181,7 +186,7 @@ Through WSL or Git Bash. macOS and Linux work out of the box.
 No. teach reads the chat you are in and the project folder, so `teach` on its own is enough.
 
 **Does it send my chat or code anywhere?**
-Nothing beyond the AI you already use. Lessons are built and stored on your computer, in `~/growthx-teach/`. teach only sends something to GrowthX if you say yes: your lessons and feedback if you agree to share (the lesson text, which can mention your project, but never your chat, code or files), and a lesson-ready email with the lesson's title and opening line if you give an address. See [Feedback and data sharing](#feedback-and-data-sharing).
+Nothing beyond the AI you already use. Lessons are built and stored on your computer, in `~/growthx-teach/`. Apart from an anonymous install count (see [Install count](#install-count)), teach only sends something to GrowthX if you say yes: your lessons and feedback if you agree to share (the lesson text, which can mention your project, but never your chat, code or files), and a lesson-ready email with the lesson's title and opening line if you give an address. See [Feedback and data sharing](#feedback-and-data-sharing).
 
 **Will it slow down my work?**
 Barely. It asks a couple of quick questions (one click with your saved answers). In Claude Code it then builds the lesson in the background while you keep working and posts a link when it's ready; in other agents it builds it right there in the chat.

@@ -7,6 +7,9 @@ skill="$root/skills/teach"
 work=$(mktemp -d "${TMPDIR:-/tmp}/teach-test.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 
+# Never count test runs as installs; the install ping tests turn it back on.
+export TEACH_NO_PING=1
+
 pass() { printf '  ✓ %s\n' "$1"; }
 fail() { printf '  ✗ %s\n' "$1" >&2; exit 1; }
 
@@ -214,6 +217,7 @@ http.createServer((req, res) => {
     const reply = (code, json) => { res.writeHead(code, { "Content-Type": "application/json" }); res.end(JSON.stringify(json)); };
     if (req.method === "POST" && req.url === "/api/v1/teach/installs") return reply(201, { install_id: "inst-1", install_token: "tok-1" });
     if (req.method === "POST" && req.url === "/api/v1/teach/notify") { fs.appendFileSync(log, `NOTIFY ${body}\n`); return reply(202, { success: true }); }
+    if (req.method === "POST" && req.url === "/api/v1/teach/pings") { fs.appendFileSync(log, `PING ${body}\n`); res.writeHead(204); return res.end(); }
     if (!auth) return reply(401, { msg: "Unknown teach install" });
     if (req.method === "POST" && req.url === "/api/v1/teach/lessons") { lessons.add(JSON.parse(body).lesson_dir); return reply(200, { success: true }); }
     const m = req.url.match(/^\/api\/v1\/teach\/lessons\/([^/]+)\/feedback\/([^/]+)$/);
@@ -315,6 +319,41 @@ printf 'checked=%s\nlatest=1.9.0\nskipped=\n' "$(date +%s)" > "$uh/update-check"
 printf '1.10.0\n' > "$fake_home/.claude/skills/teach/.version"
 if [ "$(TEACH_HOME="$uh" sh "$upd" check)" = "UPDATE=none" ]; then pass "versions compare as numbers (1.10 is newer than 1.9)"; else fail "versions compare as numbers (1.10 is newer than 1.9)"; fi
 if [ "$(TEACH_HOME="$uh" sh "$skill/scripts/update.sh" check)" = "UPDATE=none" ]; then pass "a git clone is never offered updates"; else fail "a git clone is never offered updates"; fi
+
+echo "install ping"
+ping_log="$work/ping.log"; : > "$ping_log"
+PINGPORT=8761
+node "$work/mock-api.mjs" $PINGPORT "$ping_log" > "$work/ping-mock.out" 2>&1 &
+ping_pid=$!
+i=0; while [ $i -lt 30 ] && ! grep -q MOCK_UP "$work/ping-mock.out"; do sleep 0.2; i=$((i+1)); done
+pings() { grep -c '^PING ' "$ping_log" || true; }
+wait_pings() { i=0; while [ $i -lt 25 ] && [ "$(pings)" -lt "$1" ]; do sleep 0.2; i=$((i+1)); done; }
+ph="$work/ping-home"; mkdir -p "$ph/.claude"
+pinged() { TEACH_NO_PING=0 HOME="$ph" TEACH_HOME="$ph/growthx-teach" TEACH_API_URL="http://127.0.0.1:$PINGPORT/api/v1" "$@"; }
+pinged env TEACH_INSTALL_CODEX=0 sh "$root/install.sh" >/dev/null
+wait_pings 1
+i=0; while [ $i -lt 25 ] && ! grep -q '^version=' "$ph/growthx-teach/ping" 2>/dev/null; do sleep 0.2; i=$((i+1)); done
+first_ping=$(grep '^PING ' "$ping_log" | head -n 1)
+if echo "$first_ping" | grep -Eq "^PING \{\"ping_id\":\"[0-9a-f]{32}\",\"version\":\"$plugin_version\",\"channel\":\"script\",\"agent\":\"claude\",\"os\":\"[a-z]+\"\}$"; then pass "install sends one anonymous ping: id, version, channel, agent, OS"; else fail "install sends one anonymous ping ($first_ping)"; fi
+pinged sh "$ph/.claude/skills/teach/scripts/setup.sh" >/dev/null
+sleep 1
+if [ "$(pings)" = 1 ]; then pass "the skill's first run doesn't ping again for the same version"; else fail "the skill's first run doesn't ping again for the same version ($(pings))"; fi
+printf '99.0.0\n' > "$ph/.claude/skills/teach/.version"
+pinged sh "$ph/.claude/skills/teach/scripts/setup.sh" >/dev/null
+wait_pings 2
+id1=$(grep '^PING ' "$ping_log" | sed -n '1s/.*"ping_id":"\([0-9a-f]*\)".*/\1/p')
+id2=$(grep '^PING ' "$ping_log" | sed -n '2s/.*"ping_id":"\([0-9a-f]*\)".*/\1/p')
+if [ "$(pings)" = 2 ] && [ -n "$id1" ] && [ "$id1" = "$id2" ] && grep '^PING ' "$ping_log" | sed -n 2p | grep -q '"version":"99.0.0","channel":"script"'; then pass "an update pings again with the same id"; else fail "an update pings again with the same id ($(pings) $id1 $id2)"; fi
+dnt="$work/dnt-home"; mkdir -p "$dnt"
+TEACH_NO_PING=0 DO_NOT_TRACK=1 TEACH_HOME="$dnt" TEACH_API_URL="http://127.0.0.1:$PINGPORT/api/v1" sh "$ph/.claude/skills/teach/scripts/setup.sh" >/dev/null
+TEACH_NO_PING=0 TEACH_HOME="$work/clone-home" TEACH_API_URL="http://127.0.0.1:$PINGPORT/api/v1" sh "$skill/scripts/setup.sh" >/dev/null
+sleep 1
+if [ "$(pings)" = 2 ] && [ ! -e "$dnt/ping" ] && [ ! -e "$work/clone-home/ping" ]; then pass "DO_NOT_TRACK and git clones never ping"; else fail "DO_NOT_TRACK and git clones never ping ($(pings))"; fi
+kill $ping_pid 2>/dev/null || true; wait $ping_pid 2>/dev/null || true
+nohost="$work/nohost-home"
+TEACH_NO_PING=0 TEACH_HOME="$nohost" TEACH_API_URL="http://127.0.0.1:9/api/v1" sh "$ph/.claude/skills/teach/scripts/setup.sh" >/dev/null
+sleep 1
+if [ -f "$nohost/profile.json" ] && grep -q '^id=' "$nohost/ping" && ! grep -q '^version=' "$nohost/ping"; then pass "an unreachable API never fails setup, and the ping is retried later"; else fail "an unreachable API never fails setup, and the ping is retried later"; fi
 
 HOME="$fake_home" sh "$root/uninstall.sh" >/dev/null
 if [ ! -e "$fake_home/.claude/skills/teach" ] && [ ! -e "$fake_home/.agents/skills/teach" ] && [ -d "$fake_home/growthx-teach/lessons" ]; then pass "uninstall removes the skill, keeps lessons"; else fail "uninstall removes the skill, keeps lessons"; fi
